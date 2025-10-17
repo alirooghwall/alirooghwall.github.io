@@ -39,7 +39,7 @@ if (!EMAIL_USER || !EMAIL_PASS) {
 }
 
 // Email transporter
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: { user: EMAIL_USER, pass: EMAIL_PASS }
 });
