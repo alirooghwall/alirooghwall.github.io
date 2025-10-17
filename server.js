@@ -9,15 +9,29 @@ const mongoose = require('mongoose');
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+// allow HTML forms (application/x-www-form-urlencoded)
+app.use(bodyParser.urlencoded({ extended: true }));
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const PORT = process.env.PORT || 3000;
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
+// basic sanity checks
+if (!process.env.MONGO_URI) {
+  console.error('❌ MONGO_URI is not set in .env');
+  process.exit(1);
+}
+if (!JWT_SECRET) {
+  console.error('❌ JWT_SECRET is not set in .env');
+  process.exit(1);
+}
 
-.then(() => console.log('Connected to MongoDB...'))
-.catch((err) => console.error('❌ MongoDB connection error:', err));
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('Connected to MongoDB...'))
+  .catch((err) => {
+    console.error('❌ MongoDB connection error:', err);
+    process.exit(1);
+  });
 
 // Create a User model
 const userSchema = new mongoose.Schema({
@@ -28,22 +42,45 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-
-app.post('/signup', async (req, res) => {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password)
-    return res.status(400).json({ message: 'Missing fields' });
-
-  const existing = await User.findOne({ email });
-  if (existing) return res.status(400).json({ message: 'Email already registered' });
-
-  const hashed = await bcrypt.hash(password, 10);
-  const newUser = new User({ name, email, password: hashed });
-  await newUser.save();
-
-  res.json({ message: 'User created successfully' });
+// GET signup form (for quick browser testing)
+app.get('/signup', (req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(`<!doctype html>
+  <html>
+  <head><meta charset="utf-8"><title>Sign Up</title></head>
+  <body>
+    <h1>Sign Up</h1>
+    <form method="post" action="/signup">
+      <label>Name: <input name="name" required /></label><br/>
+      <label>Email: <input name="email" type="email" required /></label><br/>
+      <label>Password: <input name="password" type="password" required /></label><br/>
+      <button type="submit">Sign Up</button>
+    </form>
+    <p><a href="/">Back to Home</a></p>
+  </body>
+  </html>`);
 });
 
+// POST /signup - create user
+app.post('/signup', async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password)
+      return res.status(400).json({ message: 'Missing fields' });
+
+    const existing = await User.findOne({ email });
+    if (existing) return res.status(400).json({ message: 'Email already registered' });
+
+    const hashed = await bcrypt.hash(password, 10);
+    const newUser = new User({ name, email, password: hashed });
+    await newUser.save();
+
+    res.json({ message: 'User created successfully' });
+  } catch (err) {
+    console.error('❌ Error creating user:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 app.post('/signin', async (req, res) => {
   const { email, password } = req.body;
