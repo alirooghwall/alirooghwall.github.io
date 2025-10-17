@@ -75,7 +75,15 @@ app.post('/signup', async (req, res) => {
     const newUser = new User({ name, email, password: hashed });
     await newUser.save();
 
-    res.json({ message: 'User created successfully' });
+    res.setHeader('contact-Type', 'text/html; charset=utf-8')
+    res.send(`<!doctype html>
+  <html>
+  <head><meta charset="utf-8"><title>Sign Up</title></head>
+  <body>
+    <h1> 'User created successfully' </h1>
+  </body>
+  </html>`)
+
   } catch (err) {
     console.error('❌ Error creating user:', err);
     res.status(500).json({ message: 'Internal server error' });
