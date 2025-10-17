@@ -6,27 +6,43 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const path = require('path');
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Serve static files (CSS, JS, images) from the project root
+// Serve static files
 app.use(express.static(path.join(__dirname)));
 
+// JWT and email config
 const JWT_SECRET = process.env.JWT_SECRET;
+const EMAIL_USER = process.env.EMAIL_USER; // e.g., yourgmail@gmail.com
+const EMAIL_PASS = process.env.EMAIL_PASS; // app password
+const BASE_URL = process.env.BASE_URL || 'https://your-app.onrender.com'; // Update to your Render URL
 const PORT = process.env.PORT || 3000;
 
 // Sanity checks
-if (!process.env.MONGO_URI) {
-  console.error('❌ MONGO_URI is not set in .env');
-  process.exit(1);
-}
 if (!JWT_SECRET) {
   console.error('❌ JWT_SECRET is not set in .env');
   process.exit(1);
 }
+if (!process.env.MONGO_URI) {
+  console.error('❌ MONGO_URI is not set in .env');
+  process.exit(1);
+}
+if (!EMAIL_USER || !EMAIL_PASS) {
+  console.error('❌ EMAIL_USER and EMAIL_PASS are not set in .env');
+  process.exit(1);
+}
+
+// Email transporter
+const transporter = nodemailer.createTransporter({
+  service: 'gmail',
+  auth: { user: EMAIL_USER, pass: EMAIL_PASS }
+});
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -36,21 +52,56 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
     process.exit(1);
   });
 
-// User model
+// User model with verification
 const userSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
   password: String,
+  isVerified: { type: Boolean, default: false },
+  verificationToken: String,
 });
 const User = mongoose.model('User', userSchema);
 
-// GET / - Serve main page (index.html)
+// Middleware to check auth
+const requireAuth = (req, res, next) => {
+  const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
+  if (!token) return res.redirect('/signin');
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch {
+    res.redirect('/signin');
+  }
+};
+
+// Middleware to check verification
+const requireVerified = (req, res, next) => {
+  if (!req.user.isVerified) return res.send('<p>Please verify your email first. <a href="/signin">Back</a></p>');
+  next();
+};
+
+// Health check for Render
+app.get('/health', (req, res) => res.send('OK'));
+
+// GET / - Serve home (limited access)
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// GET /signup - Styled form
+// GET /elements - Info page (limited access)
+app.get('/elements', (req, res) => {
+  res.sendFile(path.join(__dirname, 'elements.html'));
+});
+
+// Protect other pages
+app.get('/generic', requireAuth, requireVerified, (req, res) => {
+  res.sendFile(path.join(__dirname, 'generic.html'));
+});
+
+// GET /signup - Styled form with pre-fill
 app.get('/signup', (req, res) => {
+  const saved = req.cookies?.signupData ? JSON.parse(req.cookies.signupData) : {};
   res.send(`
     <!doctype html>
     <html>
@@ -59,16 +110,16 @@ app.get('/signup', (req, res) => {
       <title>Sign Up | MARS EMPIRE</title>
       <link rel="stylesheet" href="assets/css/main.css">
       <style>
-        body { background: #f4f4f4; font-family: Arial, sans-serif; }
-        main { max-width: 400px; margin: 5rem auto; padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #333; }
+        body { background: linear-gradient(135deg, #1e1e2e, #2a2a3e); color: #ffffff; font-family: 'Source Sans Pro', sans-serif; }
+        main { max-width: 400px; margin: 5rem auto; padding: 2rem; background: rgba(255,255,255,0.1); border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        h1 { text-align: center; color: #ff6b6b; }
         form { display: flex; flex-direction: column; }
         label { margin-bottom: 0.5rem; font-weight: bold; }
-        input { padding: 0.5rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 4px; }
-        button { padding: 0.75rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #0056b3; }
+        input { padding: 0.5rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 4px; background: #333; color: #fff; }
+        button { padding: 0.75rem; background: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #ff5252; }
         p { text-align: center; margin-top: 1rem; }
-        a { color: #007bff; text-decoration: none; }
+        a { color: #4ecdc4; text-decoration: none; }
       </style>
     </head>
     <body>
@@ -76,22 +127,30 @@ app.get('/signup', (req, res) => {
         <h1>Sign Up</h1>
         <form method="post" action="/signup">
           <label>Name</label>
-          <input name="name" required />
+          <input name="name" value="${saved.name || ''}" required aria-label="Name" />
           <label>Email</label>
-          <input name="email" type="email" required />
+          <input name="email" type="email" value="${saved.email || ''}" required aria-label="Email" />
           <label>Password</label>
-          <input name="password" type="password" required />
+          <input name="password" type="password" required aria-label="Password" />
           <button type="submit">Create Account</button>
         </form>
         <p><a href="/signin">Already have an account? Sign In</a></p>
         <p><a href="/">Back to Home</a></p>
       </main>
+      <script>
+        document.querySelectorAll('input').forEach(input => {
+          input.addEventListener('input', () => {
+            const data = { name: document.querySelector('[name=name]').value, email: document.querySelector('[name=email]').value };
+            document.cookie = 'signupData=' + JSON.stringify(data) + '; path=/; secure; samesite=strict';
+          });
+        });
+      </script>
     </body>
     </html>
   `);
 });
 
-// POST /signup - Create user with pop-up success
+// POST /signup - Create user, send verification email
 app.post('/signup', async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -105,19 +164,46 @@ app.post('/signup', async (req, res) => {
     }
 
     const hashed = await bcrypt.hash(password, 10);
-    const newUser = new User({ name, email, password: hashed });
+    const token = crypto.randomBytes(32).toString('hex');
+    const newUser = new User({ name, email, password: hashed, verificationToken: token });
     await newUser.save();
 
-    // Success pop-up and redirect
-    res.send('<script>alert("User created successfully!"); window.location.href="/signin";</script>');
+    // Send verification email
+    const mailOptions = {
+      from: EMAIL_USER,
+      to: email,
+      subject: 'Verify your email - MARS EMPIRE',
+      html: `<p>Click <a href="${BASE_URL}/verify/${token}">here</a> to verify your account.</p>`
+    };
+    await transporter.sendMail(mailOptions);
+
+    res.send('<script>alert("Signup successful! Check your email to verify."); window.location.href="/signin";</script>');
   } catch (err) {
     console.error('Signup error:', err);
     res.status(500).send('<script>alert("Server error"); window.location.href="/signup";</script>');
   }
 });
 
-// GET /signin - Styled form
+// GET /verify/:token - Verify email
+app.get('/verify/:token', async (req, res) => {
+  try {
+    const user = await User.findOne({ verificationToken: req.params.token });
+    if (!user) return res.send('<p>Invalid token. <a href="/signup">Sign up</a></p>');
+
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    await user.save();
+
+    res.send('<p>Email verified! <a href="/signin">Sign in</a></p>');
+  } catch (err) {
+    console.error('Verification error:', err);
+    res.status(500).send('<p>Server error</p>');
+  }
+});
+
+// GET /signin - Styled form with pre-fill
 app.get('/signin', (req, res) => {
+  const saved = req.cookies?.signinData ? JSON.parse(req.cookies.signinData) : {};
   res.send(`
     <!doctype html>
     <html>
@@ -126,16 +212,16 @@ app.get('/signin', (req, res) => {
       <title>Sign In | MARS EMPIRE</title>
       <link rel="stylesheet" href="assets/css/main.css">
       <style>
-        body { background: #f4f4f4; font-family: Arial, sans-serif; }
-        main { max-width: 400px; margin: 5rem auto; padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #333; }
+        body { background: linear-gradient(135deg, #1e1e2e, #2a2a3e); color: #ffffff; font-family: 'Source Sans Pro', sans-serif; }
+        main { max-width: 400px; margin: 5rem auto; padding: 2rem; background: rgba(255,255,255,0.1); border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        h1 { text-align: center; color: #4ecdc4; }
         form { display: flex; flex-direction: column; }
         label { margin-bottom: 0.5rem; font-weight: bold; }
-        input { padding: 0.5rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 4px; }
-        button { padding: 0.75rem; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #218838; }
+        input { padding: 0.5rem; margin-bottom: 1rem; border: 1px solid #ccc; border-radius: 4px; background: #333; color: #fff; }
+        button { padding: 0.75rem; background: #4ecdc4; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #45b7aa; }
         p { text-align: center; margin-top: 1rem; }
-        a { color: #007bff; text-decoration: none; }
+        a { color: #ff6b6b; text-decoration: none; }
       </style>
     </head>
     <body>
@@ -143,20 +229,28 @@ app.get('/signin', (req, res) => {
         <h1>Sign In</h1>
         <form method="post" action="/signin">
           <label>Email</label>
-          <input name="email" type="email" required />
+          <input name="email" type="email" value="${saved.email || ''}" required aria-label="Email" />
           <label>Password</label>
-          <input name="password" type="password" required />
+          <input name="password" type="password" required aria-label="Password" />
           <button type="submit">Sign In</button>
         </form>
         <p><a href="/signup">Create an account</a></p>
         <p><a href="/">Back to Home</a></p>
       </main>
+      <script>
+        document.querySelectorAll('input').forEach(input => {
+          input.addEventListener('input', () => {
+            const data = { email: document.querySelector('[name=email]').value };
+            document.cookie = 'signinData=' + JSON.stringify(data) + '; path=/; secure; samesite=strict';
+          });
+        });
+      </script>
     </body>
     </html>
   `);
 });
 
-// POST /signin - Authenticate with styled response
+// POST /signin - Authenticate, set cookie
 app.post('/signin', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -174,29 +268,29 @@ app.post('/signin', async (req, res) => {
       return res.status(400).send('<script>alert("Invalid password"); window.location.href="/signin";</script>');
     }
 
-    const token = jwt.sign({ email: user.email }, JWT_SECRET, { expiresIn: '1d' });
-    // For demo, show token in alert and redirect home
-    res.send(`<script>alert("Signed in! Token: ${token}"); window.location.href="/";</script>`);
+    if (!user.isVerified) {
+      return res.send('<script>alert("Please verify your email first"); window.location.href="/signin";</script>');
+    }
+
+    const token = jwt.sign({ email: user.email, isVerified: user.isVerified }, JWT_SECRET, { expiresIn: '1d' });
+    res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 86400000 });
+    res.redirect('/');
   } catch (err) {
     console.error('Signin error:', err);
     res.status(500).send('<script>alert("Server error"); window.location.href="/signin";</script>');
   }
 });
 
-app.get('/profile', async (req, res) => {
-  const auth = req.headers.authorization;
-  if (!auth) return res.status(401).json({ message: 'No token' });
-
-  const token = auth.split(' ')[1];
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await User.findOne({ email: decoded.email }).select('-password');
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    res.json({ message: 'Profile loaded', user });
-  } catch (err) {
-    console.error('Profile error:', err);
-    res.status(401).json({ message: 'Invalid token' });
-  }
+// GET /profile - Protected
+app.get('/profile', requireAuth, requireVerified, async (req, res) => {
+  const user = await User.findOne({ email: req.user.email }).select('-password');
+  res.json({ user });
 });
 
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+// Logout
+app.post('/logout', (req, res) => {
+  res.clearCookie('token');
+  res.redirect('/');
+});
+
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
