@@ -21,7 +21,7 @@ app.use(express.static(path.join(__dirname)));
 const JWT_SECRET = process.env.JWT_SECRET;
 const EMAIL_USER = process.env.EMAIL_USER; // e.g., yourgmail@gmail.com
 const EMAIL_PASS = process.env.EMAIL_PASS; // app password
-const BASE_URL = process.env.BASE_URL || 'https://your-app.onrender.com'; // Update to your Render URL
+const BASE_URL = process.env.BASE_URL || https://mars-empire-mlm.onrender.com'; 
 const PORT = process.env.PORT || 3000;
 
 // Sanity checks
