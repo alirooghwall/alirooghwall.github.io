@@ -32,6 +32,10 @@ ol, ul {
 	list-style: none;
 }
 
+.button[href="/signup"] {
+  color: #ffffff !important;
+}
+
 blockquote, q {
 	quotes: none;
 }
