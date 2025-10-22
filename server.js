@@ -419,7 +419,13 @@ app.post('/signin', async (req, res) => {
     }
 
     const token = jwt.sign({ email: user.email, isVerified: user.isVerified }, JWT_SECRET, { expiresIn: '1d' });
-    res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 86400000 });
+    res.cookie('token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', // only true online, false locally
+    sameSite: 'lax', // allows browser to send cookie with links and form posts
+    maxAge: 86400000
+  });
+
     res.redirect(redirect || '/');
   } catch (err) {
     console.error('Signin error:', err);
