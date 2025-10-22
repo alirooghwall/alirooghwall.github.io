@@ -28,6 +28,27 @@ body {
 	line-height: 1;
 }
 
+.date-time-section {
+    text-align: center;
+    margin: 2rem 0;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-radius: 8px;
+}
+.date-time-section h2 {
+    color: #ffffff;
+    font-family: 'Noto Sans Arabic', sans-serif;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+#date-time-display p {
+    color: #ffffff;
+    font-family: 'Noto Sans Arabic', sans-serif;
+    font-size: 1.2rem;
+    margin: 0.5rem 0;
+    direction: rtl;
+}
+
 ol, ul {
 	list-style: none;
 }
