@@ -804,8 +804,6 @@ app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, '404.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
   // Init after server starts
   Checklist.findOne({ isPredefined: true }).then(existing => {
     if (!existing) {
@@ -820,12 +818,20 @@ app.listen(PORT, () => {
       }).save().then(() => console.log('Predefined checklists added')).catch(err => console.error('Checklist save error:', err));
     }
   }).catch(err => console.error('Checklist find error:', err));
-  User.findOne({ accountType: 'admin' }).then(admin => {
-    if (!admin) {
-      bcrypt.hash('Login@123', 10).then(hashed => {
-        new User({
+  
+  // Ensure admin account exists and is verified
+const createAdmin = async () => {
+  try {
+    const adminEmail = 'admin@marsempire.com';
+    const adminPassword = 'Login@123';
+
+    const hashed = await bcrypt.hash(adminPassword, 10);
+
+    await User.findOneAndUpdate(
+      { email: adminEmail },
+      {
+        $setOnInsert: {
           name: 'Admin',
-          email: 'admin@marsempire.com',
           password: hashed,
           accountType: 'admin',
           mlmLevel: 'expert',
@@ -833,9 +839,23 @@ app.listen(PORT, () => {
           leaderName: 'None',
           userId: 'ADMIN001',
           status: 'approved',
-          isVerified: true
-        }).save().then(() => console.log('Admin user created: admin@marsempire.com / admin123')).catch(err => console.error('Admin save error:', err));
-      }).catch(err => console.error('Hash error:', err));
-    }
-  }).catch(err => console.error('Admin find error:', err));
+          isVerified: true,
+          createdAt: new Date()
+        }
+      },
+      { upsert: true }
+    );
+
+    console.log(`✅ Admin account ensured: ${adminEmail} / ${adminPassword}`);
+  } catch (err) {
+    console.error('❌ Admin creation error:', err);
+  }
+};
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);  
+
+// Call this after server starts
+createAdmin();
+
 });
