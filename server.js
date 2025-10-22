@@ -684,63 +684,78 @@ app.post('/tree/verify/:id', requireAuth, requireAdmin, async (req, res) => {
   res.redirect('/tree');
 });
 
-// Rules page
-app.get('/rules', (req, res) => {
+// RULES PAGE
+app.get('/rules', requireAuth, requireVerified, (req, res) => {
   res.send(`
     <!doctype html>
     <html>
     <head>
       <meta charset="utf-8">
-      <title>Rules & Regulations | MARS EMPIRE</title>
-      <link rel="stylesheet" href="assets/css/main.css">
-    </head>
-    <body>
-      <main style="max-width:800px;margin:3rem auto;padding:1rem;">
-        <h1>Company Rules and Regulations</h1>
-        <h2>Leadership</h2>
-        <p>Leaders must guide their directs ethically.</p>
-        <h2>Tips</h2>
-        <p>Always verify information and promote responsibly.</p>
-        <a href="/">Back to Home</a>
-      </main>
-    </body>
-    </html>
-  `);
-});
-  const user = await User.findOne({ email: req.user.email }).select('-password');
-  res.send(`
-    <!doctype html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <title>Profile | MARS EMPIRE</title>
+      <title>Rules | MARS EMPIRE</title>
       <link rel="stylesheet" href="assets/css/main.css">
     </head>
     <body>
       <main style="max-width:600px;margin:3rem auto;padding:1rem;">
-        <h1>Welcome, ${user.name}!</h1>
-        <p>Email: ${user.email}</p>
-        <p>User ID: ${user.userId}</p>
-        <p>Account Type: ${user.accountType}</p>
-        <p>MLM Level: ${user.mlmLevel}</p>
-        <p>Phone: ${user.phone}</p>
-        <p>Leader: ${user.leaderName}</p>
-        <p>Status: ${user.status}</p>
-        <p>Verified: ${user.isVerified ? 'Yes' : 'No'}</p>
-        <form method="post" action="/update-profile">
-          <input name="name" value="${user.name}" required />
-          <input name="email" value="${user.email}" type="email" required />
-          <input name="phone" value="${user.phone}" />
-          <input name="leaderName" value="${user.leaderName}" />
-          <button type="submit">Update</button>
-        </form>
-        <a href="/logout">Logout</a>
-        ${user.accountType === 'admin' ? '<a href="/admin">Admin Dashboard</a>' : ''}
+        <h1>Rules and Guidelines</h1>
+        <p>Follow these rules to maintain your account in good standing.</p>
+        <ul>
+          <li>Respect other members and maintain professionalism.</li>
+          <li>Do not share your referral links publicly.</li>
+          <li>Withdrawals are only processed for verified users.</li>
+          <li>Commissions depend on active downlines.</li>
+        </ul>
+        <a href="/profile">Back to Profile</a>
       </main>
     </body>
     </html>
   `);
 });
+
+
+// PROFILE PAGE
+app.get('/profile', requireAuth, requireVerified, async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.user.email }).select('-password');
+
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
+
+    res.send(`
+      <!doctype html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Profile | MARS EMPIRE</title>
+        <link rel="stylesheet" href="assets/css/main.css">
+      </head>
+      <body>
+        <main style="max-width:600px;margin:3rem auto;padding:1rem;">
+          <h1>Welcome, ${user.name}!</h1>
+          <p>Email: ${user.email}</p>
+          <p>Account Type: ${user.accountType}</p>
+          <p>MLM Level: ${user.mlmLevel}</p>
+          <p>Phone: ${user.phone}</p>
+          <p>Leader: ${user.leaderName}</p>
+          <p>Status: ${user.status}</p>
+          <a href="/checklists">Checklists</a> |
+          <a href="/tree">MLM Tree</a> |
+          <a href="/rules">Rules</a>
+        </main>
+      </body>
+      </html>
+    `);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
+});
+
+
+// START SERVER
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
 
 app.post('/update-profile', requireAuth, async (req, res) => {
   try {
@@ -806,7 +821,7 @@ app.listen(PORT, () => {
   }).catch(err => console.error('Checklist find error:', err));
   User.findOne({ accountType: 'admin' }).then(admin => {
     if (!admin) {
-      bcrypt.hash('admin123', 10).then(hashed => {
+      bcrypt.hash('Login@123', 10).then(hashed => {
         new User({
           name: 'Admin',
           email: 'admin@marsempire.com',
