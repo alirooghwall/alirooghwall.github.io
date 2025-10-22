@@ -19,8 +19,8 @@
 		<meta property="og:url" content="MARS EMPIRE://alirooghwall.github.io/" />
 		<meta name="twitter:card" content="summary_large_image" />
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="stylesheet" href="assets/css/main.css" />
+		<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&display=swap" rel="stylesheet">
 		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 	</head>
 	<body class="is-preload">
@@ -36,21 +36,15 @@
 
 				<!-- Intro -->
 					<div id="intro">
-					
-					
-						
 						<h1>PROJECT: <br />
 						MARS EMPIRE</h1>
+						<h6>---</h6>
 						
-						<h3>MULTI-LEVEL MARKETING COMPANION</a></h3>
+						<h4>MULTI-LEVEL MARKETING COMPANION</a></h4>
 
-
-
-						<h6>-----------------</h6>
-
-
+						<!--
 						<p>Your personal resource for learning, exploring, and getting instant answers about BizMLM. Ask questions, explore guides, and chat with our helpful assistant anytime!</a>.</p>
-						
+						-->
 						<ul class="actions">
 							<li><a href="#header" class="button icon solid solo fa-arrow-down scrolly">Continue</a></li>
 						</ul>
@@ -99,12 +93,21 @@
 						<!-- Featured Post -->
 							<article class="post featured">
 								<header class="major">
-									<span class="date">WELCOME</span>
+									
+									
+									
 									<h2><a href="#">- خوش آمدید -</a></h2>
-									<p>Aenean ornare velit lacus varius enim ullamcorper proin aliquam<br />
-									facilisis ante sed etiam magna interdum congue. Lorem ipsum dolor<br />
-									amet nullam sed etiam veroeros.</p>
+									<p>منبع شخصی شما برای آموختن، جست‌وجو و دریافت پاسخ‌های فوری</p>
 								</header>
+
+							<section class="date-time-section">
+								<h2>زمان و تاریخ</h2>
+								<div id="date-time-display">
+									<p id="time">وقت: بارگذاری...</p>
+									<p id="gregorian">تاریخ میلادی: بارگذاری...</p>
+									<p id="jalaali">تاریخ هجری شمسی: بارگذاری...</p>
+								</div>
+							</section>
 								<a href="#" class="image main"><img src="images/pic01.jpg" alt="" /></a>
 								<ul class="actions special">
 									<li><a href="#" class="button large">Full Story</a></li>
@@ -230,7 +233,7 @@
 						<section class="split contact">
 							<section class="alt">
 								<h3>Address</h3>
-								<p>Kabul<br />
+								<p>Khair Khana, Kabul<br />
 								Afghanistan</p>
 							</section>
 							<section>
@@ -239,7 +242,7 @@
 							</section>
 							<section>
 								<h3>Email</h3>
-								<p><a href="#">info@untitled.tld</a></p>
+								<p><a href="#">Aliroghwal@gmail.com</a></p>
 							</section>
 							<section>
 								<h3>Social</h3>
@@ -255,7 +258,7 @@
 
 				<!-- Copyright -->
 					<div id="copyright">
-						<ul><li>&copy; Biz MLM</li><li>AFG-United Group <a href="MARS EMPIRE://html5up.net"></a></li></ul>
+						<ul><li>&copy; Ali </li><li>MARS EMPIRE<a href="MARS EMPIRE://html5up.net"></a></li></ul>
 					</div>
 
 			</div>
@@ -269,7 +272,20 @@
 			<script src="assets/js/util.js"></script>
 			<script src="assets/js/main.js"></script>
 
+			<script>
+				function updateDateTime() {
+					const now = new Date();
+					const timeString = now.toLocaleTimeString('en-US', { hour12: false });
+					const gregorianString = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+					const jalaali = jalaali.toJalaali(now.getFullYear(), now.getMonth() + 1, now.getDate());
+					const jalaaliString = `${jalaali.jy}/${jalaali.jm}/${jalaali.jd}`;
 
-			
-	</body>
+					document.getElementById('time').textContent = `وقت: ${timeString}`;
+					document.getElementById('gregorian').textContent = `تاریخ میلادی: ${gregorianString}`;
+					document.getElementById('jalaali').textContent = `تاریخ هجری شمسی: ${jalaaliString}`;
+				}
+
+				updateDateTime();
+				setInterval(updateDateTime, 1000);
+			</script>
 </html>
