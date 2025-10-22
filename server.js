@@ -758,11 +758,6 @@ app.get('/profile', requireAuth, requireVerified, async (req, res) => {
 });
 
 
-// START SERVER
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-
-
 app.post('/update-profile', requireAuth, async (req, res) => {
   try {
     const { name, email, phone, leaderName } = req.body;
