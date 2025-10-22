@@ -822,7 +822,7 @@ app.use((req, res) => {
   // Ensure admin account exists and is verified
 const createAdmin = async () => {
   try {
-    const adminEmail = 'admin@marsempire.com';
+    const adminEmail = 'alirooghwall999@gmail.com';
     const adminPassword = 'Login@123';
 
     const hashed = await bcrypt.hash(adminPassword, 10);
