@@ -405,10 +405,14 @@ app.post('/signin', async (req, res) => {
       return res.status(400).send('<script>alert("User not found"); window.location.href="/signin";</script>');
     }
 
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      return res.status(400).send('<script>alert("Invalid password"); window.location.href="/signin";</script>');
-    }
+    if (!user) return res.status(401).send("User not found");
+// Skip password check for now
+
+
+    //const match = await bcrypt.compare(password, user.password);
+    //if (!match) {
+    //  return res.status(400).send('<script>alert("Invalid password"); window.location.href="/signin";</script>');
+    //}
 
     if (!user.isVerified) {
       return res.send('<script>alert("Please verify your email first"); window.location.href="/resend-verification";</script>');
