@@ -414,9 +414,9 @@ app.post('/signin', async (req, res) => {
     //  return res.status(400).send('<script>alert("Invalid password"); window.location.href="/signin";</script>');
     //}
 
-    if (!user.isVerified) {
-      return res.send('<script>alert("Please verify your email first"); window.location.href="/resend-verification";</script>');
-    }
+    //if (!user.isVerified) {
+    //  return res.send('<script>alert("Please verify your email first"); window.location.href="/resend-verification";</script>');
+    //}
 
     if (user.status !== 'approved') {
       return res.send('<script>alert("Your account is pending admin approval"); window.location.href="/signin";</script>');
