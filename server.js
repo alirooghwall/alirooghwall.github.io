@@ -105,10 +105,10 @@ const requireAuth = (req, res, next) => {
 };
 
 // Middleware to check verification
-const requireVerified = (req, res, next) => {
-  if (!req.user.isVerified) return res.send('<p>Please verify your email first. <a href="/resend-verification">Resend verification</a></p>');
-  next();
-};
+// const requireVerified = (req, res, next) => {
+//   if (!req.user.isVerified) return res.send('<p>Please verify your email first. <a href="/resend-verification">Resend verification</a></p>');
+//   next();
+// };
 
 // Middleware to check admin
 const requireAdmin = (req, res, next) => {
@@ -124,11 +124,11 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.get('/elements', requireAuth, requireVerified, (req, res) => {
+app.get('/elements', requireAuth, /*requireVerified,*/ (req, res) => {
   res.sendFile(path.join(__dirname, 'elements.html'));
 });
 
-app.get('/generic', requireAuth, requireVerified, (req, res) => {
+app.get('/generic', requireAuth, /*requireVerified,*/ (req, res) => {
   res.sendFile(path.join(__dirname, 'generic.html'));
 });
 
@@ -237,18 +237,18 @@ app.post('/signup', async (req, res) => {
     const hashed = await bcrypt.hash(password, 10);
     const token = crypto.randomBytes(32).toString('hex');
     const userId = 'ME' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase(); // System-generated ID
-    const newUser = new User({ name, email, password: hashed, accountType, mlmLevel, phone, leaderName, userId, status: 'pending', verificationToken: token });
+    const newUser = new User({ name, email, password: hashed, accountType, mlmLevel, phone, leaderName, userId, status: 'pending', /*verificationToken: token,*/ isVerified: true });
     await newUser.save();
 
-    const mailOptions = {
-      from: EMAIL_USER,
-      to: email,
-      subject: 'Verify your email - MARS EMPIRE',
-      html: `<p>Click <a href="${BASE_URL}/verify/${token}">here</a> to verify your account. Your account will be reviewed by an admin before approval.</p>`
-    };
-    await transporter.sendMail(mailOptions);
+    // const mailOptions = {
+    //   from: EMAIL_USER,
+    //   to: email,
+    //   subject: 'Verify your email - MARS EMPIRE',
+    //   html: `<p>Click <a href="${BASE_URL}/verify/${token}">here</a> to verify your account. Your account will be reviewed by an admin before approval.</p>`
+    // };
+    // await transporter.sendMail(mailOptions);
 
-    res.send('<script>alert("Signup successful! Check your email to verify. Your account is pending admin approval."); window.location.href="/signin";</script>');
+    res.send('<script>alert("Signup successful! /*Check your email to verify.*/ Your account is pending admin approval."); window.location.href="/signin";</script>');
   } catch (err) {
     console.error('Signup error:', err);
     res.status(500).send('<script>alert("Server error"); window.location.href="/signup";</script>');
@@ -414,13 +414,13 @@ app.post('/signin', async (req, res) => {
     //  return res.status(400).send('<script>alert("Invalid password"); window.location.href="/signin";</script>');
     //}
 
-   // if (!user.isVerified) {
-   //   return res.send('<script>alert("Please verify your email first"); window.location.href="/resend-verification";</script>');
-   // }
+    // if (!user.isVerified) {
+    //   return res.send('<script>alert("Please verify your email first"); window.location.href="/resend-verification";</script>');
+    // }
 
-   // if (user.status !== 'approved') {
-   //   return res.send('<script>alert("Your account is pending admin approval"); window.location.href="/signin";</script>');
-   // }
+    if (user.status !== 'approved') {
+      return res.send('<script>alert("Your account is pending admin approval"); window.location.href="/signin";</script>');
+    }
 
     const token = jwt.sign({ email: user.email, isVerified: user.isVerified }, JWT_SECRET, { expiresIn: '1d' });
     res.cookie('token', token, {
@@ -527,7 +527,7 @@ app.post('/reset-password/:token', async (req, res) => {
 });
 
 // Admin dashboard
-app.get('/admin', requireAuth, requireVerified, requireAdmin, async (req, res) => {
+app.get('/admin', requireAuth, /*requireVerified,*/ requireAdmin, async (req, res) => {
   const pendingUsers = await User.find({ status: 'pending' }).select('name email userId accountType mlmLevel phone leaderName createdAt');
   const allUsers = await User.find({}).select('name email userId accountType status');
   res.send(`
@@ -576,7 +576,7 @@ app.post('/admin/reject/:id', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // Checklists
-app.get('/checklists', requireAuth, requireVerified, async (req, res) => {
+app.get('/checklists', requireAuth, /*requireVerified,*/ async (req, res) => {
   const userChecklists = await Checklist.find({ userId: req.user.email });
   const predefined = await Checklist.find({ isPredefined: true });
   res.send(`
@@ -653,7 +653,7 @@ app.post('/checklists/update', requireAuth, async (req, res) => {
 });
 
 // Tree view
-app.get('/tree', requireAuth, requireVerified, async (req, res) => {
+app.get('/tree', requireAuth, /*requireVerified,*/ async (req, res) => {
   const trees = await Tree.find({ verified: true }).populate('userId leaderId');
   // Simple list for now, can use D3 later
   res.send(`
@@ -695,7 +695,7 @@ app.post('/tree/verify/:id', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // RULES PAGE
-app.get('/rules', requireAuth, requireVerified, (req, res) => {
+app.get('/rules', requireAuth, /*requireVerified,*/ (req, res) => {
   res.send(`
     <!doctype html>
     <html>
@@ -723,7 +723,7 @@ app.get('/rules', requireAuth, requireVerified, (req, res) => {
 
 
 // PROFILE PAGE
-app.get('/profile', requireAuth, requireVerified, async (req, res) => {
+app.get('/profile', requireAuth, /*requireVerified,*/ async (req, res) => {
   try {
     const user = await User.findOne({ email: req.user.email }).select('-password');
 
