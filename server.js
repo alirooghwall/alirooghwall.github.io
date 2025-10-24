@@ -105,10 +105,10 @@ const requireAuth = (req, res, next) => {
 };
 
 // Middleware to check verification
-// const requireVerified = (req, res, next) => {
-//   if (!req.user.isVerified) return res.send('<p>Please verify your email first. <a href="/resend-verification">Resend verification</a></p>');
-//   next();
-// };
+const requireVerified = (req, res, next) => {
+  if (!req.user.isVerified) return res.send('<p>Please verify your email first. <a href="/resend-verification">Resend verification</a></p>');
+  next();
+};
 
 // Middleware to check admin
 const requireAdmin = (req, res, next) => {
@@ -124,11 +124,11 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.get('/elements', requireAuth, /*requireVerified,*/ (req, res) => {
+app.get('/elements', requireAuth, requireVerified, (req, res) => {
   res.sendFile(path.join(__dirname, 'elements.html'));
 });
 
-app.get('/generic', requireAuth, /*requireVerified,*/ (req, res) => {
+app.get('/generic', requireAuth, requireVerified, (req, res) => {
   res.sendFile(path.join(__dirname, 'generic.html'));
 });
 
@@ -237,18 +237,18 @@ app.post('/signup', async (req, res) => {
     const hashed = await bcrypt.hash(password, 10);
     const token = crypto.randomBytes(32).toString('hex');
     const userId = 'ME' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase(); // System-generated ID
-    const newUser = new User({ name, email, password: hashed, accountType, mlmLevel, phone, leaderName, userId, status: 'pending', /*verificationToken: token,*/ isVerified: true });
+    const newUser = new User({ name, email, password: hashed, accountType, mlmLevel, phone, leaderName, userId, status: 'pending', verificationToken: token });
     await newUser.save();
 
-    // const mailOptions = {
-    //   from: EMAIL_USER,
-    //   to: email,
-    //   subject: 'Verify your email - MARS EMPIRE',
-    //   html: `<p>Click <a href="${BASE_URL}/verify/${token}">here</a> to verify your account. Your account will be reviewed by an admin before approval.</p>`
-    // };
-    // await transporter.sendMail(mailOptions);
+    const mailOptions = {
+      from: EMAIL_USER,
+      to: email,
+      subject: 'Verify your email - MARS EMPIRE',
+      html: `<p>Click <a href="${BASE_URL}/verify/${token}">here</a> to verify your account. Your account will be reviewed by an admin before approval.</p>`
+    };
+    await transporter.sendMail(mailOptions);
 
-    res.send('<script>alert("Signup successful! /*Check your email to verify.*/ Your account is pending admin approval."); window.location.href="/signin";</script>');
+    res.send('<script>alert("Signup successful! Check your email to verify. Your account is pending admin approval."); window.location.href="/signin";</script>');
   } catch (err) {
     console.error('Signup error:', err);
     res.status(500).send('<script>alert("Server error"); window.location.href="/signup";</script>');
@@ -405,31 +405,21 @@ app.post('/signin', async (req, res) => {
       return res.status(400).send('<script>alert("User not found"); window.location.href="/signin";</script>');
     }
 
-    if (!user) return res.status(401).send("User not found");
-// Skip password check for now
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return res.status(400).send('<script>alert("Invalid password"); window.location.href="/signin";</script>');
+    }
 
-
-    //const match = await bcrypt.compare(password, user.password);
-    //if (!match) {
-    //  return res.status(400).send('<script>alert("Invalid password"); window.location.href="/signin";</script>');
-    //}
-
-    // if (!user.isVerified) {
-    //   return res.send('<script>alert("Please verify your email first"); window.location.href="/resend-verification";</script>');
-    // }
+    if (!user.isVerified) {
+      return res.send('<script>alert("Please verify your email first"); window.location.href="/resend-verification";</script>');
+    }
 
     if (user.status !== 'approved') {
       return res.send('<script>alert("Your account is pending admin approval"); window.location.href="/signin";</script>');
     }
 
-    const token = jwt.sign({ email: user.email, isVerified: user.isVerified }, JWT_SECRET, { expiresIn: '1d' });
-    res.cookie('token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // only true online, false locally
-    sameSite: 'lax', // allows browser to send cookie with links and form posts
-    maxAge: 86400000
-  });
-
+    const token = jwt.sign({ email: user.email, isVerified: user.isVerified, accountType: user.accountType }, JWT_SECRET, { expiresIn: '1d' });
+    res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 86400000 });
     res.redirect(redirect || '/');
   } catch (err) {
     console.error('Signin error:', err);
@@ -527,7 +517,7 @@ app.post('/reset-password/:token', async (req, res) => {
 });
 
 // Admin dashboard
-app.get('/admin', requireAuth, /*requireVerified,*/ requireAdmin, async (req, res) => {
+app.get('/admin', requireAuth, requireVerified, requireAdmin, async (req, res) => {
   const pendingUsers = await User.find({ status: 'pending' }).select('name email userId accountType mlmLevel phone leaderName createdAt');
   const allUsers = await User.find({}).select('name email userId accountType status');
   res.send(`
@@ -576,7 +566,7 @@ app.post('/admin/reject/:id', requireAuth, requireAdmin, async (req, res) => {
 });
 
 // Checklists
-app.get('/checklists', requireAuth, /*requireVerified,*/ async (req, res) => {
+app.get('/checklists', requireAuth, requireVerified, async (req, res) => {
   const userChecklists = await Checklist.find({ userId: req.user.email });
   const predefined = await Checklist.find({ isPredefined: true });
   res.send(`
@@ -653,7 +643,7 @@ app.post('/checklists/update', requireAuth, async (req, res) => {
 });
 
 // Tree view
-app.get('/tree', requireAuth, /*requireVerified,*/ async (req, res) => {
+app.get('/tree', requireAuth, requireVerified, async (req, res) => {
   const trees = await Tree.find({ verified: true }).populate('userId leaderId');
   // Simple list for now, can use D3 later
   res.send(`
@@ -694,73 +684,66 @@ app.post('/tree/verify/:id', requireAuth, requireAdmin, async (req, res) => {
   res.redirect('/tree');
 });
 
-// RULES PAGE
-app.get('/rules', requireAuth, /*requireVerified,*/ (req, res) => {
+// Rules page
+app.get('/rules', (req, res) => {
   res.send(`
     <!doctype html>
     <html>
     <head>
       <meta charset="utf-8">
-      <title>Rules | MARS EMPIRE</title>
+      <title>Rules & Regulations | MARS EMPIRE</title>
       <link rel="stylesheet" href="assets/css/main.css">
     </head>
     <body>
-      <main style="max-width:600px;margin:3rem auto;padding:1rem;">
-        <h1>Rules and Guidelines</h1>
-        <p>Follow these rules to maintain your account in good standing.</p>
-        <ul>
-          <li>Respect other members and maintain professionalism.</li>
-          <li>Do not share your referral links publicly.</li>
-          <li>Withdrawals are only processed for verified users.</li>
-          <li>Commissions depend on active downlines.</li>
-        </ul>
-        <a href="/profile">Back to Profile</a>
+      <main style="max-width:800px;margin:3rem auto;padding:1rem;">
+        <h1>Company Rules and Regulations</h1>
+        <h2>Leadership</h2>
+        <p>Leaders must guide their directs ethically.</p>
+        <h2>Tips</h2>
+        <p>Always verify information and promote responsibly.</p>
+        <a href="/">Back to Home</a>
       </main>
     </body>
     </html>
   `);
 });
 
-
-// PROFILE PAGE
-app.get('/profile', requireAuth, /*requireVerified,*/ async (req, res) => {
-  try {
-    const user = await User.findOne({ email: req.user.email }).select('-password');
-
-    if (!user) {
-      return res.status(404).send('User not found');
-    }
-
-    res.send(`
-      <!doctype html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Profile | MARS EMPIRE</title>
-        <link rel="stylesheet" href="assets/css/main.css">
-      </head>
-      <body>
-        <main style="max-width:600px;margin:3rem auto;padding:1rem;">
-          <h1>Welcome, ${user.name}!</h1>
-          <p>Email: ${user.email}</p>
-          <p>Account Type: ${user.accountType}</p>
-          <p>MLM Level: ${user.mlmLevel}</p>
-          <p>Phone: ${user.phone}</p>
-          <p>Leader: ${user.leaderName}</p>
-          <p>Status: ${user.status}</p>
-          <a href="/checklists">Checklists</a> |
-          <a href="/tree">MLM Tree</a> |
-          <a href="/rules">Rules</a>
-        </main>
-      </body>
-      </html>
-    `);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
+// Profile page
+app.get('/profile', requireAuth, requireVerified, async (req, res) => {
+  const user = await User.findOne({ email: req.user.email }).select('-password');
+  res.send(`
+    <!doctype html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Profile | MARS EMPIRE</title>
+      <link rel="stylesheet" href="assets/css/main.css">
+    </head>
+    <body>
+      <main style="max-width:600px;margin:3rem auto;padding:1rem;">
+        <h1>Welcome, ${user.name}!</h1>
+        <p>Email: ${user.email}</p>
+        <p>User ID: ${user.userId}</p>
+        <p>Account Type: ${user.accountType}</p>
+        <p>MLM Level: ${user.mlmLevel}</p>
+        <p>Phone: ${user.phone}</p>
+        <p>Leader: ${user.leaderName}</p>
+        <p>Status: ${user.status}</p>
+        <p>Verified: ${user.isVerified ? 'Yes' : 'No'}</p>
+        <form method="post" action="/update-profile">
+          <input name="name" value="${user.name}" required />
+          <input name="email" value="${user.email}" type="email" required />
+          <input name="phone" value="${user.phone}" />
+          <input name="leaderName" value="${user.leaderName}" />
+          <button type="submit">Update</button>
+        </form>
+        <a href="/logout">Logout</a>
+        ${user.accountType === 'admin' ? '<a href="/admin">Admin Dashboard</a>' : ''}
+      </main>
+    </body>
+    </html>
+  `);
 });
-
 
 app.post('/update-profile', requireAuth, async (req, res) => {
   try {
@@ -808,6 +791,8 @@ app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, '404.html'));
 });
 
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
   // Init after server starts
   Checklist.findOne({ isPredefined: true }).then(existing => {
     if (!existing) {
@@ -822,20 +807,12 @@ app.use((req, res) => {
       }).save().then(() => console.log('Predefined checklists added')).catch(err => console.error('Checklist save error:', err));
     }
   }).catch(err => console.error('Checklist find error:', err));
-  
-  // Ensure admin account exists and is verified
-const createAdmin = async () => {
-  try {
-    const adminEmail = 'alirooghwall999@gmail.com';
-    const adminPassword = 'Login@123';
-
-    const hashed = await bcrypt.hash(adminPassword, 10);
-
-    await User.findOneAndUpdate(
-      { email: adminEmail },
-      {
-        $setOnInsert: {
+  User.findOne({ accountType: 'admin' }).then(admin => {
+    if (!admin) {
+      bcrypt.hash('admin123', 10).then(hashed => {
+        new User({
           name: 'Admin',
+          email: 'admin@alirooghwall.github.io',
           password: hashed,
           accountType: 'admin',
           mlmLevel: 'expert',
@@ -843,23 +820,9 @@ const createAdmin = async () => {
           leaderName: 'None',
           userId: 'ADMIN001',
           status: 'approved',
-          isVerified: true,
-          createdAt: new Date()
-        }
-      },
-      { upsert: true }
-    );
-
-    console.log(`✅ Admin account ensured: ${adminEmail} / ${adminPassword}`);
-  } catch (err) {
-    console.error('❌ Admin creation error:', err);
-  }
-};
-
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);  
-
-// Call this after server starts
-createAdmin();
-
+          isVerified: true
+        }).save().then(() => console.log('Admin user created: admin@alirooghwall.github.io / admin123')).catch(err => console.error('Admin save error:', err));
+      }).catch(err => console.error('Hash error:', err));
+    }
+  }).catch(err => console.error('Admin find error:', err));
 });

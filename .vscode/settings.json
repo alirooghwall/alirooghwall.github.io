@@ -1,5 +1,5 @@
 {
     "chat.agent.maxRequests": 100,
-    "chat.agentSessionsViewLocation": "disabled",
+    "chat.agentSessionsViewLocation": "view",
     "chat.allowAnonymousAccess": true
 }
