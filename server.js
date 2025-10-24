@@ -120,6 +120,99 @@ const requireAdmin = (req, res, next) => {
 app.get('/health', (req, res) => res.send('OK'));
 
 // Routes
+// Modal endpoints for sign in/sign up forms
+app.get('/modal/signin', (req, res) => {
+  res.send(`
+    <form method="post" action="/signin" id="modalSigninForm">
+      <div class="input-group">
+        <i class="fas fa-envelope"></i>
+        <input name="email" type="email" placeholder="Email" required aria-label="Email" />
+      </div>
+      <div class="input-group">
+        <i class="fas fa-lock"></i>
+        <input name="password" type="password" placeholder="Password" required aria-label="Password" />
+      </div>
+      <button type="submit" id="modalSigninBtn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+      <p class="forgot"><a href="/forgot-password" target="_blank">Forgot password?</a></p>
+      <p><a href="/signup" target="_blank">Create an account</a></p>
+    </form>
+    <script>
+      document.getElementById('modalSigninForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('modalSigninBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing In...';
+        const formData = new FormData(this);
+        const res = await fetch('/signin', { method: 'POST', body: formData });
+        const text = await res.text();
+        if (text.includes('window.location.href')) {
+          window.location.reload();
+        } else {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+          document.getElementById('signInFormContainer').innerHTML = text;
+        }
+      };
+    </script>
+  `);
+});
+
+app.get('/modal/signup', (req, res) => {
+  res.send(`
+    <form method="post" action="/signup" id="modalSignupForm">
+      <div class="input-group">
+        <i class="fas fa-user"></i>
+        <input name="name" placeholder="Name" required aria-label="Name" />
+      </div>
+      <div class="input-group">
+        <i class="fas fa-envelope"></i>
+        <input name="email" type="email" placeholder="Email" required aria-label="Email" />
+      </div>
+      <div class="input-group">
+        <i class="fas fa-lock"></i>
+        <input name="password" type="password" placeholder="Password (min 8 chars)" required aria-label="Password" minlength="8" />
+      </div>
+      <div class="input-group">
+        <i class="fas fa-user-tag"></i>
+        <select name="accountType" required aria-label="Account Type">
+          <option value="student">Student</option>
+          <option value="participant">Participant</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <i class="fas fa-level-up-alt"></i>
+        <input name="mlmLevel" placeholder="MLM Level (e.g., beginner)" required aria-label="MLM Level" />
+      </div>
+      <div class="input-group">
+        <i class="fas fa-phone"></i>
+        <input name="phone" placeholder="Phone" required aria-label="Phone" />
+      </div>
+      <div class="input-group">
+        <i class="fas fa-user-friends"></i>
+        <input name="leaderName" placeholder="Leader's Name" required aria-label="Leader's Name" />
+      </div>
+      <button type="submit" id="modalSignupBtn"><i class="fas fa-paper-plane"></i> Create Account</button>
+    </form>
+    <script>
+      document.getElementById('modalSignupForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('modalSignupBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing Up...';
+        const formData = new FormData(this);
+        const res = await fetch('/signup', { method: 'POST', body: formData });
+        const text = await res.text();
+        if (text.includes('window.location.href')) {
+          window.location.reload();
+        } else {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-paper-plane"></i> Create Account';
+          document.getElementById('signUpFormContainer').innerHTML = text;
+        }
+      };
+    </script>
+  `);
+});
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
