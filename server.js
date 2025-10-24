@@ -419,7 +419,7 @@ app.post('/signin', async (req, res) => {
     }
 
     const token = jwt.sign({ email: user.email, isVerified: user.isVerified, accountType: user.accountType }, JWT_SECRET, { expiresIn: '1d' });
-    res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'strict', maxAge: 86400000 });
+    res.cookie('token', token, { httpOnly: true, secure: false, sameSite: 'strict', maxAge: 86400000 });
     res.redirect(redirect || '/');
   } catch (err) {
     console.error('Signin error:', err);
