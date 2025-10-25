@@ -610,9 +610,12 @@ app.post('/reset-password/:token', async (req, res) => {
 });
 
 // Admin dashboard
+
+// Admin dashboard with CRUD for users and tree
 app.get('/admin', requireAuth, requireVerified, requireAdmin, async (req, res) => {
-  const pendingUsers = await User.find({ status: 'pending' }).select('name email userId accountType mlmLevel phone leaderName createdAt');
-  const allUsers = await User.find({}).select('name email userId accountType status');
+  const pendingUsers = await User.find({ status: 'pending' }).select('name email userId accountType mlmLevel phone leaderName createdAt _id');
+  const allUsers = await User.find({}).select('name email userId accountType status mlmLevel phone leaderName _id');
+  const treeConnections = await Tree.find({}).select('userId leaderId verified _id');
   res.send(`
     <!doctype html>
     <html>
@@ -620,6 +623,10 @@ app.get('/admin', requireAuth, requireVerified, requireAdmin, async (req, res) =
       <meta charset="utf-8">
       <title>Admin Dashboard | MARS EMPIRE</title>
       <link rel="stylesheet" href="assets/css/main.css">
+      <style>
+        .crud-btn { margin-left: 0.5rem; }
+        input, select { margin: 0.2rem; }
+      </style>
     </head>
     <body>
       <main style="max-width:1200px;margin:3rem auto;padding:1rem;">
@@ -627,25 +634,105 @@ app.get('/admin', requireAuth, requireVerified, requireAdmin, async (req, res) =
         <h2>Pending Approvals</h2>
         <ul>
           ${pendingUsers.map(u => `
-            <li>${u.name} (${u.email}) - ${u.accountType} - ${u.mlmLevel} - ${u.phone} - Leader: ${u.leaderName}
+            <li>
+              <form method="post" action="/admin/edit-user/${u._id}" style="display:inline;">
+                <input name="name" value="${u.name}" required />
+                <input name="email" value="${u.email}" required />
+                <input name="phone" value="${u.phone}" />
+                <input name="leaderName" value="${u.leaderName}" />
+                <select name="accountType">
+                  <option value="student" ${u.accountType==='student'?'selected':''}>Student</option>
+                  <option value="participant" ${u.accountType==='participant'?'selected':''}>Participant</option>
+                  <option value="admin" ${u.accountType==='admin'?'selected':''}>Admin</option>
+                </select>
+                <input name="mlmLevel" value="${u.mlmLevel}" />
+                <button type="submit" class="crud-btn">Edit</button>
+              </form>
               <form method="post" action="/admin/approve/${u._id}" style="display:inline;">
                 <button type="submit">Approve</button>
               </form>
               <form method="post" action="/admin/reject/${u._id}" style="display:inline;">
                 <button type="submit">Reject</button>
               </form>
+              <form method="post" action="/admin/delete-user/${u._id}" style="display:inline;">
+                <button type="submit" class="crud-btn" onclick="return confirm('Delete user?')">Delete</button>
+              </form>
             </li>
           `).join('')}
         </ul>
         <h2>All Users</h2>
         <ul>
-          ${allUsers.map(u => `<li>${u.name} (${u.email}) - ${u.accountType} - ${u.status}</li>`).join('')}
+          ${allUsers.map(u => `
+            <li>
+              <form method="post" action="/admin/edit-user/${u._id}" style="display:inline;">
+                <input name="name" value="${u.name}" required />
+                <input name="email" value="${u.email}" required />
+                <input name="phone" value="${u.phone}" />
+                <input name="leaderName" value="${u.leaderName}" />
+                <select name="accountType">
+                  <option value="student" ${u.accountType==='student'?'selected':''}>Student</option>
+                  <option value="participant" ${u.accountType==='participant'?'selected':''}>Participant</option>
+                  <option value="admin" ${u.accountType==='admin'?'selected':''}>Admin</option>
+                </select>
+                <input name="mlmLevel" value="${u.mlmLevel}" />
+                <button type="submit" class="crud-btn">Edit</button>
+              </form>
+              <form method="post" action="/admin/delete-user/${u._id}" style="display:inline;">
+                <button type="submit" class="crud-btn" onclick="return confirm('Delete user?')">Delete</button>
+              </form>
+            </li>
+          `).join('')}
+        </ul>
+        <h2>Tree Connections</h2>
+        <ul>
+          ${treeConnections.map(t => `
+            <li>
+              <form method="post" action="/admin/edit-tree/${t._id}" style="display:inline;">
+                <input name="userId" value="${t.userId}" required />
+                <input name="leaderId" value="${t.leaderId}" />
+                <select name="verified">
+                  <option value="true" ${t.verified?'selected':''}>Verified</option>
+                  <option value="false" ${!t.verified?'selected':''}>Not Verified</option>
+                </select>
+                <button type="submit" class="crud-btn">Edit</button>
+              </form>
+              <form method="post" action="/admin/delete-tree/${t._id}" style="display:inline;">
+                <button type="submit" class="crud-btn" onclick="return confirm('Delete tree connection?')">Delete</button>
+              </form>
+            </li>
+          `).join('')}
         </ul>
         <a href="/profile">Back to Profile</a>
       </main>
     </body>
     </html>
   `);
+});
+
+// Admin edit user
+app.post('/admin/edit-user/:id', requireAuth, requireAdmin, async (req, res) => {
+  const { name, email, phone, leaderName, accountType, mlmLevel } = req.body;
+  await User.updateOne({ _id: req.params.id }, { name, email, phone, leaderName, accountType, mlmLevel });
+  res.redirect('/admin');
+});
+
+// Admin delete user
+app.post('/admin/delete-user/:id', requireAuth, requireAdmin, async (req, res) => {
+  await User.deleteOne({ _id: req.params.id });
+  res.redirect('/admin');
+});
+
+// Admin edit tree connection
+app.post('/admin/edit-tree/:id', requireAuth, requireAdmin, async (req, res) => {
+  const { userId, leaderId, verified } = req.body;
+  await Tree.updateOne({ _id: req.params.id }, { userId, leaderId, verified: verified === 'true' });
+  res.redirect('/admin');
+});
+
+// Admin delete tree connection
+app.post('/admin/delete-tree/:id', requireAuth, requireAdmin, async (req, res) => {
+  await Tree.deleteOne({ _id: req.params.id });
+  res.redirect('/admin');
 });
 
 app.post('/admin/approve/:id', requireAuth, requireAdmin, async (req, res) => {
