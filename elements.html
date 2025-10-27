@@ -49,76 +49,73 @@
 		</div>
 
 		<script>
-		// Wait for DOM to be fully loaded
-		document.addEventListener('DOMContentLoaded', function() {
-			// Modal logic with fallback
-			const signInModal = document.getElementById('signInModal');
-			const signUpModal = document.getElementById('signUpModal');
+		// Modal logic with fallback
+		const signInModal = document.getElementById('signInModal');
+		const signUpModal = document.getElementById('signUpModal');
 
-			// Debug: Check if elements exist
-			console.log('Sign In Modal:', signInModal);
-			console.log('Sign Up Modal:', signUpModal);
+		// Debug: Check if elements exist
+		console.log('Sign In Modal:', signInModal);
+		console.log('Sign Up Modal:', signUpModal);
 
-			document.getElementById('openSignIn').onclick = function() {
-				console.log('Sign In button clicked');
-				signInModal.style.display = 'flex';
-				// Try server endpoint first, fallback to direct form
-				fetch('/modal/signin')
-					.then(r => {
-						console.log('Fetch response:', r.status);
-						if (!r.ok) throw new Error('Server not available');
-						return r.text();
-					})
-					.then(html => {
-						console.log('Got HTML:', html.substring(0, 100));
-						document.getElementById('signInFormContainer').innerHTML = html;
-					})
-					.catch((error) => {
-						console.log('Fetch failed:', error);
-						// Fallback: redirect to signin page
-						window.location.href = '/signin';
-					});
-			};
+		document.getElementById('openSignIn').addEventListener('click', function() {
+			console.log('Sign In button clicked');
+			signInModal.style.display = 'flex';
+			// Try server endpoint first, fallback to direct form
+			fetch('/modal/signin')
+				.then(r => {
+					console.log('Fetch response:', r.status);
+					if (!r.ok) throw new Error('Server not available');
+					return r.text();
+				})
+				.then(html => {
+					console.log('Got HTML:', html.substring(0, 100));
+					document.getElementById('signInFormContainer').innerHTML = html;
+				})
+				.catch((error) => {
+					console.log('Fetch failed:', error);
+					// Fallback: redirect to signin page
+					window.location.href = '/signin';
+				});
+		});
 
-			document.getElementById('openSignUp').onclick = function() {
-				console.log('Sign Up button clicked');
-				signUpModal.style.display = 'flex';
-				// Try server endpoint first, fallback to direct form
-				fetch('/modal/signup')
-					.then(r => {
-						console.log('Fetch response:', r.status);
-						if (!r.ok) throw new Error('Server not available');
-						return r.text();
-					})
-					.then(html => {
-						console.log('Got HTML:', html.substring(0, 100));
-						document.getElementById('signUpFormContainer').innerHTML = html;
-					})
-					.catch((error) => {
-						console.log('Fetch failed:', error);
-						// Fallback: redirect to signup page
-						window.location.href = '/signup';
-					});
-			};
+		document.getElementById('openSignUp').addEventListener('click', function() {
+			console.log('Sign Up button clicked');
+			signUpModal.style.display = 'flex';
+			// Try server endpoint first, fallback to direct form
+			fetch('/modal/signup')
+				.then(r => {
+					console.log('Fetch response:', r.status);
+					if (!r.ok) throw new Error('Server not available');
+					return r.text();
+				})
+				.then(html => {
+					console.log('Got HTML:', html.substring(0, 100));
+					document.getElementById('signUpFormContainer').innerHTML = html;
+				})
+				.catch((error) => {
+					console.log('Fetch failed:', error);
+					// Fallback: redirect to signup page
+					window.location.href = '/signup';
+				});
+		});
 
-			document.getElementById('closeSignIn').onclick = function() {
-				console.log('Close Sign In clicked');
+		document.getElementById('closeSignIn').addEventListener('click', function() {
+			console.log('Close Sign In clicked');
+			signInModal.style.display = 'none';
+		});
+		document.getElementById('closeSignUp').addEventListener('click', function() {
+			console.log('Close Sign Up clicked');
+			signUpModal.style.display = 'none';
+		});
+		window.addEventListener('click', function(e) {
+			if (e.target === signInModal) {
+				console.log('Clicked outside Sign In modal');
 				signInModal.style.display = 'none';
-			};
-			document.getElementById('closeSignUp').onclick = function() {
-				console.log('Close Sign Up clicked');
+			}
+			if (e.target === signUpModal) {
+				console.log('Clicked outside Sign Up modal');
 				signUpModal.style.display = 'none';
-			};
-			window.onclick = function(e) {
-				if (e.target === signInModal) {
-					console.log('Clicked outside Sign In modal');
-					signInModal.style.display = 'none';
-				}
-				if (e.target === signUpModal) {
-					console.log('Clicked outside Sign Up modal');
-					signUpModal.style.display = 'none';
-				}
-			};
+			}
 		});
 		</script>
 
