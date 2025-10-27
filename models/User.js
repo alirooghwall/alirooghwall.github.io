@@ -2,17 +2,20 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now }
-});
-
-// Password hashing before saving
-userSchema.pre('save', async function(next){
-    if(!this.isModified('password')) return next();
-    this.password = await bcrypt.hash(this.password, 10);
-    next();
+  name: String,
+  email: { type: String, unique: true },
+  password: String,
+  accountType: { type: String, enum: ['student', 'participant', 'admin'], default: 'participant' },
+  mlmLevel: { type: String, default: 'beginner' }, // To be verified by admin
+  phone: String,
+  leaderName: String,
+  userId: { type: String, unique: true }, // System-generated ID
+  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  isVerified: { type: Boolean, default: false },
+  verificationToken: String,
+  resetToken: String,
+  resetExpires: Date,
+  createdAt: { type: Date, default: Date.now },
 });
 
 // Compare password method
