@@ -985,7 +985,7 @@ app.listen(PORT, () => {
       bcrypt.hash('admin123', 10).then(hashed => {
         new User({
           name: 'Admin',
-          email: 'alirooghwall999@gmail.com',
+          email: 'admin@alirooghwall.github.io',
           password: hashed,
           accountType: 'admin',
           mlmLevel: 'expert',
@@ -994,7 +994,7 @@ app.listen(PORT, () => {
           userId: 'ADMIN001',
           status: 'approved',
           isVerified: true
-        }).save().then(() => logger.info('Admin user created: alirooghwall999@gmail.com / admin123')).catch(err => logger.error('Admin save error:', err));
+        }).save().then(() => logger.info('Admin user created: admin@alirooghwall.github.io / admin123')).catch(err => logger.error('Admin save error:', err));
       }).catch(err => logger.error('Hash error:', err));
     }
   }).catch(err => logger.error('Admin find error:', err));
