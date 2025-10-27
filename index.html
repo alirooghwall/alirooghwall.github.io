@@ -23,15 +23,6 @@
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&display=swap" rel="stylesheet">
 		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
-
-		<!-- Google Analytics -->
-		<script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
-		<script>
-			window.dataLayer = window.dataLayer || [];
-			function gtag(){dataLayer.push(arguments);}
-			gtag('js', new Date());
-			gtag('config', 'GA_MEASUREMENT_ID');
-		</script>
 	</head>
 	<body class="is-preload">
 
@@ -153,6 +144,10 @@ document.getElementById('openSignIn').onclick = function() {
 				dashboardLi.style.display = 'none';
 				profileLi.style.display = 'none';
 			}
+		})
+		.catch(() => {
+			// On static site, assume not logged in
+			console.log('Auth check failed, assuming not logged in');
 		});
 		</script>
 
@@ -225,7 +220,7 @@ document.getElementById('openSignIn').onclick = function() {
 									
 									
 									<h2><a href="#">- خوش آمدید -</a></h2>
-									<p>منبع شخصی شما برای آموختن، جست‌وجو و دریافت پاسخ‌های فوری</p>
+									<p>منبع شخصی شما برای آموختن، جستجو و دریافت پاسخ‌های فوری</p>
 								</header>
 
 							<section class="date-time-section">

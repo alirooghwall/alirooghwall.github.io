@@ -12,15 +12,6 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
-
-		<!-- Google Analytics -->
-		<script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
-		<script>
-			window.dataLayer = window.dataLayer || [];
-			function gtag(){dataLayer.push(arguments);}
-			gtag('js', new Date());
-			gtag('config', 'GA_MEASUREMENT_ID');
-		</script>
 	</head>
 	<body class="is-preload">
 
@@ -61,7 +52,7 @@
 			console.log('Sign In button clicked');
 			signInModal.style.display = 'flex';
 			// Try server endpoint first, fallback to direct form
-			fetch('/modal/signin')
+			fetch('https://mars-empire-mlm.onrender.com/modal/signin')
 				.then(r => {
 					console.log('Fetch response:', r.status);
 					if (!r.ok) throw new Error('Server not available');
@@ -74,7 +65,7 @@
 				.catch((error) => {
 					console.log('Fetch failed:', error);
 					// Fallback: redirect to signin page
-					window.location.href = '/signin';
+					window.location.href = 'https://mars-empire-mlm.onrender.com/signin';
 				});
 		});
 
@@ -82,7 +73,7 @@
 			console.log('Sign Up button clicked');
 			signUpModal.style.display = 'flex';
 			// Try server endpoint first, fallback to direct form
-			fetch('/modal/signup')
+			fetch('https://mars-empire-mlm.onrender.com/modal/signup')
 				.then(r => {
 					console.log('Fetch response:', r.status);
 					if (!r.ok) throw new Error('Server not available');
@@ -95,7 +86,7 @@
 				.catch((error) => {
 					console.log('Fetch failed:', error);
 					// Fallback: redirect to signup page
-					window.location.href = '/signup';
+					window.location.href = 'https://mars-empire-mlm.onrender.com/signup';
 				});
 		});
 
@@ -141,6 +132,10 @@
 				logoutForm.style.display = 'none';
 				if (dashboardLi) dashboardLi.style.display = 'none';
 			}
+		})
+		.catch(() => {
+			// On static site, assume not logged in
+			console.log('Auth check failed, assuming not logged in');
 		});
 		</script>
 		
