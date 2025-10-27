@@ -51,6 +51,7 @@
 		document.getElementById('openSignIn').addEventListener('click', function() {
 			console.log('Sign In button clicked');
 			signInModal.style.display = 'flex';
+			signUpModal.style.display = 'none'; // Hide sign up modal
 			// Try server endpoint first, fallback to direct form
 			fetch('https://mars-empire-mlm.onrender.com/modal/signin')
 				.then(r => {
@@ -72,6 +73,7 @@
 		document.getElementById('openSignUp').addEventListener('click', function() {
 			console.log('Sign Up button clicked');
 			signUpModal.style.display = 'flex';
+			signInModal.style.display = 'none'; // Hide sign in modal
 			// Try server endpoint first, fallback to direct form
 			fetch('https://mars-empire-mlm.onrender.com/modal/signup')
 				.then(r => {
