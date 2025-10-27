@@ -46,7 +46,7 @@ app.set('view engine', 'ejs');
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 2000, // limit each IP to 1000 requests per windowMs
+  max: 2000, // limit each IP to 2000 requests per windowMs
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use(limiter);
@@ -985,7 +985,7 @@ app.listen(PORT, () => {
       bcrypt.hash('admin123', 10).then(hashed => {
         new User({
           name: 'Admin',
-          email: 'admin@alirooghwall.github.io',
+          email: 'alirooghwall999@gmail.com',
           password: hashed,
           accountType: 'admin',
           mlmLevel: 'expert',
@@ -994,7 +994,7 @@ app.listen(PORT, () => {
           userId: 'ADMIN001',
           status: 'approved',
           isVerified: true
-        }).save().then(() => logger.info('Admin user created: admin@alirooghwall.github.io / admin123')).catch(err => logger.error('Admin save error:', err));
+        }).save().then(() => logger.info('Admin user created: alirooghwall999@gmail.com / admin123')).catch(err => logger.error('Admin save error:', err));
       }).catch(err => logger.error('Hash error:', err));
     }
   }).catch(err => logger.error('Admin find error:', err));
