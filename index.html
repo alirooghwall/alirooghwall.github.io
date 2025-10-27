@@ -18,6 +18,7 @@
 		<meta property="og:image" content="MARS EMPIRE://alirooghwall.github.io/images/Untitled.png" />
 		<meta property="og:url" content="MARS EMPIRE://alirooghwall.github.io/" />
 		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<meta charset="utf-8" />
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&display=swap" rel="stylesheet">
@@ -75,6 +76,31 @@
 		};
 		</script>
 
+		<script>
+		fetch('/check-auth')
+		.then(r => r.json())
+		.then(data => {
+			const signInBtn = document.getElementById('openSignIn');
+			const signUpBtn = document.getElementById('openSignUp');
+			const dashboardLi = document.getElementById('dashboardLink');
+			const profileLi = document.querySelector('a[href="/profile"]').parentElement;
+			const logoutForm = document.querySelector('form[action="/logout"]');
+			if (data.loggedIn) {
+				signInBtn.style.display = 'none';
+				signUpBtn.style.display = 'none';
+				dashboardLi.style.display = 'block';
+				profileLi.style.display = 'block';
+				logoutForm.style.display = 'inline';
+			} else {
+				signInBtn.style.display = 'block';
+				signUpBtn.style.display = 'block';
+				dashboardLi.style.display = 'none';
+				profileLi.style.display = 'none';
+				logoutForm.style.display = 'none';
+			}
+		});
+		</script>
+
 		<!-- Wrapper -->
 			<div id="wrapper" class="fade-in">
 
@@ -128,8 +154,9 @@
 							<li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
 							<li><a href="#" class="icon brands fa-github"><span class="label">GitHub</span></a></li>
 						
-							<a href="/profile">Profile</a>
-  							<form method="post" action="/logout" style="display:inline;"><button type="submit">Logout</button></form>
+							<li style="display:none;" id="dashboardLink"><a href="/dashboard">Dashboard</a></li>
+							<li style="display:none;"><a href="/profile">Profile</a></li>
+  							<form method="post" action="/logout" style="display:none;"><button type="submit">Logout</button></form>
 						</ul>
 					</nav>
 					
@@ -319,13 +346,14 @@
 			<script src="assets/js/breakpoints.min.js"></script>
 			<script src="assets/js/util.js"></script>
 			<script src="assets/js/main.js"></script>
+			<script src="https://cdn.jsdelivr.net/npm/jalaali-js@1.2.6/dist/jalaali.min.js"></script>
 
 			<script>
 				function updateDateTime() {
 					const now = new Date();
 					const timeString = now.toLocaleTimeString('en-US', { hour12: false });
 					const gregorianString = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-					const jalaali = jalaali.toJalaali(now.getFullYear(), now.getMonth() + 1, now.getDate());
+					const jalaali = toJalaali(now.getFullYear(), now.getMonth() + 1, now.getDate());
 					const jalaaliString = `${jalaali.jy}/${jalaali.jm}/${jalaali.jd}`;
 
 					document.getElementById('time').textContent = `وقت: ${timeString}`;

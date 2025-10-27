@@ -16,6 +16,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.set('view engine', 'ejs');
 
 // Rate limiting
 const limiter = rateLimit({
@@ -56,7 +57,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Connected to MongoDB...'))
   .catch((err) => {
     console.error('❌ MongoDB connection error:', err);
@@ -112,6 +113,18 @@ const requireAdmin = (req, res, next) => {
 
 // Health check
 app.get('/health', (req, res) => res.send('OK'));
+
+// Check auth status
+app.get('/check-auth', (req, res) => {
+  const token = req.cookies?.token;
+  if (!token) return res.json({ loggedIn: false });
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    res.json({ loggedIn: true, user: decoded });
+  } catch {
+    res.json({ loggedIn: false });
+  }
+});
 
 // Routes
 // Modal endpoints for sign in/sign up forms
@@ -759,100 +772,7 @@ app.post('/admin/reject/:id', requireAuth, requireAdmin, async (req, res) => {
 app.get('/checklists', requireAuth, requireVerified, async (req, res) => {
   const userChecklists = await Checklist.find({ userId: req.user.email });
   const predefined = await Checklist.find({ isPredefined: true });
-  res.send(`
-    <!doctype html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <title>Checklists | MARS EMPIRE</title>
-      <link rel="stylesheet" href="assets/css/main.css">
-      <style>
-        .progress-bar {
-          width: 100%;
-          background-color: #f0f0f0;
-          border-radius: 5px;
-          overflow: hidden;
-          height: 20px;
-          margin: 10px 0;
-        }
-        .progress-fill {
-          height: 100%;
-          background-color: #4caf50;
-          transition: width 0.3s;
-        }
-        .progress-text {
-          text-align: center;
-          font-size: 14px;
-          margin-bottom: 10px;
-        }
-      </style>
-    </head>
-    <body>
-      <main style="max-width:800px;margin:3rem auto;padding:1rem;">
-        <h1>Checklists</h1>
-        <h2>Predefined Checklists</h2>
-        ${predefined.map(c => {
-          const completed = c.items.filter(item => item.completed).length;
-          const total = c.items.length;
-          const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-          return `
-            <h3>${c.title}</h3>
-            <div class="progress-text">${completed}/${total} completed (${percentage}%)</div>
-            <div class="progress-bar">
-              <div class="progress-fill" style="width: ${percentage}%"></div>
-            </div>
-            <ul>
-              ${c.items.map((item, i) => `
-                <li>
-                  <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="updateItem('${c._id}', ${i}, this.checked)">
-                  ${item.text}
-                </li>
-              `).join('')}
-            </ul>
-          `;
-        }).join('')}
-        <h2>Your Checklists</h2>
-        ${userChecklists.map(c => {
-          const completed = c.items.filter(item => item.completed).length;
-          const total = c.items.length;
-          const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-          return `
-            <h3>${c.title}</h3>
-            <div class="progress-text">${completed}/${total} completed (${percentage}%)</div>
-            <div class="progress-bar">
-              <div class="progress-fill" style="width: ${percentage}%"></div>
-            </div>
-            <ul>
-              ${c.items.map((item, i) => `
-                <li>
-                  <input type="checkbox" ${item.completed ? 'checked' : ''} onchange="updateItem('${c._id}', ${i}, this.checked)">
-                  ${item.text}
-                </li>
-              `).join('')}
-            </ul>
-          `;
-        }).join('')}
-        <form method="post" action="/checklists/create">
-          <input name="title" placeholder="New Checklist Title" required />
-          <textarea name="items" placeholder="Items (one per line)" required></textarea>
-          <button type="submit">Create</button>
-        </form>
-        <a href="/profile">Back to Profile</a>
-      </main>
-      <script>
-        async function updateItem(id, index, completed) {
-          await fetch('/checklists/update', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, index, completed })
-          });
-          // Reload page to update progress bar
-          location.reload();
-        }
-      </script>
-    </body>
-    </html>
-  `);
+  res.render('checklists', { userChecklists, predefined, user: req.user });
 });
 
 app.post('/checklists/create', requireAuth, async (req, res) => {
@@ -874,7 +794,7 @@ app.post('/checklists/update', requireAuth, async (req, res) => {
 
 // Tree request for users
 app.get('/request-tree', requireAuth, requireVerified, async (req, res) => {
-  const leaders = await User.find({ accountType: { $in: ['leader', 'admin'] }, status: 'approved' }).select('name userId');
+  const leaders = await User.find({ accountType: { $in: ['participant', 'admin'] }, status: 'approved' }).select('name userId');
   res.send(`
     <!doctype html>
     <html>
@@ -908,6 +828,8 @@ app.post('/request-tree', requireAuth, requireVerified, async (req, res) => {
   await new Tree({ userId: user._id, leaderId, verified: false }).save();
   res.send('<p>Request submitted! Admin will review.</p>');
 });
+
+app.get('/tree', requireAuth, requireVerified, async (req, res) => {
   const trees = await Tree.find({ verified: true }).populate('userId leaderId');
   // Build tree data for D3
   const treeData = { name: 'Top', children: [] };
@@ -920,67 +842,8 @@ app.post('/request-tree', requireAuth, requireVerified, async (req, res) => {
     nodeMap[leaderName].children.push(nodeMap[userName]);
   });
   const treeJson = JSON.stringify(treeData);
-  res.send(`
-    <!doctype html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <title>MLM Tree | MARS EMPIRE</title>
-      <link rel="stylesheet" href="assets/css/main.css">
-      <script src="https://d3js.org/d3.v7.min.js"></script>
-      <style>
-        .node circle { fill: #fff; stroke: steelblue; stroke-width: 3px; }
-        .node text { font: 12px sans-serif; }
-        .link { fill: none; stroke: #ccc; stroke-width: 2px; }
-      </style>
-    </head>
-    <body>
-      <main style="max-width:1000px;margin:3rem auto;padding:1rem;">
-        <h1>MLM Hierarchy Tree</h1>
-        <div id="tree"></div>
-        ${req.user.accountType === 'admin' ? `
-          <h2>Pending Connections</h2>
-          <ul>
-            ${(await Tree.find({ verified: false })).map(t => `
-              <li>${t.userId} under ${t.leaderId}
-                <form method="post" action="/tree/verify/${t._id}" style="display:inline;">
-                  <button type="submit">Verify</button>
-                </form>
-              </li>
-            `).join('')}
-          </ul>
-        ` : ''}
-        <a href="/profile">Back to Profile</a>
-      </main>
-      <script>
-        const treeData = ${treeJson};
-        const width = 800;
-        const height = 600;
-        const svg = d3.select('#tree').append('svg').attr('width', width).attr('height', height);
-        const g = svg.append('g').attr('transform', 'translate(40,0)');
-        const treeLayout = d3.tree().size([height - 100, width - 160]);
-        const root = d3.hierarchy(treeData);
-        treeLayout(root);
-        g.selectAll('.link')
-          .data(root.links())
-          .enter().append('path')
-          .attr('class', 'link')
-          .attr('d', d3.linkHorizontal().x(d => d.y).y(d => d.x));
-        const node = g.selectAll('.node')
-          .data(root.descendants())
-          .enter().append('g')
-          .attr('class', 'node')
-          .attr('transform', d => \`translate(\${d.y},\${d.x})\`);
-        node.append('circle').attr('r', 10);
-        node.append('text')
-          .attr('dy', '.35em')
-          .attr('x', d => d.children ? -13 : 13)
-          .style('text-anchor', d => d.children ? 'end' : 'start')
-          .text(d => d.data.name);
-      </script>
-    </body>
-    </html>
-  `);
+  const pendingConnections = req.user.accountType === 'admin' ? await Tree.find({ verified: false }).populate('userId leaderId') : [];
+  res.render('tree', { treeJson, user: req.user, pendingConnections });
 });
 
 app.post('/tree/verify/:id', requireAuth, requireAdmin, async (req, res) => {
@@ -988,90 +851,24 @@ app.post('/tree/verify/:id', requireAuth, requireAdmin, async (req, res) => {
   res.redirect('/tree');
 });
 
-// Resources page
-app.get('/resources', requireAuth, requireVerified, (req, res) => {
-  res.send(`
-    <!doctype html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <title>Resources | MARS EMPIRE</title>
-      <link rel="stylesheet" href="assets/css/main.css">
-    </head>
-    <body>
-      <main style="max-width:800px;margin:3rem auto;padding:1rem;">
-        <h1>MLM Learning Resources</h1>
-        <h2>Videos</h2>
-        <ul>
-          <li><a href="https://example.com/mlm-intro">Introduction to MLM</a></li>
-        </ul>
-        <h2>Articles</h2>
-        <ul>
-          <li><a href="https://example.com/tips">Leadership Tips</a></li>
-        </ul>
-        <a href="/profile">Back to Profile</a>
-      </main>
-    </body>
-    </html>
-  `);
+// Dashboard
+app.get('/dashboard', requireAuth, requireVerified, (req, res) => {
+  res.render('dashboard', { user: req.user });
 });
-  res.send(`
-    <!doctype html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <title>Rules & Regulations | MARS EMPIRE</title>
-      <link rel="stylesheet" href="assets/css/main.css">
-    </head>
-    <body>
-      <main style="max-width:800px;margin:3rem auto;padding:1rem;">
-        <h1>Company Rules and Regulations</h1>
-        <h2>Leadership</h2>
-        <p>Leaders must guide their directs ethically.</p>
-        <h2>Tips</h2>
-        <p>Always verify information and promote responsibly.</p>
-        <a href="/">Back to Home</a>
-      </main>
-    </body>
-    </html>
-  `);
+
+// Calculator
+app.get('/calculator', requireAuth, requireVerified, (req, res) => {
+  res.render('calculator', { user: req.user });
+});
+
+app.get('/rules', requireAuth, requireVerified, (req, res) => {
+  res.render('rules', { user: req.user });
 });
 
 // Profile page
 app.get('/profile', requireAuth, requireVerified, async (req, res) => {
   const user = await User.findOne({ email: req.user.email }).select('-password');
-  res.send(`
-    <!doctype html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <title>Profile | MARS EMPIRE</title>
-      <link rel="stylesheet" href="assets/css/main.css">
-    </head>
-    <body>
-      <main style="max-width:600px;margin:3rem auto;padding:1rem;">
-        <h1>Welcome, ${user.name}!</h1>
-        <p>Email: ${user.email}</p>
-        <p>User ID: ${user.userId}</p>
-        <p>Account Type: ${user.accountType}</p>
-        <p>MLM Level: ${user.mlmLevel}</p>
-        <p>Phone: ${user.phone}</p>
-        <p>Leader: ${user.leaderName}</p>
-        <p>Status: ${user.status}</p>
-        <p>Verified: ${user.isVerified ? 'Yes' : 'No'}</p>
-        <form method="post" action="/update-profile">
-          <input name="name" value="${user.name}" required />
-          <input name="email" value="${user.email}" type="email" required />
-          <input name="phone" value="${user.phone}" />
-          <input name="leaderName" value="${user.leaderName}" />
-          <button type="submit">Update</button>
-        </form>
-        <a href="/logout">Logout</a>
-        ${user.accountType === 'admin' ? '<a href="/admin">Admin Dashboard</a>' : ''}
-      </main>
-    </body>
-    </html>
-  `);
+  res.render('profile', { user });
 });
 
 app.post('/update-profile', requireAuth, async (req, res) => {
@@ -1108,7 +905,8 @@ app.get('/sitemap.xml', (req, res) => {
     <url><loc>${BASE_URL}/rules</loc></url>
     <url><loc>${BASE_URL}/tree</loc></url>
     <url><loc>${BASE_URL}/checklists</loc></url>
-    <url><loc>${BASE_URL}/resources</loc></url>
+    <url><loc>${BASE_URL}/dashboard</loc></url>
+    <url><loc>${BASE_URL}/calculator</loc></url>
     <url><loc>${BASE_URL}/profile</loc></url>
     <url><loc>${BASE_URL}/admin</loc></url>
   </urlset>`;

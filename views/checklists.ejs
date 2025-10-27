@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Checklists | MARS EMPIRE</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&display=swap" rel="stylesheet">
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+		<style>
+			body { background: #f4f4f4; color: #333; }
+			main { background: #fff; margin: 2rem auto; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 1000px; }
+			h1 { color: #2a2a3e; text-align: center; }
+			h2 { color: #4ecdc4; }
+			.checklist { margin-bottom: 2rem; }
+			.progress-bar { width: 100%; background-color: #f0f0f0; border-radius: 5px; overflow: hidden; height: 20px; margin: 10px 0; }
+			.progress-fill { height: 100%; background-color: #4ecdc4; transition: width 0.3s; }
+			.progress-text { text-align: center; font-size: 14px; margin-bottom: 10px; }
+			ul { list-style: none; padding: 0; }
+			li { margin-bottom: 0.5rem; display: flex; align-items: center; }
+			input[type="checkbox"] { margin-right: 0.5rem; }
+			form { margin-top: 2rem; }
+			input, textarea, button { display: block; width: 100%; margin-bottom: 1rem; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
+			button { background: #4ecdc4; color: white; border: none; cursor: pointer; }
+			button:hover { background: #45b7aa; }
+		</style>
+	</head>
+	<body class="is-preload">
+		<div id="wrapper" class="fade-in">
+			<header id="header">
+				<a href="/" class="logo">MARS EMPIRE</a>
+			</header>
+			<nav id="nav">
+				<ul class="links">
+					<li><a href="/">MARS EMPIRE</a></li>
+					<li><a href="/generic">MLM Companion 'AI'</a></li>
+					<li><a href="/elements">Resources</a></li>
+					<li><a href="/rules">Rules</a></li>
+					<li class="active"><a href="/checklists">Checklists</a></li>
+					<li><a href="/tree">Tree View</a></li>
+				</ul>
+				<ul class="icons">
+					<% if (user) { %>
+						<li><a href="/dashboard">Dashboard</a></li>
+						<li><a href="/profile">Profile</a></li>
+						<form method="post" action="/logout" style="display:inline;"><button type="submit">Logout</button></form>
+					<% } %>
+				</ul>
+			</nav>
+			<div id="main">
+				<article class="post featured">
+					<header class="major">
+						<h1>Checklists</h1>
+					</header>
+					<% predefined.forEach(c => { %>
+						<section class="checklist">
+							<h2><%= c.title %></h2>
+							<div class="progress-text"><%= c.items.filter(item => item.completed).length %>/<%= c.items.length %> completed (<%= Math.round((c.items.filter(item => item.completed).length / c.items.length) * 100) %>%)</div>
+							<div class="progress-bar">
+								<div class="progress-fill" style="width: <%= Math.round((c.items.filter(item => item.completed).length / c.items.length) * 100) %>%"></div>
+							</div>
+							<ul>
+								<% c.items.forEach((item, i) => { %>
+									<li>
+										<input type="checkbox" <%= item.completed ? 'checked' : '' %> onchange="updateItem('<%= c._id %>', <%= i %>, this.checked)">
+										<%= item.text %>
+									</li>
+								<% }); %>
+							</ul>
+						</section>
+					<% }); %>
+					<% userChecklists.forEach(c => { %>
+						<section class="checklist">
+							<h2><%= c.title %></h2>
+							<div class="progress-text"><%= c.items.filter(item => item.completed).length %>/<%= c.items.length %> completed (<%= Math.round((c.items.filter(item => item.completed).length / c.items.length) * 100) %>%)</div>
+							<div class="progress-bar">
+								<div class="progress-fill" style="width: <%= Math.round((c.items.filter(item => item.completed).length / c.items.length) * 100) %>%"></div>
+							</div>
+							<ul>
+								<% c.items.forEach((item, i) => { %>
+									<li>
+										<input type="checkbox" <%= item.completed ? 'checked' : '' %> onchange="updateItem('<%= c._id %>', <%= i %>, this.checked)">
+										<%= item.text %>
+									</li>
+								<% }); %>
+							</ul>
+						</section>
+					<% }); %>
+					<form method="post" action="/checklists/create">
+						<input name="title" placeholder="New Checklist Title" required />
+						<textarea name="items" placeholder="Items (one per line)" required></textarea>
+						<button type="submit">Create</button>
+					</form>
+				</article>
+			</div>
+		</div>
+		<script>
+			async function updateItem(id, index, completed) {
+				await fetch('/checklists/update', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ id, index, completed })
+				});
+				location.reload();
+			}
+		</script>
+		<script src="assets/js/jquery.min.js"></script>
+		<script src="assets/js/jquery.scrollex.min.js"></script>
+		<script src="assets/js/jquery.scrolly.min.js"></script>
+		<script src="assets/js/browser.min.js"></script>
+		<script src="assets/js/breakpoints.min.js"></script>
+		<script src="assets/js/util.js"></script>
+		<script src="assets/js/main.js"></script>
+	</body>
+</html>

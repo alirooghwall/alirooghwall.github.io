@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Dashboard | MARS EMPIRE</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&display=swap" rel="stylesheet">
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+		<style>
+			body { background: #f4f4f4; color: #333; }
+			main { background: #fff; margin: 2rem auto; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 1200px; }
+			h1 { color: #2a2a3e; text-align: center; }
+			.dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+			.card { background: #f9f9f9; padding: 1.5rem; border-radius: 8px; box-shadow: 0 1px 5px rgba(0,0,0,0.1); }
+			.card h3 { color: #4ecdc4; margin-bottom: 1rem; }
+			.card p { margin-bottom: 0.5rem; }
+			.quick-links { display: flex; flex-wrap: wrap; gap: 1rem; }
+			.quick-links a { background: #4ecdc4; color: white; padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none; }
+			.quick-links a:hover { background: #45b7aa; }
+		</style>
+	</head>
+	<body class="is-preload">
+		<div id="wrapper" class="fade-in">
+			<header id="header">
+				<a href="/" class="logo">MARS EMPIRE</a>
+			</header>
+			<nav id="nav">
+				<ul class="links">
+					<li><a href="/">MARS EMPIRE</a></li>
+					<li><a href="/generic">MLM Companion 'AI'</a></li>
+					<li><a href="/elements">Resources</a></li>
+					<li><a href="/rules">Rules</a></li>
+					<li><a href="/checklists">Checklists</a></li>
+					<li><a href="/tree">Tree View</a></li>
+				</ul>
+				<ul class="icons">
+					<% if (user) { %>
+						<li class="active"><a href="/dashboard">Dashboard</a></li>
+						<li><a href="/profile">Profile</a></li>
+						<form method="post" action="/logout" style="display:inline;"><button type="submit">Logout</button></form>
+					<% } %>
+				</ul>
+			</nav>
+			<div id="main">
+				<article class="post featured">
+					<header class="major">
+						<h1>Welcome back, <%= user.name %>!</h1>
+					</header>
+					<div class="dashboard-grid">
+						<div class="card">
+							<h3>Your Stats</h3>
+							<p>User ID: <%= user.userId %></p>
+							<p>Account Type: <%= user.accountType %></p>
+							<p>MLM Level: <%= user.mlmLevel %></p>
+							<p>Status: <%= user.status %></p>
+						</div>
+						<div class="card">
+							<h3>Earnings Overview</h3>
+							<p>Total Earnings: $0.00</p>
+							<p>This Month: $0.00</p>
+							<p>Pending Commissions: $0.00</p>
+						</div>
+						<div class="card">
+							<h3>Downline</h3>
+							<p>Direct Recruits: 0</p>
+							<p>Total Team: 0</p>
+							<p>Active Members: 0</p>
+						</div>
+						<div class="card">
+							<h3>Recent Activity</h3>
+							<p>No recent activity.</p>
+						</div>
+					</div>
+					<section>
+						<h2>Quick Links</h2>
+						<div class="quick-links">
+							<a href="/profile">Update Profile</a>
+							<a href="/checklists">View Checklists</a>
+							<a href="/tree">View Tree</a>
+							<a href="/rules">Read Rules</a>
+							<a href="/elements">Resources</a>
+							<a href="/calculator">Commission Calculator</a>
+							<% if (user.accountType === 'admin') { %>
+								<a href="/admin">Admin Dashboard</a>
+							<% } %>
+						</div>
+					</section>
+				</article>
+			</div>
+		</div>
+		<script src="assets/js/jquery.min.js"></script>
+		<script src="assets/js/jquery.scrollex.min.js"></script>
+		<script src="assets/js/jquery.scrolly.min.js"></script>
+		<script src="assets/js/browser.min.js"></script>
+		<script src="assets/js/breakpoints.min.js"></script>
+		<script src="assets/js/util.js"></script>
+		<script src="assets/js/main.js"></script>
+	</body>
+</html>

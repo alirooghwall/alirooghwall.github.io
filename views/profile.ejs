@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Profile | MARS EMPIRE</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&display=swap" rel="stylesheet">
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+		<style>
+			body { background: #f4f4f4; color: #333; }
+			main { background: #fff; margin: 2rem auto; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 600px; }
+			h1 { color: #2a2a3e; text-align: center; }
+			form { margin-top: 2rem; }
+			label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
+			input { width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 1rem; }
+			button { background: #4ecdc4; color: white; border: none; padding: 0.75rem; border-radius: 4px; cursor: pointer; width: 100%; }
+			button:hover { background: #45b7aa; }
+			p { margin-bottom: 0.5rem; }
+			a { color: #4ecdc4; text-decoration: none; }
+			a:hover { text-decoration: underline; }
+		</style>
+	</head>
+	<body class="is-preload">
+		<div id="wrapper" class="fade-in">
+			<header id="header">
+				<a href="/" class="logo">MARS EMPIRE</a>
+			</header>
+			<nav id="nav">
+				<ul class="links">
+					<li><a href="/">MARS EMPIRE</a></li>
+					<li><a href="/generic">MLM Companion 'AI'</a></li>
+					<li><a href="/elements">Resources</a></li>
+					<li><a href="/rules">Rules</a></li>
+					<li><a href="/checklists">Checklists</a></li>
+					<li><a href="/tree">Tree View</a></li>
+				</ul>
+				<ul class="icons">
+					<% if (user) { %>
+						<li><a href="/dashboard">Dashboard</a></li>
+						<li class="active"><a href="/profile">Profile</a></li>
+						<form method="post" action="/logout" style="display:inline;"><button type="submit">Logout</button></form>
+					<% } %>
+				</ul>
+			</nav>
+			<div id="main">
+				<article class="post featured">
+					<header class="major">
+						<h1>Welcome, <%= user.name %>!</h1>
+					</header>
+					<p><strong>Email:</strong> <%= user.email %></p>
+					<p><strong>User ID:</strong> <%= user.userId %></p>
+					<p><strong>Account Type:</strong> <%= user.accountType %></p>
+					<p><strong>MLM Level:</strong> <%= user.mlmLevel %></p>
+					<p><strong>Phone:</strong> <%= user.phone %></p>
+					<p><strong>Leader:</strong> <%= user.leaderName %></p>
+					<p><strong>Status:</strong> <%= user.status %></p>
+					<p><strong>Verified:</strong> <%= user.isVerified ? 'Yes' : 'No' %></p>
+					<form method="post" action="/update-profile">
+						<label for="name">Name</label>
+						<input name="name" value="<%= user.name %>" required />
+						<label for="email">Email</label>
+						<input name="email" value="<%= user.email %>" type="email" required />
+						<label for="phone">Phone</label>
+						<input name="phone" value="<%= user.phone %>" />
+						<label for="leaderName">Leader Name</label>
+						<input name="leaderName" value="<%= user.leaderName %>" />
+						<button type="submit">Update</button>
+					</form>
+					<% if (user.accountType === 'admin') { %>
+						<p><a href="/admin">Admin Dashboard</a></p>
+					<% } %>
+				</article>
+			</div>
+		</div>
+		<script src="assets/js/jquery.min.js"></script>
+		<script src="assets/js/jquery.scrollex.min.js"></script>
+		<script src="assets/js/jquery.scrolly.min.js"></script>
+		<script src="assets/js/browser.min.js"></script>
+		<script src="assets/js/breakpoints.min.js"></script>
+		<script src="assets/js/util.js"></script>
+		<script src="assets/js/main.js"></script>
+	</body>
+</html>
