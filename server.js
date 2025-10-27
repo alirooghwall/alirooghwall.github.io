@@ -164,7 +164,7 @@ app.get('/modal/signin', (req, res) => {
         <i class="fas fa-lock"></i>
         <input name="password" type="password" placeholder="Password" required aria-label="Password" />
       </div>
-      <button type="submit" id="modalSigninBtn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+      <button type="submit" id="modalSigninBtn" style="pointer-events: auto; cursor: pointer;"><i class="fas fa-sign-in-alt"></i> Sign In</button>
       <p class="forgot"><a href="/forgot-password" target="_blank">Forgot password?</a></p>
       <p><a href="/signup" target="_blank">Create an account</a></p>
     </form>
@@ -223,7 +223,7 @@ app.get('/modal/signup', (req, res) => {
         <i class="fas fa-user-friends"></i>
         <input name="leaderName" placeholder="Leader's Name" required aria-label="Leader's Name" />
       </div>
-      <button type="submit" id="modalSignupBtn"><i class="fas fa-paper-plane"></i> Create Account</button>
+      <button type="submit" id="modalSignupBtn" style="pointer-events: auto; cursor: pointer;"><i class="fas fa-paper-plane"></i> Create Account</button>
     </form>
     <script>
       document.getElementById('modalSignupForm').onsubmit = async function(e) {
