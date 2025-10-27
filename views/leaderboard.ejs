@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Leaderboard | MARS EMPIRE</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+		<div id="wrapper">
+			<header id="header">
+				<a href="/" class="logo">MARS EMPIRE</a>
+				<nav>
+					<a href="#menu">Menu</a>
+				</nav>
+			</header>
+			<nav id="menu">
+				<ul class="links">
+					<li><a href="/">Home</a></li>
+					<li><a href="/dashboard">Dashboard</a></li>
+					<li><a href="/rules">Rules</a></li>
+					<li><a href="/articles">Articles</a></li>
+					<li><a href="/resources">Resources</a></li>
+					<li><a href="/checklists">Checklists</a></li>
+					<li><a href="/tree">Tree</a></li>
+					<li><a href="/calculator">Calculator</a></li>
+					<li class="active"><a href="/leaderboard">Leaderboard</a></li>
+					<% if (user.accountType === 'admin' || user.accountType === 'master_admin') { %>
+					<li><a href="/admin">Admin</a></li>
+					<% } %>
+				</ul>
+				<ul class="actions stacked">
+					<li><a href="/profile" class="button primary fit">Profile</a></li>
+					<li><form method="post" action="/logout"><button type="submit" class="button fit">Logout</button></form></li>
+				</ul>
+			</nav>
+			<div id="main">
+				<section>
+					<header class="major">
+						<h1>Leaderboard</h1>
+						<p>Top performers in the MLM network</p>
+					</header>
+					<div class="posts">
+						<article>
+							<header>
+								<h2>Top by Score</h2>
+							</header>
+							<table>
+								<thead>
+									<tr>
+										<th>Rank</th>
+										<th>Name</th>
+										<th>Score</th>
+										<th>Sales</th>
+										<th>Recruited</th>
+									</tr>
+								</thead>
+								<tbody>
+									<% topByScore.forEach((user, index) => { %>
+									<tr>
+										<td><%= index + 1 %></td>
+										<td><%= user.name %></td>
+										<td><%= user.score %></td>
+										<td><%= user.sales %></td>
+										<td><%= user.recruited %></td>
+									</tr>
+									<% }) %>
+								</tbody>
+							</table>
+						</article>
+						<article>
+							<header>
+								<h2>Top by Sales</h2>
+							</header>
+							<table>
+								<thead>
+									<tr>
+										<th>Rank</th>
+										<th>Name</th>
+										<th>Score</th>
+										<th>Sales</th>
+										<th>Recruited</th>
+									</tr>
+								</thead>
+								<tbody>
+									<% topBySales.forEach((user, index) => { %>
+									<tr>
+										<td><%= index + 1 %></td>
+										<td><%= user.name %></td>
+										<td><%= user.score %></td>
+										<td><%= user.sales %></td>
+										<td><%= user.recruited %></td>
+									</tr>
+									<% }) %>
+								</tbody>
+							</table>
+						</article>
+						<article>
+							<header>
+								<h2>Top by Recruited</h2>
+							</header>
+							<table>
+								<thead>
+									<tr>
+										<th>Rank</th>
+										<th>Name</th>
+										<th>Score</th>
+										<th>Sales</th>
+										<th>Recruited</th>
+									</tr>
+								</thead>
+								<tbody>
+									<% topByRecruited.forEach((user, index) => { %>
+									<tr>
+										<td><%= index + 1 %></td>
+										<td><%= user.name %></td>
+										<td><%= user.score %></td>
+										<td><%= user.sales %></td>
+										<td><%= user.recruited %></td>
+									</tr>
+									<% }) %>
+								</tbody>
+							</table>
+						</article>
+					</div>
+				</section>
+			</div>
+			<footer id="footer">
+				<p class="copyright">&copy; MARS EMPIRE. All rights reserved.</p>
+			</footer>
+		</div>
+		<script src="assets/js/jquery.min.js"></script>
+		<script src="assets/js/jquery.scrollex.min.js"></script>
+		<script src="assets/js/jquery.scrolly.min.js"></script>
+		<script src="assets/js/browser.min.js"></script>
+		<script src="assets/js/breakpoints.min.js"></script>
+		<script src="assets/js/util.js"></script>
+		<script src="assets/js/main.js"></script>
+	</body>
+</html>

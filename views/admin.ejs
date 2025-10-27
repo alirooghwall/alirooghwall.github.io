@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | MARS EMPIRE</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <style>
+    .tabs { display: flex; border-bottom: 1px solid #ccc; margin-bottom: 1rem; }
+    .tab { padding: 0.5rem 1rem; cursor: pointer; background: #f0f0f0; border: 1px solid #ccc; border-bottom: none; }
+    .tab.active { background: white; border-bottom: 1px solid white; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .crud-btn { margin-left: 0.5rem; }
+    input, select, textarea { margin: 0.2rem; width: 200px; }
+    textarea { width: 300px; height: 100px; }
+  </style>
+</head>
+<body>
+  <main style="max-width:1200px;margin:3rem auto;padding:1rem;">
+    <h1>Admin Dashboard</h1>
+    
+    <div class="tabs">
+      <div class="tab active" data-tab="overview">Overview</div>
+      <div class="tab" data-tab="users">User Management</div>
+      <div class="tab" data-tab="content">Content</div>
+      <div class="tab" data-tab="tree">Tree</div>
+      <div class="tab" data-tab="settings">Settings</div>
+    </div>
+    
+    <div id="overview" class="tab-content active">
+      <h2>Overview</h2>
+      <p>Welcome to the admin dashboard. Use the tabs above to manage different aspects of the system.</p>
+      <p>Total Users: <%= allUsers.length %></p>
+      <p>Pending Approvals: <%= pendingUsers.length %></p>
+      <p>Verified Tree Connections: <%= treeConnections.length %></p>
+    </div>
+    
+    <div id="users" class="tab-content">
+      <h2>Create New User</h2>
+      <form method="post" action="/admin/create-user">
+        <input name="name" placeholder="Name" required />
+        <input name="email" type="email" placeholder="Email" required />
+        <input name="password" placeholder="Password" required />
+        <input name="phone" placeholder="Phone" />
+        <input name="leaderName" placeholder="Leader Name" />
+        <select name="accountType">
+          <option value="student">Student</option>
+          <option value="participant">Participant</option>
+          <option value="editor">Editor</option>
+          <option value="manager">Manager</option>
+          <option value="admin">Admin</option>
+          <option value="master_admin">Master Admin</option>
+        </select>
+        <input name="permissions" placeholder="Permissions (comma separated, e.g., view_users,edit_content)" />
+        <input name="mlmLevel" placeholder="MLM Level" />
+        <button type="submit">Create User</button>
+      </form>
+      
+      <h2>Pending Approvals</h2>
+      <ul>
+        <% pendingUsers.forEach(u => { %>
+          <li>
+            <form method="post" action="/admin/edit-user/<%= u._id %>" style="display:inline;">
+              <input name="name" value="<%= u.name %>" required />
+              <input name="email" value="<%= u.email %>" required />
+              <input name="phone" value="<%= u.phone %>" />
+              <input name="leaderName" value="<%= u.leaderName %>" />
+              <select name="accountType">
+                <option value="student" <%= u.accountType==='student'?'selected':'' %>>Student</option>
+                <option value="participant" <%= u.accountType==='participant'?'selected':'' %>>Participant</option>
+                <option value="editor" <%= u.accountType==='editor'?'selected':'' %>>Editor</option>
+                <option value="manager" <%= u.accountType==='manager'?'selected':'' %>>Manager</option>
+                <option value="admin" <%= u.accountType==='admin'?'selected':'' %>>Admin</option>
+              </select>
+              <input name="mlmLevel" value="<%= u.mlmLevel %>" />
+              <button type="submit" class="crud-btn">Edit</button>
+            </form>
+            <form method="post" action="/admin/approve/<%= u._id %>" style="display:inline;">
+              <button type="submit">Approve</button>
+            </form>
+            <form method="post" action="/admin/reject/<%= u._id %>" style="display:inline;">
+              <button type="submit">Reject</button>
+            </form>
+            <form method="post" action="/admin/delete-user/<%= u._id %>" style="display:inline;">
+              <button type="submit" class="crud-btn" onclick="return confirm('Delete user?')">Delete</button>
+            </form>
+          </li>
+        <% }); %>
+      </ul>
+      
+      <h2>All Users</h2>
+      <ul>
+        <% allUsers.forEach(u => { %>
+          <li>
+            <form method="post" action="/admin/edit-user/<%= u._id %>" style="display:inline;">
+              <input name="name" value="<%= u.name %>" required />
+              <input name="email" value="<%= u.email %>" required />
+              <input name="phone" value="<%= u.phone %>" />
+              <input name="leaderName" value="<%= u.leaderName %>" />
+              <select name="accountType">
+                <option value="student" <%= u.accountType==='student'?'selected':'' %>>Student</option>
+                <option value="participant" <%= u.accountType==='participant'?'selected':'' %>>Participant</option>
+                <option value="editor" <%= u.accountType==='editor'?'selected':'' %>>Editor</option>
+                <option value="manager" <%= u.accountType==='manager'?'selected':'' %>>Manager</option>
+                <option value="admin" <%= u.accountType==='admin'?'selected':'' %>>Admin</option>
+              </select>
+              <input name="mlmLevel" value="<%= u.mlmLevel %>" />
+              <button type="submit" class="crud-btn">Edit</button>
+            </form>
+            <form method="post" action="/admin/delete-user/<%= u._id %>" style="display:inline;">
+              <button type="submit" class="crud-btn" onclick="return confirm('Delete user?')">Delete</button>
+            </form>
+          </li>
+        <% }); %>
+      </ul>
+    </div>
+    
+    <div id="content" class="tab-content">
+      <h2>Rules</h2>
+      <form method="post" action="/rules/create">
+        <input name="title" placeholder="Title" required />
+        <textarea name="content" placeholder="Content"></textarea>
+        <input name="category" placeholder="Category" />
+        <button type="submit">Create Rule</button>
+      </form>
+      <ul>
+        <% rules.forEach(r => { %>
+          <li>
+            <form method="post" action="/rules/update/<%= r._id %>" style="display:inline;">
+              <input name="title" value="<%= r.title %>" required />
+              <textarea name="content"><%= r.content %></textarea>
+              <input name="category" value="<%= r.category %>" />
+              <button type="submit" class="crud-btn">Update</button>
+            </form>
+            <form method="post" action="/rules/delete/<%= r._id %>" style="display:inline;">
+              <button type="submit" class="crud-btn" onclick="return confirm('Delete rule?')">Delete</button>
+            </form>
+          </li>
+        <% }); %>
+      </ul>
+      
+      <h2>Articles</h2>
+      <form method="post" action="/articles/create">
+        <input name="title" placeholder="Title" required />
+        <textarea name="content" placeholder="Content"></textarea>
+        <input name="category" placeholder="Category" />
+        <input name="tags" placeholder="Tags (comma separated)" />
+        <label><input name="published" type="checkbox" /> Published</label>
+        <button type="submit">Create Article</button>
+      </form>
+      <ul>
+        <% articles.forEach(a => { %>
+          <li>
+            <form method="post" action="/articles/update/<%= a._id %>" style="display:inline;">
+              <input name="title" value="<%= a.title %>" required />
+              <textarea name="content"><%= a.content %></textarea>
+              <input name="category" value="<%= a.category %>" />
+              <input name="tags" value="<%= a.tags.join(',') %>" />
+              <label><input name="published" type="checkbox" <%= a.published?'checked':'' %> /> Published</label>
+              <button type="submit" class="crud-btn">Update</button>
+            </form>
+            <form method="post" action="/articles/delete/<%= a._id %>" style="display:inline;">
+              <button type="submit" class="crud-btn" onclick="return confirm('Delete article?')">Delete</button>
+            </form>
+          </li>
+        <% }); %>
+      </ul>
+      
+      <h2>Resources</h2>
+      <form method="post" action="/resources/create">
+        <input name="title" placeholder="Title" required />
+        <textarea name="description" placeholder="Description"></textarea>
+        <select name="type">
+          <option value="document">Document</option>
+          <option value="video">Video</option>
+          <option value="link">Link</option>
+          <option value="file">File</option>
+        </select>
+        <input name="url" placeholder="URL" />
+        <input name="category" placeholder="Category" />
+        <select name="accessLevel">
+          <option value="public">Public</option>
+          <option value="participants">Participants</option>
+          <option value="managers">Managers</option>
+        </select>
+        <button type="submit">Create Resource</button>
+      </form>
+      <ul>
+        <% resources.forEach(res => { %>
+          <li>
+            <form method="post" action="/resources/update/<%= res._id %>" style="display:inline;">
+              <input name="title" value="<%= res.title %>" required />
+              <textarea name="description"><%= res.description %></textarea>
+              <select name="type">
+                <option value="document" <%= res.type==='document'?'selected':'' %>>Document</option>
+                <option value="video" <%= res.type==='video'?'selected':'' %>>Video</option>
+                <option value="link" <%= res.type==='link'?'selected':'' %>>Link</option>
+                <option value="file" <%= res.type==='file'?'selected':'' %>>File</option>
+              </select>
+              <input name="url" value="<%= res.url %>" />
+              <input name="category" value="<%= res.category %>" />
+              <select name="accessLevel">
+                <option value="public" <%= res.accessLevel==='public'?'selected':'' %>>Public</option>
+                <option value="participants" <%= res.accessLevel==='participants'?'selected':'' %>>Participants</option>
+                <option value="managers" <%= res.accessLevel==='managers'?'selected':'' %>>Managers</option>
+              </select>
+              <button type="submit" class="crud-btn">Update</button>
+            </form>
+            <form method="post" action="/resources/delete/<%= res._id %>" style="display:inline;">
+              <button type="submit" class="crud-btn" onclick="return confirm('Delete resource?')">Delete</button>
+            </form>
+          </li>
+        <% }); %>
+      </ul>
+    </div>
+    
+    <div id="tree" class="tab-content">
+      <h2>Tree Connections</h2>
+      <ul>
+        <% treeConnections.forEach(t => { %>
+          <li>
+            <form method="post" action="/admin/edit-tree/<%= t._id %>" style="display:inline;">
+              <input name="userId" value="<%= t.userId %>" required />
+              <input name="leaderId" value="<%= t.leaderId %>" />
+              <select name="verified">
+                <option value="true" <%= t.verified?'selected':'' %>>Verified</option>
+                <option value="false" <%= !t.verified?'selected':'' %>>Not Verified</option>
+              </select>
+              <button type="submit" class="crud-btn">Edit</button>
+            </form>
+            <form method="post" action="/admin/delete-tree/<%= t._id %>" style="display:inline;">
+              <button type="submit" class="crud-btn" onclick="return confirm('Delete tree connection?')">Delete</button>
+            </form>
+          </li>
+        <% }); %>
+      </ul>
+    </div>
+    
+    <div id="settings" class="tab-content">
+      <h2>Settings</h2>
+      <a href="/settings">Manage Settings</a>
+    </div>
+    
+    <a href="/profile">Back to Profile</a>
+  </main>
+  
+  <script>
+    const tabs = document.querySelectorAll('.tab');
+    const contents = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        contents.forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

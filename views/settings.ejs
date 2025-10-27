@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings | MARS EMPIRE</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <style>
+    .crud-btn { margin-left: 0.5rem; }
+    input, textarea { margin: 0.2rem; width: 200px; }
+    textarea { width: 300px; height: 100px; }
+  </style>
+</head>
+<body>
+  <main style="max-width:800px;margin:3rem auto;padding:1rem;">
+    <h1>Settings Management</h1>
+    
+    <h2>Create New Setting</h2>
+    <form method="post" action="/settings/create">
+      <input name="key" placeholder="Key" required />
+      <textarea name="value" placeholder="Value"></textarea>
+      <button type="submit">Create Setting</button>
+    </form>
+    
+    <h2>All Settings</h2>
+    <ul>
+      <% settings.forEach(s => { %>
+        <li>
+          <form method="post" action="/settings/update/<%= s._id %>" style="display:inline;">
+            <input name="key" value="<%= s.key %>" readonly />
+            <textarea name="value"><%= s.value %></textarea>
+            <button type="submit" class="crud-btn">Update</button>
+          </form>
+          <form method="post" action="/settings/delete/<%= s._id %>" style="display:inline;">
+            <button type="submit" class="crud-btn" onclick="return confirm('Delete setting?')">Delete</button>
+          </form>
+        </li>
+      <% }); %>
+    </ul>
+    
+    <a href="/admin">Back to Admin</a>
+  </main>
+</body>
+</html>

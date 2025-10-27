@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Logs | MARS EMPIRE</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+</head>
+<body>
+  <main style="max-width:1000px;margin:3rem auto;padding:1rem;">
+    <h1>System Logs</h1>
+    
+    <table style="width:100%; border-collapse: collapse;">
+      <thead>
+        <tr>
+          <th style="border:1px solid #ccc; padding:0.5rem;">Timestamp</th>
+          <th style="border:1px solid #ccc; padding:0.5rem;">Level</th>
+          <th style="border:1px solid #ccc; padding:0.5rem;">Message</th>
+          <th style="border:1px solid #ccc; padding:0.5rem;">Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% logs.forEach(l => { %>
+          <tr>
+            <td style="border:1px solid #ccc; padding:0.5rem;"><%= l.timestamp %></td>
+            <td style="border:1px solid #ccc; padding:0.5rem;"><%= l.level %></td>
+            <td style="border:1px solid #ccc; padding:0.5rem;"><%= l.message %></td>
+            <td style="border:1px solid #ccc; padding:0.5rem;"><%= JSON.stringify(l.details) %></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    
+    <a href="/profile">Back to Profile</a>
+  </main>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications | MARS EMPIRE</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <style>
+    .crud-btn { margin-left: 0.5rem; }
+    input, select, textarea { margin: 0.2rem; width: 200px; }
+    textarea { width: 300px; height: 100px; }
+  </style>
+</head>
+<body>
+  <main style="max-width:800px;margin:3rem auto;padding:1rem;">
+    <h1>Notifications</h1>
+    
+    <% if (user.accountType === 'admin' || user.accountType === 'master_admin') { %>
+      <h2>Create New Notification</h2>
+      <form method="post" action="/notifications/create">
+        <input name="userId" placeholder="User ID" required />
+        <input name="title" placeholder="Title" required />
+        <textarea name="message" placeholder="Message"></textarea>
+        <input name="type" placeholder="Type" />
+        <button type="submit">Create Notification</button>
+      </form>
+    <% } %>
+    
+    <h2>Your Notifications</h2>
+    <ul>
+      <% notifications.forEach(n => { %>
+        <li>
+          <strong><%= n.title %></strong>: <%= n.message %> (Type: <%= n.type %>, Read: <%= n.read %>, Created: <%= n.createdAt %>)
+        </li>
+      <% }); %>
+    </ul>
+    
+    <a href="/profile">Back to Profile</a>
+  </main>
+</body>
+</html>

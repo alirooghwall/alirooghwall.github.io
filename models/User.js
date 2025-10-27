@@ -5,7 +5,8 @@ const userSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
   password: String,
-  accountType: { type: String, enum: ['student', 'participant', 'editor', 'manager', 'admin'], default: 'participant' },
+  accountType: { type: String, enum: ['student', 'participant', 'editor', 'manager', 'admin', 'master_admin'], default: 'participant' },
+  permissions: [{ type: String }], // Custom permissions list
   mlmLevel: { type: String, default: 'beginner' }, // To be verified by admin
   phone: String,
   leaderName: String,
@@ -15,6 +16,9 @@ const userSchema = new mongoose.Schema({
   verificationToken: String,
   resetToken: String,
   resetExpires: Date,
+  score: { type: Number, default: 0 }, // For leaderboard
+  sales: { type: Number, default: 0 }, // For leaderboard
+  recruited: { type: Number, default: 0 }, // For leaderboard
   createdAt: { type: Date, default: Date.now },
 });
 

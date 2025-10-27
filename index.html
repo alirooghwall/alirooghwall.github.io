@@ -147,8 +147,36 @@
 						</ul>
 					</div>
 					
+					<!-- Quotes Slideshow for Admins -->
+					<div id="quotes-slideshow" style="display:none; background: rgba(0,0,0,0.5); padding: 2rem; margin: 2rem 0; border-radius: 12px; text-align: center;">
+						<h2>Inspirational Quotes</h2>
+						<div id="quote-display" style="font-size: 1.5rem; font-style: italic; color: #4ecdc4;">"Success is not final, failure is not fatal: It is the courage to continue that counts." - Winston Churchill</div>
+						<button id="next-quote" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #4ecdc4; color: white; border: none; border-radius: 8px; cursor: pointer;">Next Quote</button>
+					</div>
 					
-
+					<script>
+						const quotes = [
+							"Success is not final, failure is not fatal: It is the courage to continue that counts. - Winston Churchill",
+							"The only way to do great work is to love what you do. - Steve Jobs",
+							"Believe you can and you're halfway there. - Theodore Roosevelt",
+							"Your time is limited, so don't waste it living someone else's life. - Steve Jobs",
+							"The future belongs to those who believe in the beauty of their dreams. - Eleanor Roosevelt"
+						];
+						let currentQuote = 0;
+						document.getElementById('next-quote').addEventListener('click', () => {
+							currentQuote = (currentQuote + 1) % quotes.length;
+							document.getElementById('quote-display').textContent = quotes[currentQuote];
+						});
+						// Show only for admins or role-assigned users
+						fetch('https://mars-empire-mlm.onrender.com/check-auth')
+						.then(r => r.json())
+						.then(data => {
+							if (data.loggedIn && (data.user.accountType === 'admin' || data.user.accountType === 'master_admin' || (data.user.permissions && data.user.permissions.includes('view_quotes')))) {
+								document.getElementById('quotes-slideshow').style.display = 'block';
+							}
+						})
+						.catch(() => {});
+					</script>
 
 				<!-- Header -->
 					<header id="header">
@@ -166,24 +194,8 @@
 							<li><a href="/resources">Study Materials</a></li>
 							<li><a href="/checklists">Checklists</a></li>
 							<li><a href="/tree">Tree View</a></li>
-						</ul>
-							
-						
-						
-							<!-- 
-							<a href="signin" class="button primary">Sign In</a>
-							<a href="signup" class="button">Sign Up</a>
-						 	-->
-							
-							
-							
-							<ul class="icons">
-							<li><a href="https://www.instagram.com/sulaiman_cu2?igsh=MThnMmdrbW9nNDFkdw%3D%3D&utm_source=qr" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
-							<li><a href="https://www.facebook.com/sultan.suliman.9461" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
-							<li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
-							<li><a href="#" class="icon brands fa-github"><span class="label">GitHub</span></a></li>
-
-							<li style="display:none;" id="dashboardLink"><a href="/dashboard">Dashboard</a></li>
+							<li><a href="/calculator">Calculator</a></li>
+							<li><a href="/leaderboard">Leaderboard</a></li>
 						</ul>
 					</nav>
 					

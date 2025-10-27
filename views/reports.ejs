@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports | MARS EMPIRE</title>
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <style>
+    .crud-btn { margin-left: 0.5rem; }
+    input, select, textarea { margin: 0.2rem; width: 200px; }
+    textarea { width: 300px; height: 100px; }
+  </style>
+</head>
+<body>
+  <main style="max-width:800px;margin:3rem auto;padding:1rem;">
+    <h1>Reports</h1>
+    
+    <h2>Create New Report</h2>
+    <form method="post" action="/reports/create">
+      <input name="type" placeholder="Type" required />
+      <textarea name="data" placeholder="Data"></textarea>
+      <button type="submit">Create Report</button>
+    </form>
+    
+    <h2>All Reports</h2>
+    <ul>
+      <% reports.forEach(r => { %>
+        <li>
+          <strong><%= r.type %></strong>: <%= r.data %> (Created: <%= r.createdAt %>)
+        </li>
+      <% }); %>
+    </ul>
+    
+    <a href="/profile">Back to Profile</a>
+  </main>
+</body>
+</html>
