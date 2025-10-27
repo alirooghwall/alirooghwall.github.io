@@ -155,7 +155,7 @@ app.get('/check-auth', (req, res) => {
 // Modal endpoints for sign in/sign up forms
 app.get('/modal/signin', (req, res) => {
   res.send(`
-    <form method="post" action="/signin" id="modalSigninForm">
+    <form method="post" action="${BASE_URL}/signin" id="modalSigninForm">
       <div class="input-group">
         <i class="fas fa-envelope"></i>
         <input name="email" type="email" placeholder="Email" required aria-label="Email" />
@@ -165,8 +165,8 @@ app.get('/modal/signin', (req, res) => {
         <input name="password" type="password" placeholder="Password" required aria-label="Password" />
       </div>
       <button type="submit" id="modalSigninBtn" style="pointer-events: auto; cursor: pointer;"><i class="fas fa-sign-in-alt"></i> Sign In</button>
-      <p class="forgot"><a href="/forgot-password" target="_blank">Forgot password?</a></p>
-      <p><a href="/signup" target="_blank">Create an account</a></p>
+      <p class="forgot"><a href="${BASE_URL}/forgot-password" target="_blank">Forgot password?</a></p>
+      <p><a href="${BASE_URL}/signup" target="_blank">Create an account</a></p>
     </form>
     <script>
       document.getElementById('modalSigninForm').onsubmit = async function(e) {
@@ -175,7 +175,7 @@ app.get('/modal/signin', (req, res) => {
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing In...';
         const formData = new FormData(this);
-        const res = await fetch('/signin', { method: 'POST', body: formData });
+        const res = await fetch('${BASE_URL}/signin', { method: 'POST', body: formData });
         const text = await res.text();
         if (text.includes('window.location.href')) {
           window.location.reload();
@@ -191,7 +191,7 @@ app.get('/modal/signin', (req, res) => {
 
 app.get('/modal/signup', (req, res) => {
   res.send(`
-    <form method="post" action="/signup" id="modalSignupForm">
+    <form method="post" action="${BASE_URL}/signup" id="modalSignupForm">
       <div class="input-group">
         <i class="fas fa-user"></i>
         <input name="name" placeholder="Name" required aria-label="Name" />
@@ -232,7 +232,7 @@ app.get('/modal/signup', (req, res) => {
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing Up...';
         const formData = new FormData(this);
-        const res = await fetch('/signup', { method: 'POST', body: formData });
+        const res = await fetch('${BASE_URL}/signup', { method: 'POST', body: formData });
         const text = await res.text();
         if (text.includes('window.location.href')) {
           window.location.reload();
