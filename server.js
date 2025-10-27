@@ -155,6 +155,7 @@ app.get('/check-auth', (req, res) => {
 // Modal endpoints for sign in/sign up forms
 app.get('/modal/signin', (req, res) => {
   res.send(`
+    <style>input, select { background: #f9f9f9; color: #000; border: 1px solid #ccc; padding: 0.5rem; border-radius: 4px; }</style>
     <form method="post" action="${BASE_URL}/signin" id="modalSigninForm">
       <div class="input-group">
         <i class="fas fa-envelope"></i>
@@ -177,7 +178,7 @@ app.get('/modal/signin', (req, res) => {
         const formData = new FormData(this);
         const res = await fetch('${BASE_URL}/signin', { method: 'POST', body: formData });
         const text = await res.text();
-        if (text.includes('window.location.href')) {
+        if (text.includes('window.location.reload')) {
           window.location.reload();
         } else {
           btn.disabled = false;
@@ -191,6 +192,7 @@ app.get('/modal/signin', (req, res) => {
 
 app.get('/modal/signup', (req, res) => {
   res.send(`
+    <style>input, select { background: #f9f9f9; color: #000; border: 1px solid #ccc; padding: 0.5rem; border-radius: 4px; }</style>
     <form method="post" action="${BASE_URL}/signup" id="modalSignupForm">
       <div class="input-group">
         <i class="fas fa-user"></i>
@@ -234,7 +236,7 @@ app.get('/modal/signup', (req, res) => {
         const formData = new FormData(this);
         const res = await fetch('${BASE_URL}/signup', { method: 'POST', body: formData });
         const text = await res.text();
-        if (text.includes('window.location.href')) {
+        if (text.includes('window.location.reload')) {
           window.location.reload();
         } else {
           btn.disabled = false;
@@ -358,7 +360,7 @@ app.post('/signup', [
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).send('<script>alert("' + errors.array().map(e => e.msg).join(', ') + '"); window.location.href="/signup";</script>');
+    return res.status(400).send('<p style="color:red;">' + errors.array().map(e => e.msg).join(', ') + '</p>');
   }
 
   try {
@@ -368,7 +370,7 @@ app.post('/signup', [
     if (existing) {
       // If user exists and verified, treat as password change request
       if (existing.isVerified) {
-        return res.status(400).send('<script>alert("Account already exists. Use forgot password to reset."); window.location.href="/signin";</script>');
+        return res.status(400).send('<p style="color:red;">Account already exists. Use forgot password to reset.</p>');
       } else {
         // Resend verification if unverified
         const token = crypto.randomBytes(32).toString('hex');
@@ -381,7 +383,7 @@ app.post('/signup', [
           html: `<p>Click <a href="${BASE_URL}/verify/${token}">here</a> to verify your account.</p>`
         };
         await transporter.sendMail(mailOptions);
-        return res.send('<script>alert("Verification email resent."); window.location.href="/signin";</script>');
+        return res.send('<p style="color:green;">Verification email resent.</p>');
       }
     }
 
@@ -399,10 +401,10 @@ app.post('/signup', [
     };
     await transporter.sendMail(mailOptions);
 
-    res.send('<script>alert("Signup successful! Check your email to verify. Your account is pending admin approval."); window.location.href="/signin";</script>');
+    res.send('<script>window.location.reload();</script>');
   } catch (err) {
     logger.error('Signup error:', err);
-    res.status(500).send('<script>alert("Server error"); window.location.href="/signup";</script>');
+    res.status(500).send('<p style="color:red;">Server error</p>');
   }
 });
 
@@ -550,7 +552,7 @@ app.post('/signin', [
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).send('<script>alert("' + errors.array().map(e => e.msg).join(', ') + '"); window.location.href="/signin";</script>');
+    return res.status(400).send('<p style="color:red;">' + errors.array().map(e => e.msg).join(', ') + '</p>');
   }
 
   try {
@@ -558,28 +560,28 @@ app.post('/signin', [
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).send('<script>alert("User not found"); window.location.href="/signin";</script>');
+      return res.status(400).send('<p style="color:red;">User not found</p>');
     }
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
-      return res.status(400).send('<script>alert("Invalid password"); window.location.href="/signin";</script>');
+      return res.status(400).send('<p style="color:red;">Invalid password</p>');
     }
 
     if (!user.isVerified) {
-      return res.send('<script>alert("Please verify your email first"); window.location.href="/resend-verification";</script>');
+      return res.send('<p style="color:red;">Please verify your email first</p>');
     }
 
     if (user.status !== 'approved') {
-      return res.send('<script>alert("Your account is pending admin approval"); window.location.href="/signin";</script>');
+      return res.send('<p style="color:red;">Your account is pending admin approval</p>');
     }
 
     const token = jwt.sign({ email: user.email, isVerified: user.isVerified, accountType: user.accountType }, JWT_SECRET, { expiresIn: '1d' });
     res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: 86400000 });
-    res.redirect(redirect || '/');
+    res.send('<script>window.location.reload();</script>');
   } catch (err) {
     logger.error('Signin error:', err);
-    res.status(500).send('<script>alert("Server error"); window.location.href="/signin";</script>');
+    res.status(500).send('<p style="color:red;">Server error</p>');
   }
 });
 
