@@ -48,21 +48,44 @@
 		</div>
 
 		<script>
-		// Modal logic
+		// Modal logic with fallback
 		const signInModal = document.getElementById('signInModal');
 		const signUpModal = document.getElementById('signUpModal');
+
 		document.getElementById('openSignIn').onclick = function() {
 			signInModal.style.display = 'flex';
-			fetch('/modal/signin').then(r => r.text()).then(html => {
-				document.getElementById('signInFormContainer').innerHTML = html;
-			});
+			// Try server endpoint first, fallback to direct form
+			fetch('/modal/signin')
+				.then(r => {
+					if (!r.ok) throw new Error('Server not available');
+					return r.text();
+				})
+				.then(html => {
+					document.getElementById('signInFormContainer').innerHTML = html;
+				})
+				.catch(() => {
+					// Fallback: redirect to signin page
+					window.location.href = '/signin';
+				});
 		};
+
 		document.getElementById('openSignUp').onclick = function() {
 			signUpModal.style.display = 'flex';
-			fetch('/modal/signup').then(r => r.text()).then(html => {
-				document.getElementById('signUpFormContainer').innerHTML = html;
-			});
+			// Try server endpoint first, fallback to direct form
+			fetch('/modal/signup')
+				.then(r => {
+					if (!r.ok) throw new Error('Server not available');
+					return r.text();
+				})
+				.then(html => {
+					document.getElementById('signUpFormContainer').innerHTML = html;
+				})
+				.catch(() => {
+					// Fallback: redirect to signup page
+					window.location.href = '/signup';
+				});
 		};
+
 		document.getElementById('closeSignIn').onclick = function() {
 			signInModal.style.display = 'none';
 		};
