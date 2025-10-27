@@ -1,0 +1,104 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Resources | MARS EMPIRE</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+</head>
+<body class="is-preload">
+  <div id="wrapper">
+    <header id="header">
+      <a href="index.html" class="logo">RESOURCES</a>
+    </header>
+    <nav id="nav">
+      <ul class="links">
+        <li><a href="index.html">MARS EMPIRE</a></li>
+        <li><a href="generic.html">MLM Companion 'AI'</a></li>
+        <li><a href="elements.html">Resources</a></li>
+        <li><a href="/rules">Rules</a></li>
+        <li><a href="/checklists">Checklists</a></li>
+        <li><a href="/tree">Tree View</a></li>
+      </ul>
+      <ul class="icons">
+        <li><a href="/dashboard">Dashboard</a></li>
+      </ul>
+    </nav>
+    <div id="main">
+      <section class="post">
+        <header class="major">
+          <h1>MLM Resources & Study Materials</h1>
+          <p>Access documents, videos, and links to enhance your MLM knowledge and skills.</p>
+        </header>
+        <% if (['admin', 'manager', 'editor'].includes(user.accountType)) { %>
+          <h2>Add New Resource</h2>
+          <form method="post" action="/resources/create">
+            <input name="title" placeholder="Resource Title" required style="width:100%;padding:0.5rem;" />
+            <textarea name="description" placeholder="Description" rows="3" style="width:100%;padding:0.5rem;"></textarea>
+            <select name="type" style="width:100%;padding:0.5rem;">
+              <option value="document">Document</option>
+              <option value="video">Video</option>
+              <option value="link">Link</option>
+              <option value="file">File</option>
+            </select>
+            <input name="url" placeholder="URL or File Path" style="width:100%;padding:0.5rem;" />
+            <input name="category" placeholder="Category (e.g., Training, Marketing)" style="width:100%;padding:0.5rem;" />
+            <select name="accessLevel" style="width:100%;padding:0.5rem;">
+              <option value="public">Public</option>
+              <option value="participants">Participants</option>
+              <option value="managers">Managers</option>
+            </select>
+            <button type="submit" style="padding:0.5rem 1rem;">Add Resource</button>
+          </form>
+        <% } %>
+        <h2>Available Resources</h2>
+        <% resources.forEach(resource => { %>
+          <article>
+            <header>
+              <h3><%= resource.title %> (<%= resource.type %>)</h3>
+              <p>Category: <%= resource.category %> | Access: <%= resource.accessLevel %></p>
+            </header>
+            <p><%= resource.description %></p>
+            <% if (resource.type === 'link') { %>
+              <a href="<%= resource.url %>" target="_blank">View Resource</a>
+            <% } else { %>
+              <a href="<%= resource.url %>">Download/View</a>
+            <% } %>
+            <% if (['admin', 'manager', 'editor'].includes(user.accountType)) { %>
+              <form method="post" action="/resources/update/<%= resource._id %>" style="display:inline;">
+                <input name="title" value="<%= resource.title %>" required />
+                <textarea name="description"><%= resource.description %></textarea>
+                <select name="type">
+                  <option value="document" <%= resource.type === 'document' ? 'selected' : '' %>>Document</option>
+                  <option value="video" <%= resource.type === 'video' ? 'selected' : '' %>>Video</option>
+                  <option value="link" <%= resource.type === 'link' ? 'selected' : '' %>>Link</option>
+                  <option value="file" <%= resource.type === 'file' ? 'selected' : '' %>>File</option>
+                </select>
+                <input name="url" value="<%= resource.url %>" />
+                <input name="category" value="<%= resource.category %>" />
+                <select name="accessLevel">
+                  <option value="public" <%= resource.accessLevel === 'public' ? 'selected' : '' %>>Public</option>
+                  <option value="participants" <%= resource.accessLevel === 'participants' ? 'selected' : '' %>>Participants</option>
+                  <option value="managers" <%= resource.accessLevel === 'managers' ? 'selected' : '' %>>Managers</option>
+                </select>
+                <button type="submit">Update</button>
+              </form>
+              <form method="post" action="/resources/delete/<%= resource._id %>" style="display:inline;" onsubmit="return confirm('Delete resource?')">
+                <button type="submit">Delete</button>
+              </form>
+            <% } %>
+          </article>
+        <% }); %>
+      </section>
+    </div>
+  </div>
+  <script src="assets/js/jquery.min.js"></script>
+  <script src="assets/js/jquery.scrollex.min.js"></script>
+  <script src="assets/js/jquery.scrolly.min.js"></script>
+  <script src="assets/js/browser.min.js"></script>
+  <script src="assets/js/breakpoints.min.js"></script>
+  <script src="assets/js/util.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

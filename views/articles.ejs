@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Articles | MARS EMPIRE</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+</head>
+<body class="is-preload">
+  <div id="wrapper">
+    <header id="header">
+      <a href="index.html" class="logo">ARTICLES</a>
+    </header>
+    <nav id="nav">
+      <ul class="links">
+        <li><a href="index.html">MARS EMPIRE</a></li>
+        <li><a href="generic.html">MLM Companion 'AI'</a></li>
+        <li><a href="elements.html">Resources</a></li>
+        <li><a href="/rules">Rules</a></li>
+        <li><a href="/checklists">Checklists</a></li>
+        <li><a href="/tree">Tree View</a></li>
+      </ul>
+      <ul class="icons">
+        <li><a href="/dashboard">Dashboard</a></li>
+      </ul>
+    </nav>
+    <div id="main">
+      <section class="post">
+        <header class="major">
+          <h1>MLM Articles & Guides</h1>
+          <p>Learn from expert-written articles on MLM strategies, success stories, and best practices.</p>
+        </header>
+        <% if (['admin', 'manager', 'editor'].includes(user.accountType)) { %>
+          <h2>Create New Article</h2>
+          <form method="post" action="/articles/create">
+            <input name="title" placeholder="Article Title" required style="width:100%;padding:0.5rem;" />
+            <textarea name="content" placeholder="Article Content" rows="10" style="width:100%;padding:0.5rem;"></textarea>
+            <input name="category" placeholder="Category (e.g., Strategy, Success)" style="width:100%;padding:0.5rem;" />
+            <input name="tags" placeholder="Tags (comma separated)" style="width:100%;padding:0.5rem;" />
+            <label><input name="published" type="checkbox" /> Publish immediately</label>
+            <button type="submit" style="padding:0.5rem 1rem;">Create Article</button>
+          </form>
+        <% } %>
+        <h2>Published Articles</h2>
+        <% articles.forEach(article => { %>
+          <article>
+            <header>
+              <h3><%= article.title %></h3>
+              <p>By <%= article.author.name %> | Category: <%= article.category %> | Tags: <%= article.tags.join(', ') %></p>
+            </header>
+            <p><%= article.content.substring(0, 200) %>...</p>
+            <% if (['admin', 'manager', 'editor'].includes(user.accountType)) { %>
+              <form method="post" action="/articles/update/<%= article._id %>" style="display:inline;">
+                <input name="title" value="<%= article.title %>" required />
+                <textarea name="content"><%= article.content %></textarea>
+                <input name="category" value="<%= article.category %>" />
+                <input name="tags" value="<%= article.tags.join(',') %>" />
+                <label><input name="published" type="checkbox" <%= article.published ? 'checked' : '' %> /> Published</label>
+                <button type="submit">Update</button>
+              </form>
+              <form method="post" action="/articles/delete/<%= article._id %>" style="display:inline;" onsubmit="return confirm('Delete article?')">
+                <button type="submit">Delete</button>
+              </form>
+            <% } %>
+          </article>
+        <% }); %>
+      </section>
+    </div>
+  </div>
+  <script src="assets/js/jquery.min.js"></script>
+  <script src="assets/js/jquery.scrollex.min.js"></script>
+  <script src="assets/js/jquery.scrolly.min.js"></script>
+  <script src="assets/js/browser.min.js"></script>
+  <script src="assets/js/breakpoints.min.js"></script>
+  <script src="assets/js/util.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

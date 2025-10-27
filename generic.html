@@ -55,7 +55,7 @@
 				document.getElementById('signInFormContainer').innerHTML = html;
 			}).catch(err => {
 				console.error('Failed to load signin modal:', err);
-				window.location.href = 'https://mars-empire-mlm.onrender.com/signin';
+				document.getElementById('signInFormContainer').innerHTML = '<p>Failed to load form. Please refresh and try again.</p>';
 			});
 		});
 		document.getElementById('openSignUp').addEventListener('click', function() {
@@ -65,7 +65,7 @@
 				document.getElementById('signUpFormContainer').innerHTML = html;
 			}).catch(err => {
 				console.error('Failed to load signup modal:', err);
-				window.location.href = 'https://mars-empire-mlm.onrender.com/signup';
+				document.getElementById('signUpFormContainer').innerHTML = '<p>Failed to load form. Please refresh and try again.</p>';
 			});
 		});
 		document.getElementById('closeSignIn').addEventListener('click', function() {

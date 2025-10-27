@@ -91,11 +91,16 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Models
 const User = require('./models/User');
+const Rule = require('./models/Rule');
+const Article = require('./models/Article');
+const Resource = require('./models/Resource');
+const ProfileUpdateRequest = require('./models/ProfileUpdateRequest');
 
 const checklistSchema = new mongoose.Schema({
   title: String,
   items: [{ text: String, completed: { type: Boolean, default: false } }],
   userId: String, // Reference to user
+  assignedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   isPredefined: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 });
@@ -133,6 +138,18 @@ const requireVerified = (req, res, next) => {
 // Middleware to check admin
 const requireAdmin = (req, res, next) => {
   if (req.user.accountType !== 'admin') return res.status(403).send('<p>Access denied. Admin only.</p>');
+  next();
+};
+
+// Middleware to check manager or admin
+const requireManager = (req, res, next) => {
+  if (!['admin', 'manager'].includes(req.user.accountType)) return res.status(403).send('<p>Access denied. Manager or Admin only.</p>');
+  next();
+};
+
+// Middleware to check editor or higher
+const requireEditor = (req, res, next) => {
+  if (!['admin', 'manager', 'editor'].includes(req.user.accountType)) return res.status(403).send('<p>Access denied. Editor or higher only.</p>');
   next();
 };
 
@@ -676,11 +693,14 @@ app.post('/reset-password/:token', async (req, res) => {
 
 // Admin dashboard
 
-// Admin dashboard with CRUD for users and tree
+// Admin dashboard with CRUD for users, content, and tree
 app.get('/admin', requireAuth, requireVerified, requireAdmin, async (req, res) => {
   const pendingUsers = await User.find({ status: 'pending' }).select('name email userId accountType mlmLevel phone leaderName createdAt _id');
   const allUsers = await User.find({}).select('name email userId accountType status mlmLevel phone leaderName _id');
   const treeConnections = await Tree.find({}).select('userId leaderId verified _id');
+  const rules = await Rule.find({});
+  const articles = await Article.find({}).populate('author');
+  const resources = await Resource.find({});
   res.send(`
     <!doctype html>
     <html>
@@ -690,12 +710,32 @@ app.get('/admin', requireAuth, requireVerified, requireAdmin, async (req, res) =
       <link rel="stylesheet" href="assets/css/main.css">
       <style>
         .crud-btn { margin-left: 0.5rem; }
-        input, select { margin: 0.2rem; }
+        input, select, textarea { margin: 0.2rem; width: 200px; }
+        textarea { width: 300px; height: 100px; }
       </style>
     </head>
     <body>
       <main style="max-width:1200px;margin:3rem auto;padding:1rem;">
         <h1>Admin Dashboard</h1>
+        
+        <h2>Create New User</h2>
+        <form method="post" action="/admin/create-user">
+          <input name="name" placeholder="Name" required />
+          <input name="email" type="email" placeholder="Email" required />
+          <input name="password" placeholder="Password" required />
+          <input name="phone" placeholder="Phone" />
+          <input name="leaderName" placeholder="Leader Name" />
+          <select name="accountType">
+            <option value="student">Student</option>
+            <option value="participant">Participant</option>
+            <option value="editor">Editor</option>
+            <option value="manager">Manager</option>
+            <option value="admin">Admin</option>
+          </select>
+          <input name="mlmLevel" placeholder="MLM Level" />
+          <button type="submit">Create User</button>
+        </form>
+        
         <h2>Pending Approvals</h2>
         <ul>
           ${pendingUsers.map(u => `
@@ -708,6 +748,8 @@ app.get('/admin', requireAuth, requireVerified, requireAdmin, async (req, res) =
                 <select name="accountType">
                   <option value="student" ${u.accountType==='student'?'selected':''}>Student</option>
                   <option value="participant" ${u.accountType==='participant'?'selected':''}>Participant</option>
+                  <option value="editor" ${u.accountType==='editor'?'selected':''}>Editor</option>
+                  <option value="manager" ${u.accountType==='manager'?'selected':''}>Manager</option>
                   <option value="admin" ${u.accountType==='admin'?'selected':''}>Admin</option>
                 </select>
                 <input name="mlmLevel" value="${u.mlmLevel}" />
@@ -725,6 +767,7 @@ app.get('/admin', requireAuth, requireVerified, requireAdmin, async (req, res) =
             </li>
           `).join('')}
         </ul>
+        
         <h2>All Users</h2>
         <ul>
           ${allUsers.map(u => `
@@ -737,6 +780,8 @@ app.get('/admin', requireAuth, requireVerified, requireAdmin, async (req, res) =
                 <select name="accountType">
                   <option value="student" ${u.accountType==='student'?'selected':''}>Student</option>
                   <option value="participant" ${u.accountType==='participant'?'selected':''}>Participant</option>
+                  <option value="editor" ${u.accountType==='editor'?'selected':''}>Editor</option>
+                  <option value="manager" ${u.accountType==='manager'?'selected':''}>Manager</option>
                   <option value="admin" ${u.accountType==='admin'?'selected':''}>Admin</option>
                 </select>
                 <input name="mlmLevel" value="${u.mlmLevel}" />
@@ -748,6 +793,104 @@ app.get('/admin', requireAuth, requireVerified, requireAdmin, async (req, res) =
             </li>
           `).join('')}
         </ul>
+        
+        <h2>Rules</h2>
+        <form method="post" action="/rules/create">
+          <input name="title" placeholder="Title" required />
+          <textarea name="content" placeholder="Content"></textarea>
+          <input name="category" placeholder="Category" />
+          <button type="submit">Create Rule</button>
+        </form>
+        <ul>
+          ${rules.map(r => `
+            <li>
+              <form method="post" action="/rules/update/${r._id}" style="display:inline;">
+                <input name="title" value="${r.title}" required />
+                <textarea name="content">${r.content}</textarea>
+                <input name="category" value="${r.category}" />
+                <button type="submit" class="crud-btn">Update</button>
+              </form>
+              <form method="post" action="/rules/delete/${r._id}" style="display:inline;">
+                <button type="submit" class="crud-btn" onclick="return confirm('Delete rule?')">Delete</button>
+              </form>
+            </li>
+          `).join('')}
+        </ul>
+        
+        <h2>Articles</h2>
+        <form method="post" action="/articles/create">
+          <input name="title" placeholder="Title" required />
+          <textarea name="content" placeholder="Content"></textarea>
+          <input name="category" placeholder="Category" />
+          <input name="tags" placeholder="Tags (comma separated)" />
+          <label><input name="published" type="checkbox" /> Published</label>
+          <button type="submit">Create Article</button>
+        </form>
+        <ul>
+          ${articles.map(a => `
+            <li>
+              <form method="post" action="/articles/update/${a._id}" style="display:inline;">
+                <input name="title" value="${a.title}" required />
+                <textarea name="content">${a.content}</textarea>
+                <input name="category" value="${a.category}" />
+                <input name="tags" value="${a.tags.join(',')}" />
+                <label><input name="published" type="checkbox" ${a.published?'checked':''} /> Published</label>
+                <button type="submit" class="crud-btn">Update</button>
+              </form>
+              <form method="post" action="/articles/delete/${a._id}" style="display:inline;">
+                <button type="submit" class="crud-btn" onclick="return confirm('Delete article?')">Delete</button>
+              </form>
+            </li>
+          `).join('')}
+        </ul>
+        
+        <h2>Resources</h2>
+        <form method="post" action="/resources/create">
+          <input name="title" placeholder="Title" required />
+          <textarea name="description" placeholder="Description"></textarea>
+          <select name="type">
+            <option value="document">Document</option>
+            <option value="video">Video</option>
+            <option value="link">Link</option>
+            <option value="file">File</option>
+          </select>
+          <input name="url" placeholder="URL" />
+          <input name="category" placeholder="Category" />
+          <select name="accessLevel">
+            <option value="public">Public</option>
+            <option value="participants">Participants</option>
+            <option value="managers">Managers</option>
+          </select>
+          <button type="submit">Create Resource</button>
+        </form>
+        <ul>
+          ${resources.map(res => `
+            <li>
+              <form method="post" action="/resources/update/${res._id}" style="display:inline;">
+                <input name="title" value="${res.title}" required />
+                <textarea name="description">${res.description}</textarea>
+                <select name="type">
+                  <option value="document" ${res.type==='document'?'selected':''}>Document</option>
+                  <option value="video" ${res.type==='video'?'selected':''}>Video</option>
+                  <option value="link" ${res.type==='link'?'selected':''}>Link</option>
+                  <option value="file" ${res.type==='file'?'selected':''}>File</option>
+                </select>
+                <input name="url" value="${res.url}" />
+                <input name="category" value="${res.category}" />
+                <select name="accessLevel">
+                  <option value="public" ${res.accessLevel==='public'?'selected':''}>Public</option>
+                  <option value="participants" ${res.accessLevel==='participants'?'selected':''}>Participants</option>
+                  <option value="managers" ${res.accessLevel==='managers'?'selected':''}>Managers</option>
+                </select>
+                <button type="submit" class="crud-btn">Update</button>
+              </form>
+              <form method="post" action="/resources/delete/${res._id}" style="display:inline;">
+                <button type="submit" class="crud-btn" onclick="return confirm('Delete resource?')">Delete</button>
+              </form>
+            </li>
+          `).join('')}
+        </ul>
+        
         <h2>Tree Connections</h2>
         <ul>
           ${treeConnections.map(t => `
@@ -800,13 +943,25 @@ app.post('/admin/delete-tree/:id', requireAuth, requireAdmin, async (req, res) =
   res.redirect('/admin');
 });
 
-app.post('/admin/approve/:id', requireAuth, requireAdmin, async (req, res) => {
-  await User.updateOne({ _id: req.params.id }, { status: 'approved' });
+app.post('/admin/create-user', requireAdmin, async (req, res) => {
+  const { name, email, password, phone, leaderName, accountType, mlmLevel } = req.body;
+  const hashed = await bcrypt.hash(password, 10);
+  const userId = 'ME' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
+  await new User({ name, email, password: hashed, phone, leaderName, accountType, mlmLevel, userId, status: 'approved', isVerified: true }).save();
   res.redirect('/admin');
 });
 
-app.post('/admin/reject/:id', requireAuth, requireAdmin, async (req, res) => {
-  await User.updateOne({ _id: req.params.id }, { status: 'rejected' });
+app.post('/admin/approve-profile/:id', requireAdmin, async (req, res) => {
+  const request = await ProfileUpdateRequest.findById(req.params.id).populate('userId');
+  if (!request || request.status !== 'pending') return res.redirect('/admin');
+  await User.updateOne({ _id: request.userId._id }, request.requestedChanges);
+  request.status = 'approved';
+  await request.save();
+  res.redirect('/admin');
+});
+
+app.post('/admin/reject-profile/:id', requireAdmin, async (req, res) => {
+  await ProfileUpdateRequest.updateOne({ _id: req.params.id }, { status: 'rejected' });
   res.redirect('/admin');
 });
 
@@ -903,25 +1058,92 @@ app.get('/calculator', requireAuth, requireVerified, (req, res) => {
   res.render('calculator', { user: req.user });
 });
 
-app.get('/rules', requireAuth, requireVerified, (req, res) => {
-  res.render('rules', { user: req.user });
+app.get('/rules', requireAuth, requireVerified, async (req, res) => {
+  const rules = await Rule.find({});
+  res.render('rules', { rules, user: req.user });
+});
+
+app.post('/rules/create', requireEditor, async (req, res) => {
+  const { title, content, category } = req.body;
+  await new Rule({ title, content, category, createdBy: req.user._id }).save();
+  res.redirect('/rules');
+});
+
+app.post('/rules/update/:id', requireEditor, async (req, res) => {
+  const { title, content, category } = req.body;
+  await Rule.updateOne({ _id: req.params.id }, { title, content, category, updatedAt: new Date() });
+  res.redirect('/rules');
+});
+
+app.post('/rules/delete/:id', requireEditor, async (req, res) => {
+  await Rule.deleteOne({ _id: req.params.id });
+  res.redirect('/rules');
+});
+
+// Articles routes
+app.get('/articles', requireAuth, requireVerified, async (req, res) => {
+  const articles = await Article.find({ published: true }).populate('author');
+  res.render('articles', { articles, user: req.user });
+});
+
+app.post('/articles/create', requireEditor, async (req, res) => {
+  const { title, content, category, tags, published } = req.body;
+  await new Article({ title, content, category, tags: tags.split(','), published: published === 'on', author: req.user._id }).save();
+  res.redirect('/articles');
+});
+
+app.post('/articles/update/:id', requireEditor, async (req, res) => {
+  const { title, content, category, tags, published } = req.body;
+  await Article.updateOne({ _id: req.params.id }, { title, content, category, tags: tags.split(','), published: published === 'on', updatedAt: new Date() });
+  res.redirect('/articles');
+});
+
+app.post('/articles/delete/:id', requireEditor, async (req, res) => {
+  await Article.deleteOne({ _id: req.params.id });
+  res.redirect('/articles');
+});
+
+// Resources routes
+app.get('/resources', requireAuth, requireVerified, async (req, res) => {
+  const accessLevels = req.user.accountType === 'admin' ? ['public', 'participants', 'managers'] : req.user.accountType === 'manager' ? ['public', 'participants'] : ['public'];
+  const resources = await Resource.find({ accessLevel: { $in: accessLevels } });
+  res.render('resources', { resources, user: req.user });
+});
+
+app.post('/resources/create', requireEditor, async (req, res) => {
+  const { title, description, type, url, category, accessLevel } = req.body;
+  await new Resource({ title, description, type, url, category, accessLevel, uploadedBy: req.user._id }).save();
+  res.redirect('/resources');
+});
+
+app.post('/resources/update/:id', requireEditor, async (req, res) => {
+  const { title, description, type, url, category, accessLevel } = req.body;
+  await Resource.updateOne({ _id: req.params.id }, { title, description, type, url, category, accessLevel });
+  res.redirect('/resources');
+});
+
+app.post('/resources/delete/:id', requireEditor, async (req, res) => {
+  await Resource.deleteOne({ _id: req.params.id });
+  res.redirect('/resources');
 });
 
 // Profile page
 app.get('/profile', requireAuth, requireVerified, async (req, res) => {
   const user = await User.findOne({ email: req.user.email }).select('-password');
-  res.render('profile', { user });
+  const pendingRequest = await ProfileUpdateRequest.findOne({ userId: user._id, status: 'pending' });
+  res.render('profile', { user, pendingRequest });
 });
 
-app.post('/update-profile', requireAuth, async (req, res) => {
-  try {
-    const { name, email, phone, leaderName } = req.body;
-    await User.updateOne({ email: req.user.email }, { name, email, phone, leaderName });
-    res.send('<p>Profile updated! <a href="/profile">Back</a></p>');
-  } catch (err) {
-    logger.error('Update error:', err);
-    res.status(500).send('<p>Server error</p>');
-  }
+app.post('/profile/request-update', requireAuth, async (req, res) => {
+  const { name, email, phone, leaderName, mlmLevel } = req.body;
+  const user = await User.findOne({ email: req.user.email });
+  const existing = await ProfileUpdateRequest.findOne({ userId: user._id, status: 'pending' });
+  if (existing) return res.send('<p>Update request already pending. <a href="/profile">Back</a></p>');
+  await new ProfileUpdateRequest({
+    userId: user._id,
+    requestedChanges: { name, email, phone, leaderName, mlmLevel }
+  }).save();
+  res.send('<p>Update request submitted for admin approval. <a href="/profile">Back</a></p>');
 });
 
 // Logout
@@ -961,9 +1183,32 @@ app.get('/robots.txt', (req, res) => {
   res.send('User-agent: *\nAllow: /\nSitemap: ' + BASE_URL + '/sitemap.xml');
 });
 
-// 404
-app.use((req, res) => {
-  res.status(404).sendFile(path.join(__dirname, '404.html'));
+// AI integration routes (placeholders for future AI model)
+app.post('/ai/chat', requireAuth, (req, res) => {
+  const { message } = req.body;
+  // Log interaction
+  logger.info(`AI Chat: User ${req.user.email} - ${message}`);
+  // Placeholder response
+  res.json({ response: 'This is a placeholder response from the AI model.' });
+});
+
+app.post('/ai/update-checklist', requireAuth, async (req, res) => {
+  const { checklistId, itemIndex, completed } = req.body;
+  const checklist = await Checklist.findById(checklistId);
+  if (checklist && (checklist.userId === req.user.email || checklist.assignedBy.toString() === req.user._id.toString())) {
+    checklist.items[itemIndex].completed = completed;
+    await checklist.save();
+    logger.info(`Checklist updated via AI: ${req.user.email} - ${checklistId}`);
+    res.json({ success: true });
+  } else {
+    res.status(403).json({ error: 'Not authorized' });
+  }
+});
+
+app.post('/ai/track-progress', requireAuth, (req, res) => {
+  const { progressData } = req.body;
+  logger.info(`Progress tracked: User ${req.user.email} - ${JSON.stringify(progressData)}`);
+  res.json({ success: true });
 });
 
 app.listen(PORT, () => {

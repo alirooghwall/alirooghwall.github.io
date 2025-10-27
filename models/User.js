@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true },
   password: String,
-  accountType: { type: String, enum: ['student', 'participant', 'admin'], default: 'participant' },
+  accountType: { type: String, enum: ['student', 'participant', 'editor', 'manager', 'admin'], default: 'participant' },
   mlmLevel: { type: String, default: 'beginner' }, // To be verified by admin
   phone: String,
   leaderName: String,
