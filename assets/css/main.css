@@ -2262,6 +2262,10 @@ input, select, textarea {
 	background-color: transparent !important;
 	box-shadow: inset 0 0 0 2px #ffffff !important;
 	color: #ffffff !important;
+	cursor: pointer !important;
+	pointer-events: auto !important;
+	z-index: 10003 !important;
+	position: relative !important;
 }
 
 #openSignIn:hover, #openSignUp:hover {
