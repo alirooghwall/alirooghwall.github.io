@@ -73,7 +73,7 @@ document.getElementById('openSignIn').onclick = function() {
 	console.log('Sign In button clicked');
 	signInModal.style.display = 'flex';
 	// Try server endpoint first, fallback to direct form
-	fetch('/modal/signin')
+	fetch('https://mars-empire-mlm.onrender.com/modal/signin')
 		.then(r => {
 			console.log('Fetch response:', r.status);
 			if (!r.ok) throw new Error('Server not available');
@@ -86,14 +86,14 @@ document.getElementById('openSignIn').onclick = function() {
 		.catch((error) => {
 			console.log('Fetch failed:', error);
 			// Fallback: redirect to signin page
-			window.location.href = '/signin';
+			window.location.href = 'https://mars-empire-mlm.onrender.com/signin';
 		});
 };	document.getElementById('openSignUp').onclick = function() {
 		alert('Sign Up clicked');
 	console.log('Sign Up button clicked');
 		signUpModal.style.display = 'flex';
 		// Try server endpoint first, fallback to direct form
-		fetch('/modal/signup')
+		fetch('https://mars-empire-mlm.onrender.com/modal/signup')
 			.then(r => {
 				console.log('Fetch response:', r.status);
 				if (!r.ok) throw new Error('Server not available');
@@ -106,7 +106,7 @@ document.getElementById('openSignIn').onclick = function() {
 			.catch((error) => {
 				console.log('Fetch failed:', error);
 				// Fallback: redirect to signup page
-				window.location.href = '/signup';
+				window.location.href = 'https://mars-empire-mlm.onrender.com/signup';
 			});
 	};
 
