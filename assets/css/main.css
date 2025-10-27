@@ -2257,6 +2257,29 @@ input, select, textarea {
 				background-color: #18bfef;
 			}
 
+/* Make auth buttons visible on dark background */
+#openSignIn, #openSignUp {
+	background-color: transparent !important;
+	box-shadow: inset 0 0 0 2px #ffffff !important;
+	color: #ffffff !important;
+}
+
+#openSignIn:hover, #openSignUp:hover {
+	box-shadow: inset 0 0 0 2px #18bfef !important;
+	color: #18bfef !important;
+}
+
+#openSignIn {
+	background-color: #ffffff !important;
+	box-shadow: none !important;
+	color: #1e252d !important;
+}
+
+#openSignIn:hover {
+	background-color: #18bfef !important;
+	color: #ffffff !important;
+}
+
 /* Form */
 
 	form {
