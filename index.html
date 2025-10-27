@@ -30,6 +30,8 @@
 			<a href="#navPanel" id="navPanelToggle">Menu</a>
 			<button class="button primary" id="openSignIn">Sign In</button>
 			<button class="button" id="openSignUp">Sign Up</button>
+			<a href="/profile" id="profileLink" style="display:none;" class="button">Profile</a>
+			<form method="post" action="/logout" id="logoutForm" style="display:none;"><button type="submit" class="button">Logout</button></form>
 		</div>
 
 		<!-- Sign In Modal -->
@@ -82,21 +84,24 @@
 		.then(data => {
 			const signInBtn = document.getElementById('openSignIn');
 			const signUpBtn = document.getElementById('openSignUp');
+			const profileLink = document.getElementById('profileLink');
+			const logoutForm = document.getElementById('logoutForm');
 			const dashboardLi = document.getElementById('dashboardLink');
 			const profileLi = document.querySelector('a[href="/profile"]').parentElement;
-			const logoutForm = document.querySelector('form[action="/logout"]');
 			if (data.loggedIn) {
 				signInBtn.style.display = 'none';
 				signUpBtn.style.display = 'none';
+				profileLink.style.display = 'inline-block';
+				logoutForm.style.display = 'inline';
 				dashboardLi.style.display = 'block';
 				profileLi.style.display = 'block';
-				logoutForm.style.display = 'inline';
 			} else {
-				signInBtn.style.display = 'block';
-				signUpBtn.style.display = 'block';
+				signInBtn.style.display = 'inline-block';
+				signUpBtn.style.display = 'inline-block';
+				profileLink.style.display = 'none';
+				logoutForm.style.display = 'none';
 				dashboardLi.style.display = 'none';
 				profileLi.style.display = 'none';
-				logoutForm.style.display = 'none';
 			}
 		});
 		</script>
@@ -153,10 +158,8 @@
 							<li><a href="https://www.facebook.com/sultan.suliman.9461" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
 							<li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
 							<li><a href="#" class="icon brands fa-github"><span class="label">GitHub</span></a></li>
-						
+
 							<li style="display:none;" id="dashboardLink"><a href="/dashboard">Dashboard</a></li>
-							<li style="display:none;"><a href="/profile">Profile</a></li>
-  							<form method="post" action="/logout" style="display:none;"><button type="submit">Logout</button></form>
 						</ul>
 					</nav>
 					

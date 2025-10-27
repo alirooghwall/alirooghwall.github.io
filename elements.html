@@ -17,9 +17,80 @@
 
 		<div style="position: fixed; top: 1rem; left: 1rem; z-index: 10001; display: flex; align-items: center; gap: 0.5rem;">
 			<a href="#navPanel" id="navPanelToggle">Menu</a>
-			<a href="/signin" class="button primary">Sign In</a>
-			<a href="/signup" class="button">Sign Up</a>
+			<button class="button primary" id="openSignIn">Sign In</button>
+			<button class="button" id="openSignUp">Sign Up</button>
+			<a href="/profile" class="button" id="profileBtn" style="display:none;">Profile</a>
+			<form method="post" action="/logout" style="display:none;"><button type="submit" class="button" id="logoutBtn">Logout</button></form>
 		</div>
+
+		<!-- Sign In Modal -->
+		<div id="signInModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.7);z-index:10002;align-items:center;justify-content:center;">
+			<div style="background:#222;padding:2rem;border-radius:12px;max-width:400px;width:90%;position:relative;">
+				<button id="closeSignIn" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;">&times;</button>
+				<div id="signInFormContainer">Loading...</div>
+			</div>
+		</div>
+
+		<!-- Sign Up Modal -->
+		<div id="signUpModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.7);z-index:10002;align-items:center;justify-content:center;">
+			<div style="background:#222;padding:2rem;border-radius:12px;max-width:400px;width:90%;position:relative;">
+				<button id="closeSignUp" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;">&times;</button>
+				<div id="signUpFormContainer">Loading...</div>
+			</div>
+		</div>
+
+		<script>
+		// Modal logic
+		const signInModal = document.getElementById('signInModal');
+		const signUpModal = document.getElementById('signUpModal');
+		document.getElementById('openSignIn').onclick = function() {
+			signInModal.style.display = 'flex';
+			fetch('/modal/signin').then(r => r.text()).then(html => {
+				document.getElementById('signInFormContainer').innerHTML = html;
+			});
+		};
+		document.getElementById('openSignUp').onclick = function() {
+			signUpModal.style.display = 'flex';
+			fetch('/modal/signup').then(r => r.text()).then(html => {
+				document.getElementById('signUpFormContainer').innerHTML = html;
+			});
+		};
+		document.getElementById('closeSignIn').onclick = function() {
+			signInModal.style.display = 'none';
+		};
+		document.getElementById('closeSignUp').onclick = function() {
+			signUpModal.style.display = 'none';
+		};
+		window.onclick = function(e) {
+			if (e.target === signInModal) signInModal.style.display = 'none';
+			if (e.target === signUpModal) signUpModal.style.display = 'none';
+		};
+		</script>
+
+		<script>
+		fetch('/check-auth')
+		.then(r => r.json())
+		.then(data => {
+			const signInBtn = document.getElementById('openSignIn');
+			const signUpBtn = document.getElementById('openSignUp');
+			const profileBtn = document.getElementById('profileBtn');
+			const logoutForm = document.querySelector('form[action="/logout"]');
+			const dashboardLi = document.getElementById('dashboardLink');
+			if (data.loggedIn) {
+				signInBtn.style.display = 'none';
+				signUpBtn.style.display = 'none';
+				profileBtn.style.display = 'inline-block';
+				logoutForm.style.display = 'inline';
+				if (dashboardLi) dashboardLi.style.display = 'block';
+			} else {
+				signInBtn.style.display = 'inline-block';
+				signUpBtn.style.display = 'inline-block';
+				profileBtn.style.display = 'none';
+				logoutForm.style.display = 'none';
+				if (dashboardLi) dashboardLi.style.display = 'none';
+			}
+		});
+		</script>
 		
 
 		<!-- Wrapper -->
@@ -36,6 +107,9 @@
 							<li><a href="index.html">MARS EMPIRE</a></li>
 							<li><a href="generic.html">MLM Companion 'AI'</a></li>
 							<li class="active"><a href="elements.html">Resources</a></li>
+							<li><a href="/rules">Rules</a></li>
+							<li><a href="/checklists">Checklists</a></li>
+							<li><a href="/tree">Tree View</a></li>
 						</ul>
 
 
@@ -52,10 +126,9 @@
 							<li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
 							<li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
 							<li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
-							<li><a href="#" class="icon brands fa-github"><span class="label">GitHub</span></a></li>
+							<li><a href="#" class="icon brands fa-github"><span class="label">Github</span></a></li>
 
-							<a href="/profile">Profile</a>
-  							<form method="post" action="/logout" style="display:inline;"><button type="submit">Logout</button></form>
+							<li style="display:none;" id="dashboardLink"><a href="/dashboard">Dashboard</a></li>
 						</ul>
 					</nav>
 
@@ -65,43 +138,32 @@
 						<!-- Post -->
 							<section class="post">
 								<header class="major">
-									<h1>Elements<br />
-									Reference</h1>
+									<h1>MLM Resources<br />
+									& Training Materials</h1>
 								</header>
 
-								<!-- Text stuff -->
-									<h2>Text</h2>
-									<p>This is <b>bold</b> and this is <strong>strong</strong>. This is <i>italic</i> and this is <em>emphasized</em>.
-									This is <sup>superscript</sup> text and this is <sub>subscript</sub> text.
-									This is <u>underlined</u> and this is code: <code>for (;;) { ... }</code>.
-									Finally, this is a <a href="#">link</a>.</p>
+								<!-- MLM Fundamentals -->
+									<h2>MLM Fundamentals</h2>
+									<p>Network Marketing, also known as Multi-Level Marketing (MLM), is a business model where independent distributors earn income through direct sales and recruiting others to do the same. Success in MLM requires understanding the fundamentals of building relationships, providing value, and creating sustainable income streams.</p>
 									<hr />
-									<h2>Heading Level 2</h2>
-									<h3>Heading Level 3</h3>
-									<h4>Heading Level 4</h4>
-									<h5>Heading Level 5</h5>
-									<h6>Heading Level 6</h6>
-									<hr />
+									<h2>Building Your Network</h2>
+									<h3>Lead Generation Strategies</h3>
+									<p>Effective lead generation is the foundation of MLM success. Focus on building genuine relationships rather than aggressive selling. Use social media, networking events, and referrals to connect with potential partners who share your vision and values.</p>
 									<header>
-										<h2>Heading with a Subtitle</h2>
-										<p>Lorem ipsum dolor sit amet nullam id egestas urna aliquam</p>
+										<h3>Recruitment Best Practices</h3>
+										<p>Quality over quantity - focus on recruiting serious, committed individuals who are willing to learn and grow.</p>
 									</header>
-									<p>Nunc lacinia ante nunc ac lobortis. Interdum adipiscing gravida odio porttitor sem non mi integer non faucibus ornare mi ut ante amet placerat aliquet. Volutpat eu sed ante lacinia sapien lorem accumsan varius montes viverra nibh in adipiscing blandit tempus accumsan.</p>
+									<p>When recruiting, emphasize the opportunity for personal development, financial freedom, and building a legacy. Share your personal journey and be transparent about both the benefits and challenges of the MLM business model.</p>
 									<header>
-										<h3>Heading with a Subtitle</h3>
-										<p>Lorem ipsum dolor sit amet nullam id egestas urna aliquam</p>
+										<h4>Training Your Team</h4>
+										<p>Invest time in mentoring and developing your downline through regular training sessions and one-on-one coaching.</p>
 									</header>
-									<p>Nunc lacinia ante nunc ac lobortis. Interdum adipiscing gravida odio porttitor sem non mi integer non faucibus ornare mi ut ante amet placerat aliquet. Volutpat eu sed ante lacinia sapien lorem accumsan varius montes viverra nibh in adipiscing blandit tempus accumsan.</p>
-									<header>
-										<h4>Heading with a Subtitle</h4>
-										<p>Lorem ipsum dolor sit amet nullam id egestas urna aliquam</p>
-									</header>
-									<p>Nunc lacinia ante nunc ac lobortis. Interdum adipiscing gravida odio porttitor sem non mi integer non faucibus ornare mi ut ante amet placerat aliquet. Volutpat eu sed ante lacinia sapien lorem accumsan varius montes viverra nibh in adipiscing blandit tempus accumsan.</p>
+									<p>Successful MLM leaders understand that their role is to serve and develop their team members. Regular training, motivation, and support are essential for long-term success.</p>
 
 									<hr />
 
-								<!-- Lists -->
-									<h2>Lists</h2>
+								<!-- Business Development -->
+									<h2>Business Development</h2>
 									<div class="row">
 										<div class="col-6 col-12-small">
 
@@ -207,102 +269,102 @@
 
 									<hr />
 
-								<!-- Blockquote -->
-									<h2>Blockquote</h2>
-									<blockquote>Fringilla nisl. Donec accumsan interdum nisi, quis tincidunt felis sagittis eget tempus euismod. Vestibulum ante ipsum primis in faucibus vestibulum. Blandit adipiscing eu felis iaculis volutpat ac adipiscing accumsan faucibus. Vestibulum ante ipsum primis in faucibus vestibulum. Blandit adipiscing eu felis.</blockquote>
+								<!-- Legal & Compliance -->
+									<h2>Legal & Compliance</h2>
+									<blockquote>MLM success depends on ethical practices and compliance with regulations. Always operate within legal boundaries and prioritize building trust with your network.</blockquote>
 
 									<hr />
 
-								<!-- Table -->
-									<h2>Table</h2>
+								<!-- Success Stories -->
+									<h2>Success Stories & Case Studies</h2>
 
-									<h3>Default</h3>
+									<h3>Real MLM Achievements</h3>
 									<div class="table-wrapper">
 										<table>
 											<thead>
 												<tr>
-													<th>Name</th>
-													<th>Description</th>
-													<th>Price</th>
+													<th>Level</th>
+													<th>Requirements</th>
+													<th>Benefits</th>
 												</tr>
 											</thead>
 											<tbody>
 												<tr>
-													<td>Item 1</td>
-													<td>Ante turpis integer aliquet porttitor.</td>
-													<td>29.99</td>
+													<td>Entry Level</td>
+													<td>Complete basic training</td>
+													<td>Access to products at wholesale</td>
 												</tr>
 												<tr>
-													<td>Item 2</td>
-													<td>Vis ac commodo adipiscing arcu aliquet.</td>
-													<td>19.99</td>
+													<td>Qualified Distributor</td>
+													<td>$500 in personal sales</td>
+													<td>10% commission on sales</td>
 												</tr>
 												<tr>
-													<td>Item 3</td>
-													<td> Morbi faucibus arcu accumsan lorem.</td>
-													<td>29.99</td>
+													<td>Team Leader</td>
+													<td>3 active team members</td>
+													<td>5% override on team sales</td>
 												</tr>
 												<tr>
-													<td>Item 4</td>
-													<td>Vitae integer tempus condimentum.</td>
-													<td>19.99</td>
+													<td>Senior Leader</td>
+													<td>10 active team members</td>
+													<td>Monthly bonuses + leadership training</td>
 												</tr>
 												<tr>
-													<td>Item 5</td>
-													<td>Ante turpis integer aliquet porttitor.</td>
-													<td>29.99</td>
+													<td>Executive Director</td>
+													<td>$10K monthly team volume</td>
+													<td>Car allowance + international trips</td>
 												</tr>
 											</tbody>
 											<tfoot>
 												<tr>
 													<td colspan="2"></td>
-													<td>100.00</td>
+													<td>Leadership = Freedom</td>
 												</tr>
 											</tfoot>
 										</table>
 									</div>
 
-									<h3>Alternate</h3>
+									<h3>Top Producer Recognition</h3>
 									<div class="table-wrapper">
 										<table class="alt">
 											<thead>
 												<tr>
-													<th>Name</th>
-													<th>Description</th>
-													<th>Price</th>
+													<th>Rank</th>
+													<th>Monthly Volume</th>
+													<th>Bonus</th>
 												</tr>
 											</thead>
 											<tbody>
 												<tr>
-													<td>Item 1</td>
-													<td>Ante turpis integer aliquet porttitor.</td>
-													<td>29.99</td>
+													<td>Diamond</td>
+													<td>$50,000+</td>
+													<td>$5,000 monthly</td>
 												</tr>
 												<tr>
-													<td>Item 2</td>
-													<td>Vis ac commodo adipiscing arcu aliquet.</td>
-													<td>19.99</td>
+													<td>Emerald</td>
+													<td>$25,000+</td>
+													<td>$2,500 monthly</td>
 												</tr>
 												<tr>
-													<td>Item 3</td>
-													<td> Morbi faucibus arcu accumsan lorem.</td>
-													<td>29.99</td>
+													<td>Ruby</td>
+													<td>$15,000+</td>
+													<td>$1,500 monthly</td>
 												</tr>
 												<tr>
-													<td>Item 4</td>
-													<td>Vitae integer tempus condimentum.</td>
-													<td>19.99</td>
+													<td>Sapphire</td>
+													<td>$8,000+</td>
+													<td>$800 monthly</td>
 												</tr>
 												<tr>
-													<td>Item 5</td>
-													<td>Ante turpis integer aliquet porttitor.</td>
-													<td>29.99</td>
+													<td>Gold</td>
+													<td>$4,000+</td>
+													<td>$400 monthly</td>
 												</tr>
 											</tbody>
 											<tfoot>
 												<tr>
 													<td colspan="2"></td>
-													<td>100.00</td>
+												<td>Volume = Income</td>
 												</tr>
 											</tfoot>
 										</table>
@@ -310,88 +372,85 @@
 
 									<hr />
 
-								<!-- Buttons -->
-									<h2>Buttons</h2>
+								<!-- Tools & Resources -->
+									<h2>Tools & Resources</h2>
 									<ul class="actions">
-										<li><a href="#" class="button primary">Primary</a></li>
-										<li><a href="#" class="button">Default</a></li>
+										<li><a href="/checklists" class="button primary">Training Checklists</a></li>
+										<li><a href="/calculator" class="button">Commission Calculator</a></li>
 									</ul>
 									<ul class="actions">
-										<li><a href="#" class="button primary large">Large</a></li>
-										<li><a href="#" class="button">Default</a></li>
-										<li><a href="#" class="button small">Small</a></li>
+										<li><a href="/tree" class="button primary large">Network Tree Viewer</a></li>
+										<li><a href="/dashboard" class="button">Personal Dashboard</a></li>
+										<li><a href="/generic" class="button small">AI Assistant</a></li>
 									</ul>
 									<ul class="actions fit">
-										<li><a href="#" class="button primary fit">Fit</a></li>
-										<li><a href="#" class="button fit">Fit</a></li>
+										<li><a href="/rules" class="button primary fit">Rules & Guidelines</a></li>
+										<li><a href="/profile" class="button fit">Profile Management</a></li>
 									</ul>
 									<ul class="actions fit small">
-										<li><a href="#" class="button primary fit small">Fit + Small</a></li>
-										<li><a href="#" class="button fit small">Fit + Small</a></li>
+										<li><a href="/request-tree" class="button primary fit small">Join Network</a></li>
+										<li><a href="#contact" class="button fit small">Get Support</a></li>
 									</ul>
 									<ul class="actions">
-										<li><a href="#" class="button primary icon solid fa-search">Icon</a></li>
-										<li><a href="#" class="button icon solid fa-download">Icon</a></li>
-									</ul>
-									<ul class="actions">
-										<li><span class="button primary disabled">Primary</span></li>
-										<li><span class="button disabled">Default</span></li>
+										<li><span class="button primary disabled">Coming Soon: Mobile App</span></li>
+										<li><span class="button disabled">Advanced Analytics</span></li>
 									</ul>
 
 									<hr />
 
-								<!-- Form -->
-									<h2>Form</h2>
+								<!-- Contact Support -->
+									<h2>Get Support</h2>
 
-									<form method="post" action="#">
+									<form method="post" action="/contact">
 										<div class="row gtr-uniform">
 											<div class="col-6 col-12-xsmall">
-												<input type="text" name="demo-name" id="demo-name" value="" placeholder="Name" />
+												<input type="text" name="name" id="name" value="" placeholder="Your Name" required />
 											</div>
 											<div class="col-6 col-12-xsmall">
-												<input type="email" name="demo-email" id="demo-email" value="" placeholder="Email" />
+												<input type="email" name="email" id="email" value="" placeholder="Your Email" required />
 											</div>
 											<!-- Break -->
 											<div class="col-12">
-												<select name="demo-category" id="demo-category">
-													<option value="">- Category -</option>
-													<option value="1">Manufacturing</option>
-													<option value="1">Shipping</option>
-													<option value="1">Administration</option>
-													<option value="1">Human Resources</option>
+												<select name="category" id="category">
+													<option value="">- Select Category -</option>
+													<option value="technical">Technical Support</option>
+													<option value="training">Training Questions</option>
+													<option value="business">Business Development</option>
+													<option value="compliance">Compliance & Legal</option>
+													<option value="other">Other</option>
 												</select>
 											</div>
 											<!-- Break -->
 											<div class="col-4 col-12-small">
-												<input type="radio" id="demo-priority-low" name="demo-priority" checked>
-												<label for="demo-priority-low">Low</label>
+												<input type="radio" id="priority-low" name="priority" checked>
+												<label for="priority-low">Low</label>
 											</div>
 											<div class="col-4 col-12-small">
-												<input type="radio" id="demo-priority-normal" name="demo-priority">
-												<label for="demo-priority-normal">Normal</label>
+												<input type="radio" id="priority-normal" name="priority">
+												<label for="priority-normal">Normal</label>
 											</div>
 											<div class="col-4 col-12-small">
-												<input type="radio" id="demo-priority-high" name="demo-priority">
-												<label for="demo-priority-high">High</label>
+												<input type="radio" id="priority-high" name="priority">
+												<label for="priority-high">High</label>
 											</div>
 											<!-- Break -->
 											<div class="col-6 col-12-small">
-												<input type="checkbox" id="demo-copy" name="demo-copy">
-												<label for="demo-copy">Email me a copy</label>
+												<input type="checkbox" id="newsletter" name="newsletter">
+												<label for="newsletter">Subscribe to newsletter</label>
 											</div>
 											<div class="col-6 col-12-small">
-												<input type="checkbox" id="demo-human" name="demo-human" checked>
-												<label for="demo-human">I am a human</label>
+												<input type="checkbox" id="followup" name="followup" checked>
+												<label for="followup">Allow follow-up contact</label>
 											</div>
 											<!-- Break -->
 											<div class="col-12">
-												<textarea name="demo-message" id="demo-message" placeholder="Enter your message" rows="6"></textarea>
+												<textarea name="message" id="message" placeholder="How can we help you succeed in MLM?" rows="6" required></textarea>
 											</div>
 											<!-- Break -->
 											<div class="col-12">
 												<ul class="actions">
 													<li><input type="submit" value="Send Message" class="primary" /></li>
-													<li><input type="reset" value="Reset" /></li>
+													<li><input type="reset" value="Clear Form" /></li>
 												</ul>
 											</div>
 										</div>
@@ -399,53 +458,39 @@
 
 									<hr />
 
-								<!-- Image -->
-									<h2>Image</h2>
+								<!-- Image Gallery -->
+									<h2>MLM Success Gallery</h2>
 
-									<h3>Fit</h3>
-									<span class="image fit"><img src="images/pic01.jpg" alt="" /></span>
+									<h3>Team Building Events</h3>
+									<span class="image fit"><img src="images/pic01.jpg" alt="MLM Team Building Event" /></span>
 									<div class="box alt">
 										<div class="row gtr-50 gtr-uniform">
-											<div class="col-4"><span class="image fit"><img src="images/pic02.jpg" alt="" /></span></div>
-											<div class="col-4"><span class="image fit"><img src="images/pic03.jpg" alt="" /></span></div>
-											<div class="col-4"><span class="image fit"><img src="images/pic04.jpg" alt="" /></span></div>
+											<div class="col-4"><span class="image fit"><img src="images/pic02.jpg" alt="Leadership Training" /></span></div>
+											<div class="col-4"><span class="image fit"><img src="images/pic03.jpg" alt="Product Launch" /></span></div>
+											<div class="col-4"><span class="image fit"><img src="images/pic04.jpg" alt="Recognition Ceremony" /></span></div>
 											<!-- Break -->
-											<div class="col-4"><span class="image fit"><img src="images/pic04.jpg" alt="" /></span></div>
-											<div class="col-4"><span class="image fit"><img src="images/pic02.jpg" alt="" /></span></div>
-											<div class="col-4"><span class="image fit"><img src="images/pic03.jpg" alt="" /></span></div>
+											<div class="col-4"><span class="image fit"><img src="images/pic04.jpg" alt="Network Meeting" /></span></div>
+											<div class="col-4"><span class="image fit"><img src="images/pic02.jpg" alt="Training Workshop" /></span></div>
+											<div class="col-4"><span class="image fit"><img src="images/pic03.jpg" alt="Team Celebration" /></span></div>
 											<!-- Break -->
-											<div class="col-4"><span class="image fit"><img src="images/pic03.jpg" alt="" /></span></div>
-											<div class="col-4"><span class="image fit"><img src="images/pic04.jpg" alt="" /></span></div>
-											<div class="col-4"><span class="image fit"><img src="images/pic02.jpg" alt="" /></span></div>
+											<div class="col-4"><span class="image fit"><img src="images/pic03.jpg" alt="Business Conference" /></span></div>
+											<div class="col-4"><span class="image fit"><img src="images/pic04.jpg" alt="Award Ceremony" /></span></div>
+											<div class="col-4"><span class="image fit"><img src="images/pic02.jpg" alt="Success Story" /></span></div>
 										</div>
 									</div>
 
-									<h3>Left &amp; Right</h3>
-									<p><span class="image left"><img src="images/pic08.jpg" alt="" /></span>Lorem ipsum dolor sit accumsan interdum nisi, quis tincidunt felis sagittis eget. tempus euismod. Vestibulum ante ipsum primis in faucibus vestibulum. Blandit adipiscing eu felis iaculis volutpat ac adipiscing accumsan eu faucibus. Integer ac pellentesque praesent tincidunt felis sagittis eget. tempus euismod. Vestibulum ante ipsum primis sagittis eget. tempus euismod. Vestibulum ante ipsum primis in faucibus vestibulum. Blandit adipiscing eu felis iaculis volutpat ac adipiscing accumsan eu faucibus. Integer ac pellentesque praesent tincidunt felis sagittis eget. tempus euismod. Vestibulum ante ipsum primis in faucibus vestibulum. Blandit adipiscing eu felis iaculis volutpat ac adipiscing accumsan eu faucibus. Integer ac pellentesque praesent. Vestibulum ante ipsum primis in faucibus magna blandit adipiscing eu felis iaculis.</p>
-									<p><span class="image right"><img src="images/pic09.jpg" alt="" /></span>Lorem ipsum dolor sit accumsan interdum nisi, quis tincidunt felis sagittis eget. tempus euismod. Vestibulum ante ipsum primis in faucibus vestibulum. Blandit adipiscing eu felis iaculis volutpat ac adipiscing accumsan eu faucibus. Integer ac pellentesque praesent tincidunt felis sagittis eget. tempus euismod. Vestibulum ante ipsum primis sagittis eget. tempus euismod. Vestibulum ante ipsum primis in faucibus vestibulum. Blandit adipiscing eu felis iaculis volutpat ac adipiscing accumsan eu faucibus. Integer ac pellentesque praesent tincidunt felis sagittis eget. tempus euismod. Vestibulum ante ipsum primis in faucibus vestibulum. Blandit adipiscing eu felis iaculis volutpat ac adipiscing accumsan eu faucibus. Integer ac pellentesque praesent. Vestibulum ante ipsum primis in faucibus magna blandit adipiscing eu felis iaculis.</p>
-
 									<hr />
 
-								<!-- Box -->
-									<h2>Box</h2>
+								<!-- Featured Content -->
+									<h2>Featured Resources</h2>
 									<div class="box">
-										<p>Felis sagittis eget tempus primis in faucibus vestibulum. Blandit adipiscing eu felis iaculis volutpat ac adipiscing accumsan eu faucibus. Integer ac pellentesque praesent tincidunt felis sagittis eget. tempus euismod. Magna sed etiam ante ipsum primis in faucibus vestibulum. Blandit adipiscing eu ipsum primis in faucibus vestibulum. Blandit adipiscing eu felis iaculis volutpat ac adipiscing accumsan eu faucibus lorem ipsum dolor sit amet nullam. Integer ac pellentesque praesent tincidunt felis sagittis eget. tempus euismod. Vestibulum ante ipsum primis sagittis eget. tempus euismod. Vestibulum ante ipsum primis in faucibus vestibulum. Blandit adipiscing eu felis iaculis volutpat ac adipiscing accumsan eu faucibus. Integer ac pellentesque praesent tincidunt felis sagittis eget. tempus euismod. Vestibulum ante ipsum primis in faucibus vestibulum. Blandit adipiscing eu felis iaculis volutpat ac adipiscing accumsan eu faucibus. Integer ac pellentesque praesent. Vestibulum ante ipsum primis in faucibus magna blandit adipiscing eu felis iaculis volutpat lorem ipsum dolor.</p>
+										<p><strong>📚 Training Library:</strong> Access comprehensive training materials, video courses, and success guides designed specifically for MLM entrepreneurs.</p>
+										<p><strong>🎯 Goal Tracking:</strong> Set and monitor your business goals with our integrated dashboard and progress tracking tools.</p>
+										<p><strong>🤖 AI Assistant:</strong> Get instant answers to your MLM questions with our intelligent chatbot powered by advanced AI technology.</p>
+										<p><strong>📊 Analytics:</strong> Track your team's performance, commission earnings, and growth metrics with detailed analytics and reporting.</p>
 									</div>
 
-									<hr />
 
-								<!-- Preformatted Code -->
-									<h2>Preformatted</h2>
-									<pre><code>i = 0;
-
-while (!deck.isInOrder()) {
-    print 'Iteration ' + i;
-    deck.shuffle();
-    i++;
-}
-
-print 'It took ' + i + ' iterations to sort the deck.';
-</code></pre>
 
 							</section>
 

@@ -16,9 +16,83 @@
 
 		<div style="position: fixed; top: 1rem; left: 1rem; z-index: 10001; display: flex; align-items: center; gap: 0.5rem;">
 			<a href="#navPanel" id="navPanelToggle">Menu</a>
-			<a href="/signin" class="button primary">Sign In</a>
-			<a href="/signup" class="button">Sign Up</a>
+			<button class="button primary" id="openSignIn">Sign In</button>
+			<button class="button" id="openSignUp">Sign Up</button>
+			<a href="/profile" id="profileLink" style="display:none;" class="button">Profile</a>
+			<form method="post" action="/logout" id="logoutForm" style="display:none;"><button type="submit" class="button">Logout</button></form>
 		</div>
+
+		<!-- Sign In Modal -->
+		<div id="signInModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.7);z-index:10002;align-items:center;justify-content:center;">
+			<div style="background:#222;padding:2rem;border-radius:12px;max-width:400px;width:90%;position:relative;">
+				<button id="closeSignIn" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;">&times;</button>
+				<div id="signInFormContainer">Loading...</div>
+			</div>
+		</div>
+
+		<!-- Sign Up Modal -->
+		<div id="signUpModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.7);z-index:10002;align-items:center;justify-content:center;">
+			<div style="background:#222;padding:2rem;border-radius:12px;max-width:400px;width:90%;position:relative;">
+				<button id="closeSignUp" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;">&times;</button>
+				<div id="signUpFormContainer">Loading...</div>
+			</div>
+		</div>
+
+		<script>
+		// Modal logic
+		const signInModal = document.getElementById('signInModal');
+		const signUpModal = document.getElementById('signUpModal');
+		document.getElementById('openSignIn').onclick = function() {
+			signInModal.style.display = 'flex';
+			fetch('/modal/signin').then(r => r.text()).then(html => {
+				document.getElementById('signInFormContainer').innerHTML = html;
+			});
+		};
+		document.getElementById('openSignUp').onclick = function() {
+			signUpModal.style.display = 'flex';
+			fetch('/modal/signup').then(r => r.text()).then(html => {
+				document.getElementById('signUpFormContainer').innerHTML = html;
+			});
+		};
+		document.getElementById('closeSignIn').onclick = function() {
+			signInModal.style.display = 'none';
+		};
+		document.getElementById('closeSignUp').onclick = function() {
+			signUpModal.style.display = 'none';
+		};
+		window.onclick = function(e) {
+			if (e.target === signInModal) signInModal.style.display = 'none';
+			if (e.target === signUpModal) signUpModal.style.display = 'none';
+		};
+		</script>
+
+		<script>
+		fetch('/check-auth')
+		.then(r => r.json())
+		.then(data => {
+			const signInBtn = document.getElementById('openSignIn');
+			const signUpBtn = document.getElementById('openSignUp');
+			const profileLink = document.getElementById('profileLink');
+			const logoutForm = document.getElementById('logoutForm');
+			const dashboardLi = document.getElementById('dashboardLink');
+			const profileLi = document.querySelector('a[href="/profile"]').parentElement;
+			if (data.loggedIn) {
+				signInBtn.style.display = 'none';
+				signUpBtn.style.display = 'none';
+				profileLink.style.display = 'inline-block';
+				logoutForm.style.display = 'inline';
+				dashboardLi.style.display = 'block';
+				profileLi.style.display = 'block';
+			} else {
+				signInBtn.style.display = 'inline-block';
+				signUpBtn.style.display = 'inline-block';
+				profileLink.style.display = 'none';
+				logoutForm.style.display = 'none';
+				dashboardLi.style.display = 'none';
+				profileLi.style.display = 'none';
+			}
+		});
+		</script>
 
 		<!-- Wrapper -->
 			<div id="wrapper">
@@ -36,6 +110,9 @@
 							<li><a href="index.html">MARS EMPIRE</a></li>
 							<li class="active"><a href="generic.html">MLM Companion 'AI'</a></li>
 							<li><a href="elements.html">Resources</a></li>
+							<li><a href="/rules">Rules</a></li>
+							<li><a href="/checklists">Checklists</a></li>
+							<li><a href="/tree">Tree View</a></li>
 						</ul>
 
 
@@ -50,8 +127,7 @@
 							<li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
 							<li><a href="#" class="icon brands fa-github"><span class="label">GitHub</span></a></li>
 
-							<a href="/profile">Profile</a>
-  							<form method="post" action="/logout" style="display:inline;"><button type="submit">Logout</button></form>
+							<li style="display:none;" id="dashboardLink"><a href="/dashboard">Dashboard</a></li>
 						</ul>
 					</nav>
 

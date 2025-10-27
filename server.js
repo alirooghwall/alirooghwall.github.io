@@ -10,12 +10,37 @@ const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const winston = require('winston');
+const { body, validationResult } = require('express-validator');
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(helmet());
+app.use(morgan('combined'));
+
+// Winston logger
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'logs/combined.log' }),
+  ],
+});
+
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(new winston.transports.Console({
+    format: winston.format.simple(),
+  }));
+}
 app.set('view engine', 'ejs');
 
 // Rate limiting
@@ -58,9 +83,9 @@ const transporter = nodemailer.createTransport({
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('Connected to MongoDB...'))
+  .then(() => logger.info('Connected to MongoDB...'))
   .catch((err) => {
-    console.error('❌ MongoDB connection error:', err);
+    logger.error('❌ MongoDB connection error:', err);
     process.exit(1);
   });
 
@@ -322,12 +347,22 @@ app.get('/signup', (req, res) => {
   `);
 });
 
-app.post('/signup', async (req, res) => {
+app.post('/signup', [
+  body('name').trim().isLength({ min: 1 }).withMessage('Name is required'),
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+  body('accountType').isIn(['student', 'participant']).withMessage('Invalid account type'),
+  body('mlmLevel').trim().isLength({ min: 1 }).withMessage('MLM level is required'),
+  body('phone').trim().isLength({ min: 1 }).withMessage('Phone is required'),
+  body('leaderName').trim().isLength({ min: 1 }).withMessage('Leader name is required'),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).send('<script>alert("' + errors.array().map(e => e.msg).join(', ') + '"); window.location.href="/signup";</script>');
+  }
+
   try {
     const { name, email, password, accountType, mlmLevel, phone, leaderName } = req.body;
-    if (!name || !email || !password || password.length < 8 || !accountType || !mlmLevel || !phone || !leaderName) {
-      return res.status(400).send('<script>alert("All fields are required. Password must be at least 8 characters."); window.location.href="/signup";</script>');
-    }
 
     const existing = await User.findOne({ email });
     if (existing) {
@@ -366,27 +401,27 @@ app.post('/signup', async (req, res) => {
 
     res.send('<script>alert("Signup successful! Check your email to verify. Your account is pending admin approval."); window.location.href="/signin";</script>');
   } catch (err) {
-    console.error('Signup error:', err);
+    logger.error('Signup error:', err);
     res.status(500).send('<script>alert("Server error"); window.location.href="/signup";</script>');
   }
 });
 
 // Verify email with logging
 app.get('/verify/:token', async (req, res) => {
-  console.log('Verifying token:', req.params.token);
+  logger.info('Verifying token:', req.params.token);
   try {
     const user = await User.findOne({ verificationToken: req.params.token });
     if (!user) {
-      console.log('User not found for token');
+      logger.warn('User not found for token');
       return res.send('<p>Invalid token. <a href="/signup">Sign up</a></p>');
     }
     user.isVerified = true;
     user.verificationToken = undefined;
     await user.save();
-    console.log('User verified:', user.email);
+    logger.info('User verified:', user.email);
     res.send('<p>Email verified! <a href="/signin">Sign in</a></p>');
   } catch (err) {
-    console.error('Verification error:', err);
+    logger.error('Verification error:', err);
     res.status(500).send('<p>Server error</p>');
   }
 });
@@ -434,7 +469,7 @@ app.post('/resend-verification', async (req, res) => {
 
     res.send('<p>Verification email sent!</p>');
   } catch (err) {
-    console.error('Resend error:', err);
+    logger.error('Resend error:', err);
     res.status(500).send('<p>Server error</p>');
   }
 });
@@ -509,12 +544,17 @@ app.get('/signin', (req, res) => {
   `);
 });
 
-app.post('/signin', async (req, res) => {
+app.post('/signin', [
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  body('password').isLength({ min: 1 }).withMessage('Password is required'),
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).send('<script>alert("' + errors.array().map(e => e.msg).join(', ') + '"); window.location.href="/signin";</script>');
+  }
+
   try {
     const { email, password, redirect } = req.body;
-    if (!email || !password) {
-      return res.status(400).send('<script>alert("Missing email or password"); window.location.href="/signin";</script>');
-    }
 
     const user = await User.findOne({ email });
     if (!user) {
@@ -535,10 +575,10 @@ app.post('/signin', async (req, res) => {
     }
 
     const token = jwt.sign({ email: user.email, isVerified: user.isVerified, accountType: user.accountType }, JWT_SECRET, { expiresIn: '1d' });
-    res.cookie('token', token, { httpOnly: true, secure: false, sameSite: 'strict', maxAge: 86400000 });
+    res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: 86400000 });
     res.redirect(redirect || '/');
   } catch (err) {
-    console.error('Signin error:', err);
+    logger.error('Signin error:', err);
     res.status(500).send('<script>alert("Server error"); window.location.href="/signin";</script>');
   }
 });
@@ -587,7 +627,7 @@ app.post('/forgot-password', async (req, res) => {
 
     res.send('<p>Reset link sent to your email!</p>');
   } catch (err) {
-    console.error('Forgot password error:', err);
+    logger.error('Forgot password error:', err);
     res.status(500).send('<p>Server error</p>');
   }
 });
@@ -627,7 +667,7 @@ app.post('/reset-password/:token', async (req, res) => {
 
     res.send('<p>Password reset! <a href="/signin">Sign in</a></p>');
   } catch (err) {
-    console.error('Reset error:', err);
+    logger.error('Reset error:', err);
     res.status(500).send('<p>Server error</p>');
   }
 });
@@ -877,7 +917,7 @@ app.post('/update-profile', requireAuth, async (req, res) => {
     await User.updateOne({ email: req.user.email }, { name, email, phone, leaderName });
     res.send('<p>Profile updated! <a href="/profile">Back</a></p>');
   } catch (err) {
-    console.error('Update error:', err);
+    logger.error('Update error:', err);
     res.status(500).send('<p>Server error</p>');
   }
 });
@@ -891,7 +931,7 @@ app.post('/logout', (req, res) => {
 // Contact form
 app.post('/contact', (req, res) => {
   const { name, email, message } = req.body;
-  console.log(`Contact from ${name} (${email}): ${message}`);
+  logger.info(`Contact from ${name} (${email}): ${message}`);
   res.send('<script>alert("Message sent!"); window.location.href="/";</script>');
 });
 
@@ -925,7 +965,7 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  logger.info(`🚀 Server running on port ${PORT}`);
   // Init after server starts
   Checklist.findOne({ isPredefined: true }).then(existing => {
     if (!existing) {
@@ -937,9 +977,9 @@ app.listen(PORT, () => {
           { text: 'Set up your profile', completed: false }
         ],
         isPredefined: true
-      }).save().then(() => console.log('Predefined checklists added')).catch(err => console.error('Checklist save error:', err));
+      }).save().then(() => logger.info('Predefined checklists added')).catch(err => logger.error('Checklist save error:', err));
     }
-  }).catch(err => console.error('Checklist find error:', err));
+  }).catch(err => logger.error('Checklist find error:', err));
   User.findOne({ accountType: 'admin' }).then(admin => {
     if (!admin) {
       bcrypt.hash('admin123', 10).then(hashed => {
@@ -954,8 +994,8 @@ app.listen(PORT, () => {
           userId: 'ADMIN001',
           status: 'approved',
           isVerified: true
-        }).save().then(() => console.log('Admin user created: admin@alirooghwall.github.io / admin123')).catch(err => console.error('Admin save error:', err));
-      }).catch(err => console.error('Hash error:', err));
+        }).save().then(() => logger.info('Admin user created: admin@alirooghwall.github.io / admin123')).catch(err => logger.error('Admin save error:', err));
+      }).catch(err => logger.error('Hash error:', err));
     }
-  }).catch(err => console.error('Admin find error:', err));
+  }).catch(err => logger.error('Admin find error:', err));
 });
