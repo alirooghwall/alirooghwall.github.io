@@ -1252,39 +1252,43 @@ app.post('/ai/track-progress', requireAuth, (req, res) => {
 app.listen(PORT, () => {
   logger.info(`🚀 Server running on port ${PORT}`);
   // Init after server starts
-  try {
-    Checklist.findOne({ isPredefined: true }).then(existing => {
-      if (!existing) {
-        new Checklist({
-          title: 'MLM Basics',
-          items: [
-            { text: 'Understand MLM structure', completed: false },
-            { text: 'Learn about BizMLM products', completed: false },
-            { text: 'Set up your profile', completed: false }
-          ],
-          isPredefined: true
-        }).save().then(() => logger.info('Predefined checklists added')).catch(err => logger.error('Checklist save error:', err));
-      }
-    }).catch(err => logger.error('Checklist find error:', err));
-    User.findOne({ accountType: 'admin' }).then(admin => {
-      if (!admin) {
-        bcrypt.hash('admin123', 10).then(hashed => {
-          new User({
-            name: 'Admin',
-            email: 'admin@alirooghwall.github.io',
-            password: hashed,
-            accountType: 'admin',
-            mlmLevel: 'expert',
-            phone: '0000000000',
-            leaderName: 'None',
-            userId: 'ADMIN001',
-            status: 'approved',
-            isVerified: true
-          }).save().then(() => logger.info('Admin user created: admin@alirooghwall.github.io / admin123')).catch(err => logger.error('Admin save error:', err));
-        }).catch(err => logger.error('Hash error:', err));
-      }
-    }).catch(err => logger.error('Admin find error:', err));
-  } catch (err) {
-    logger.error('DB init error:', err);
+  if (process.env.MONGO_URI) {
+    try {
+      Checklist.findOne({ isPredefined: true }).then(existing => {
+        if (!existing) {
+          new Checklist({
+            title: 'MLM Basics',
+            items: [
+              { text: 'Understand MLM structure', completed: false },
+              { text: 'Learn about BizMLM products', completed: false },
+              { text: 'Set up your profile', completed: false }
+            ],
+            isPredefined: true
+          }).save().then(() => logger.info('Predefined checklists added')).catch(err => logger.error('Checklist save error:', err));
+        }
+      }).catch(err => logger.error('Checklist find error:', err));
+      User.findOne({ accountType: 'admin' }).then(admin => {
+        if (!admin) {
+          bcrypt.hash('admin123', 10).then(hashed => {
+            new User({
+              name: 'Admin',
+              email: 'admin@alirooghwall.github.io',
+              password: hashed,
+              accountType: 'admin',
+              mlmLevel: 'expert',
+              phone: '0000000000',
+              leaderName: 'None',
+              userId: 'ADMIN001',
+              status: 'approved',
+              isVerified: true
+            }).save().then(() => logger.info('Admin user created: admin@alirooghwall.github.io / admin123')).catch(err => logger.error('Admin save error:', err));
+          }).catch(err => logger.error('Hash error:', err));
+        }
+      }).catch(err => logger.error('Admin find error:', err));
+    } catch (err) {
+      logger.error('DB init error:', err);
+    }
+  } else {
+    logger.info('Skipping DB initialization - MONGO_URI not set');
   }
 });
