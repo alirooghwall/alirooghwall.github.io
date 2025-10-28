@@ -71,7 +71,7 @@
 		document.getElementById('openSignIn').addEventListener('click', function() {
 			signUpModal.style.display = 'none';
 			signInModal.style.display = 'flex';
-			fetch('https://mars-empire-mlm.onrender.com/modal/signin').then(r => r.text()).then(html => {
+			fetch('/modal/signin').then(r => r.text()).then(html => {
 				document.getElementById('signInFormContainer').innerHTML = html;
 			}).catch(err => {
 				console.error('Failed to load signin modal:', err);
@@ -81,7 +81,7 @@
 		document.getElementById('openSignUp').addEventListener('click', function() {
 			signInModal.style.display = 'none';
 			signUpModal.style.display = 'flex';
-			fetch('https://mars-empire-mlm.onrender.com/modal/signup').then(r => r.text()).then(html => {
+			fetch('/modal/signup').then(r => r.text()).then(html => {
 				document.getElementById('signUpFormContainer').innerHTML = html;
 			}).catch(err => {
 				console.error('Failed to load signup modal:', err);
@@ -105,7 +105,7 @@
 		</script>
 
 		<script>
-		fetch('https://mars-empire-mlm.onrender.com/check-auth')
+		fetch('/check-auth')
 		.then(r => r.json())
 		.then(data => {
 			const signInBtn = document.getElementById('openSignIn');
@@ -176,7 +176,7 @@
 							document.getElementById('quote-display').textContent = quotes[currentQuote];
 						});
 						// Show only for admins or role-assigned users
-						fetch('https://mars-empire-mlm.onrender.com/check-auth')
+						fetch('/check-auth')
 						.then(r => r.json())
 						.then(data => {
 							if (data.loggedIn && (data.user.accountType === 'admin' || data.user.accountType === 'master_admin' || (data.user.permissions && data.user.permissions.includes('view_quotes')))) {

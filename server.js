@@ -293,7 +293,7 @@ app.get('/check-auth', (req, res) => {
 app.get('/modal/signin', (req, res) => {
   res.send(`
     <style>input, select { background: #f9f9f9; color: #000; border: 1px solid #ccc; padding: 0.5rem; border-radius: 4px; }</style>
-    <form method="post" action="${BASE_URL}/signin" id="modalSigninForm">
+    <form method="post" action="/signin" id="modalSigninForm">
       <div class="input-group">
         <i class="fas fa-envelope"></i>
         <input name="email" type="email" placeholder="Email" required aria-label="Email" />
@@ -303,8 +303,10 @@ app.get('/modal/signin', (req, res) => {
         <input name="password" type="password" placeholder="Password" required aria-label="Password" />
       </div>
       <button type="submit" id="modalSigninBtn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
-      <p class="forgot"><a href="${BASE_URL}/forgot-password" target="_blank">Forgot password?</a></p>
-      <p><a href="${BASE_URL}/signup" target="_blank">Create an account</a></p>
+      <hr style="border: none; border-top: 1px solid #ccc; margin: 1rem 0;">
+      <button type="button" onclick="window.location.href='https://mars-empire-mlm.onrender.com/auth/google'" style="background: linear-gradient(45deg, #db4437, #c23321);"><i class="fab fa-google"></i> Sign in with Google</button>
+      <p class="forgot"><a href="/forgot-password" target="_blank">Forgot password?</a></p>
+      <p><a href="/signup" target="_blank">Create an account</a></p>
     </form>
   `);
 });
@@ -312,7 +314,7 @@ app.get('/modal/signin', (req, res) => {
 app.get('/modal/signup', (req, res) => {
   res.send(`
     <style>input, select { background: #f9f9f9; color: #000; border: 1px solid #ccc; padding: 0.5rem; border-radius: 4px; }</style>
-    <form method="post" action="${BASE_URL}/signup" id="modalSignupForm">
+    <form method="post" action="/signup" id="modalSignupForm">
       <div class="input-group">
         <i class="fas fa-user"></i>
         <input name="name" placeholder="Name" required aria-label="Name" />
@@ -661,7 +663,7 @@ app.get('/signin', (req, res) => {
           </div>
           <button type="submit" id="submitBtn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
           <hr style="border: none; border-top: 1px solid #ccc; margin: 1rem 0;">
-          <button type="button" onclick="window.location.href='/auth/google'" style="background: linear-gradient(45deg, #db4437, #c23321);"><i class="fab fa-google"></i> Sign in with Google</button>
+          <button type="button" onclick="window.location.href='https://mars-empire-mlm.onrender.com/auth/google'" style="background: linear-gradient(45deg, #db4437, #c23321);"><i class="fab fa-google"></i> Sign in with Google</button>
         </form>
         <p class="forgot"><a href="/forgot-password">Forgot password?</a></p>
         <p><a href="/signup">Create an account</a></p>
