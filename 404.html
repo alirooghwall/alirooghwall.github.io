@@ -10,11 +10,11 @@
     <a href="https://mars-empire-mlm.onrender.com/signup" class="button">Sign Up</a>
     <button class="button primary" id="dashboardLink" style="display:none; background: white; color: black; border: 1px solid white; padding: 0.5rem 1rem;" onclick="location.href='https://mars-empire-mlm.onrender.com/dashboard'">Dashboard</button>
     <button class="button primary" id="profileLink" style="display:none; background: white; color: black; border: 1px solid white; padding: 0.5rem 1rem;" onclick="location.href='https://mars-empire-mlm.onrender.com/profile'">Profile</button>
-    <button id="logoutBtn" style="display:none; background: none; color: rgb(255, 255, 255); border: 1px solid white; padding: 0.5rem 1rem;" class="button" onclick="logout()">Logout</button>
+    <button id="logoutBtn" style="display:none; background: none; color: white !important; border: 1px solid white; padding: 0.5rem 1rem;" class="button" onclick="logout()">Logout</button>
   </div>
   <script>
     function updateAuthUI() {
-      fetch('https://mars-empire-mlm.onrender.com/check-auth')
+      fetch('https://mars-empire-mlm.onrender.com/check-auth', { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         const signInBtn = document.querySelector('a[href*="signin"]');
@@ -42,7 +42,8 @@
     }
     function logout() {
       fetch('https://mars-empire-mlm.onrender.com/logout', {
-        method: 'POST'
+        method: 'POST',
+        credentials: 'include'
       }).then(() => {
         updateAuthUI();
       }).catch(err => {
