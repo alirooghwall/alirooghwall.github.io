@@ -71,8 +71,9 @@
 			</div>
 			<%- include('footer') %>
 		</div>
+		<script type="application/json" id="tree-data"><%- JSON.stringify(treeData) %></script>
 		<script>
-			const treeData = <%= treeJson %>;
+			const treeData = JSON.parse(document.getElementById('tree-data').textContent);
 			const width = 800;
 			const height = 600;
 			const svg = d3.select('#tree').append('svg').attr('width', width).attr('height', height);

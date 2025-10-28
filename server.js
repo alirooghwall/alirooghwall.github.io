@@ -1036,7 +1036,7 @@ app.get('/tree', requireAuth, requireVerified, async (req, res) => {
   });
   const treeJson = JSON.stringify(treeData);
   const pendingConnections = req.user.accountType === 'admin' ? await Tree.find({ verified: false }).populate('userId leaderId') : [];
-  res.render('tree', { treeJson, user: req.user, pendingConnections });
+  res.render('tree', { treeData, user: req.user, pendingConnections });
 });
 
 app.post('/tree/verify/:id', requireAuth, requireAdmin, async (req, res) => {

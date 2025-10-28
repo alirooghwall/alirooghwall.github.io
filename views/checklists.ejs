@@ -60,11 +60,13 @@
 						<h1>Checklists</h1>
 					</header>
 					<% predefined.forEach(c => { %>
+						<% const percent = Math.round((c.items.filter(item => item.completed).length / c.items.length) * 100); %>
+						<% const style = `width: ${percent}%`; %>
 						<section class="checklist">
 							<h2><%= c.title %></h2>
-							<div class="progress-text"><%= c.items.filter(item => item.completed).length %>/<%= c.items.length %> completed (<%= Math.round((c.items.filter(item => item.completed).length / c.items.length) * 100) %>%)</div>
+							<div class="progress-text"><%= c.items.filter(item => item.completed).length %>/<%= c.items.length %> completed (<%= percent %>%)</div>
 							<div class="progress-bar">
-								<div class="progress-fill" style="width: <%= Math.round((c.items.filter(item => item.completed).length / c.items.length) * 100) %>%"></div>
+								<div class="progress-fill" data-percent="<%= percent %>"></div>
 							</div>
 							<ul>
 								<% c.items.forEach((item, i) => { %>
@@ -77,11 +79,12 @@
 						</section>
 					<% }); %>
 					<% userChecklists.forEach(c => { %>
+						<% const percent = Math.round((c.items.filter(item => item.completed).length / c.items.length) * 100); %>
 						<section class="checklist">
 							<h2><%= c.title %></h2>
-							<div class="progress-text"><%= c.items.filter(item => item.completed).length %>/<%= c.items.length %> completed (<%= Math.round((c.items.filter(item => item.completed).length / c.items.length) * 100) %>%)</div>
+							<div class="progress-text"><%= c.items.filter(item => item.completed).length %>/<%= c.items.length %> completed (<%= percent %>%)</div>
 							<div class="progress-bar">
-								<div class="progress-fill" style="width: <%= Math.round((c.items.filter(item => item.completed).length / c.items.length) * 100) %>%"></div>
+								<div class="progress-fill" data-percent="<%= percent %>"></div>
 							</div>
 							<ul>
 								<% c.items.forEach((item, i) => { %>
@@ -105,11 +108,12 @@
 					<% if (assignedChecklists && assignedChecklists.length > 0) { %>
 						<h2>Assigned Checklists</h2>
 						<% assignedChecklists.forEach(c => { %>
+							<% const percent = Math.round((c.items.filter(item => item.completed).length / c.items.length) * 100); %>
 							<section class="checklist">
 								<h3><%= c.title %> (Assigned by <%= c.assignedBy %>)</h3>
-								<div class="progress-text"><%= c.items.filter(item => item.completed).length %>/<%= c.items.length %> completed (<%= Math.round((c.items.filter(item => item.completed).length / c.items.length) * 100) %>%)</div>
+								<div class="progress-text"><%= c.items.filter(item => item.completed).length %>/<%= c.items.length %> completed (<%= percent %>%)</div>
 								<div class="progress-bar">
-									<div class="progress-fill" style="width: <%= Math.round((c.items.filter(item => item.completed).length / c.items.length) * 100) %>%"></div>
+									<div class="progress-fill" data-percent="<%= percent %>"></div>
 								</div>
 								<ul>
 									<% c.items.forEach((item, i) => { %>
@@ -127,6 +131,9 @@
 			<%- include('footer') %>
 		</div>
 		<script>
+			document.querySelectorAll('.progress-fill').forEach(el => {
+				el.style.width = el.dataset.percent + '%';
+			});
 			async function updateItem(id, index, completed) {
 				await fetch('/checklists/update', {
 					method: 'POST',

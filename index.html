@@ -46,7 +46,25 @@
 		<div id="signInModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.7);z-index:10002;align-items:center;justify-content:center;">
 			<div style="background:white;color:black;padding:2rem;border-radius:12px;max-width:400px;width:90%;position:relative;border:1px solid #ccc;">
 				<button id="closeSignIn" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#000;font-size:1.5rem;cursor:pointer;">&times;</button>
-				<div id="signInFormContainer">Loading...</div>
+				<div id="signInFormContainer">
+					<style>input, select { background: #f9f9f9; color: #000; border: 1px solid #ccc; padding: 0.5rem; border-radius: 4px; }</style>
+					<form id="modalSigninForm">
+						<input type="hidden" name="redirect" value="/" />
+						<div class="input-group">
+							<i class="fas fa-envelope"></i>
+							<input name="email" type="email" placeholder="Email" required aria-label="Email" />
+						</div>
+						<div class="input-group">
+							<i class="fas fa-lock"></i>
+							<input name="password" type="password" placeholder="Password" required aria-label="Password" />
+						</div>
+						<button type="submit" id="modalSigninBtn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+						<hr style="border: none; border-top: 1px solid #ccc; margin: 1rem 0;">
+						<button type="button" onclick="window.location.href='https://mars-empire-mlm.onrender.com/auth/google'" style="background: linear-gradient(45deg, #db4437, #c23321);"><i class="fab fa-google"></i> Sign in with Google</button>
+						<p class="forgot"><a href="/forgot-password" target="_blank">Forgot password?</a></p>
+						<p><a href="/signup" target="_blank">Create an account</a></p>
+					</form>
+				</div>
 			</div>
 		</div>
 
@@ -54,7 +72,43 @@
 		<div id="signUpModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.7);z-index:10002;align-items:center;justify-content:center;">
 			<div style="background:white;color:black;padding:2rem;border-radius:12px;max-width:400px;width:90%;position:relative;border:1px solid #ccc;">
 				<button id="closeSignUp" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#000;font-size:1.5rem;cursor:pointer;">&times;</button>
-				<div id="signUpFormContainer">Loading...</div>
+				<div id="signUpFormContainer">
+					<style>input, select { background: #f9f9f9; color: #000; border: 1px solid #ccc; padding: 0.5rem; border-radius: 4px; }</style>
+					<form id="modalSignupForm">
+						<div class="input-group">
+							<i class="fas fa-user"></i>
+							<input name="name" placeholder="Name" required aria-label="Name" />
+						</div>
+						<div class="input-group">
+							<i class="fas fa-envelope"></i>
+							<input name="email" type="email" placeholder="Email" required aria-label="Email" />
+						</div>
+						<div class="input-group">
+							<i class="fas fa-lock"></i>
+							<input name="password" type="password" placeholder="Password (min 8 chars)" required aria-label="Password" minlength="8" />
+						</div>
+						<div class="input-group">
+							<i class="fas fa-user-tag"></i>
+							<select name="accountType" required aria-label="Account Type">
+								<option value="student">Student</option>
+								<option value="participant">Participant</option>
+							</select>
+						</div>
+						<div class="input-group">
+							<i class="fas fa-level-up-alt"></i>
+							<input name="mlmLevel" placeholder="MLM Level (e.g., beginner)" required aria-label="MLM Level" />
+						</div>
+						<div class="input-group">
+							<i class="fas fa-phone"></i>
+							<input name="phone" placeholder="Phone" required aria-label="Phone" />
+						</div>
+						<div class="input-group">
+							<i class="fas fa-user-friends"></i>
+							<input name="leaderName" placeholder="Leader's Name" required aria-label="Leader's Name" />
+						</div>
+						<button type="submit" id="modalSignupBtn"><i class="fas fa-paper-plane"></i> Create Account</button>
+					</form>
+				</div>
 			</div>
 		</div>
 
@@ -71,58 +125,10 @@
 		document.getElementById('openSignIn').addEventListener('click', function() {
 			signUpModal.style.display = 'none';
 			signInModal.style.display = 'flex';
-			fetch('/modal/signin').then(r => r.text()).then(html => {
-				document.getElementById('signInFormContainer').innerHTML = html;
-				// Add submit handler
-				const form = document.getElementById('signInFormContainer').querySelector('form');
-				if (form) {
-					form.addEventListener('submit', function(e) {
-						e.preventDefault();
-						const formData = new FormData(form);
-						fetch('/signin', {
-							method: 'POST',
-							body: formData
-						}).then(r => r.text()).then(() => {
-							signInModal.style.display = 'none';
-							updateAuthUI();
-						}).catch(err => {
-							console.error('Sign in failed:', err);
-							alert('Sign in failed. Please try again.');
-						});
-					});
-				}
-			}).catch(err => {
-				console.error('Failed to load signin modal:', err);
-				document.getElementById('signInFormContainer').innerHTML = '<p>Failed to load form. Please refresh and try again.</p>';
-			});
 		});
 		document.getElementById('openSignUp').addEventListener('click', function() {
 			signInModal.style.display = 'none';
 			signUpModal.style.display = 'flex';
-			fetch('/modal/signup').then(r => r.text()).then(html => {
-				document.getElementById('signUpFormContainer').innerHTML = html;
-				// Add submit handler
-				const form = document.getElementById('signUpFormContainer').querySelector('form');
-				if (form) {
-					form.addEventListener('submit', function(e) {
-						e.preventDefault();
-						const formData = new FormData(form);
-						fetch('/signup', {
-							method: 'POST',
-							body: formData
-						}).then(r => r.text()).then(() => {
-							signUpModal.style.display = 'none';
-							updateAuthUI();
-						}).catch(err => {
-							console.error('Sign up failed:', err);
-							alert('Sign up failed. Please try again.');
-						});
-					});
-				}
-			}).catch(err => {
-				console.error('Failed to load signup modal:', err);
-				document.getElementById('signUpFormContainer').innerHTML = '<p>Failed to load form. Please refresh and try again.</p>';
-			});
 		});
 		document.getElementById('closeSignIn').addEventListener('click', function() {
 			signInModal.style.display = 'none';
@@ -137,6 +143,35 @@
 			if (e.target === signUpModal) {
 				signUpModal.style.display = 'none';
 			}
+		});
+		// Form submit handlers
+		document.getElementById('modalSigninForm').addEventListener('submit', function(e) {
+			e.preventDefault();
+			const formData = new FormData(this);
+			fetch('/signin', {
+				method: 'POST',
+				body: formData
+			}).then(r => r.text()).then(() => {
+				signInModal.style.display = 'none';
+				updateAuthUI();
+			}).catch(err => {
+				console.error('Sign in failed:', err);
+				alert('Sign in failed. Please try again.');
+			});
+		});
+		document.getElementById('modalSignupForm').addEventListener('submit', function(e) {
+			e.preventDefault();
+			const formData = new FormData(this);
+			fetch('/signup', {
+				method: 'POST',
+				body: formData
+			}).then(r => r.text()).then(() => {
+				signUpModal.style.display = 'none';
+				updateAuthUI();
+			}).catch(err => {
+				console.error('Sign up failed:', err);
+				alert('Sign up failed. Please try again.');
+			});
 		});
 		</script>
 
@@ -179,6 +214,7 @@
 				updateAuthUI();
 			}).catch(err => {
 				console.error('Logout failed:', err);
+				updateAuthUI();
 			});
 		}
 		updateAuthUI();
