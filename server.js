@@ -371,6 +371,17 @@ app.get('/generic', requireAuth, requireVerified, (req, res) => {
 
 // Signup with beautified UI
 app.get('/signup', (req, res) => {
+  const token = req.cookies?.token;
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      if (['admin', 'master_admin'].includes(decoded.accountType)) {
+        return res.redirect('/dashboard');
+      } else {
+        return res.redirect('/');
+      }
+    } catch {}
+  }
   res.sendFile(path.join(__dirname, 'signup.html'));
 });
 
@@ -541,6 +552,17 @@ app.post('/resend-verification', async (req, res) => {
 
 // Signin with beautified UI
 app.get('/signin', (req, res) => {
+  const token = req.cookies?.token;
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      if (['admin', 'master_admin'].includes(decoded.accountType)) {
+        return res.redirect('/dashboard');
+      } else {
+        return res.redirect('/');
+      }
+    } catch {}
+  }
   res.sendFile(path.join(__dirname, 'signin.html'));
 });
 
