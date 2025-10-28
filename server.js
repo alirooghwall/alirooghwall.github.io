@@ -68,7 +68,19 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      frameSrc: ["'self'", "https://www.google.com"],
+    },
+  },
+}));
 app.use(morgan('combined'));
 
 // Passport config
@@ -290,28 +302,10 @@ app.get('/modal/signin', (req, res) => {
         <i class="fas fa-lock"></i>
         <input name="password" type="password" placeholder="Password" required aria-label="Password" />
       </div>
-      <button type="submit" id="modalSigninBtn" style="pointer-events: auto; cursor: pointer;"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+      <button type="submit" id="modalSigninBtn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
       <p class="forgot"><a href="${BASE_URL}/forgot-password" target="_blank">Forgot password?</a></p>
       <p><a href="${BASE_URL}/signup" target="_blank">Create an account</a></p>
     </form>
-    <script>
-      document.getElementById('modalSigninForm').onsubmit = async function(e) {
-        e.preventDefault();
-        const btn = document.getElementById('modalSigninBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing In...';
-        const formData = new FormData(this);
-        const res = await fetch('${BASE_URL}/signin', { method: 'POST', body: formData });
-        const text = await res.text();
-        if (text.includes('window.location.reload')) {
-          window.location.reload();
-        } else {
-          btn.disabled = false;
-          btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
-          document.getElementById('signInFormContainer').innerHTML = text;
-        }
-      };
-    </script>
   `);
 });
 
@@ -350,26 +344,8 @@ app.get('/modal/signup', (req, res) => {
         <i class="fas fa-user-friends"></i>
         <input name="leaderName" placeholder="Leader's Name" required aria-label="Leader's Name" />
       </div>
-      <button type="submit" id="modalSignupBtn" style="pointer-events: auto; cursor: pointer;"><i class="fas fa-paper-plane"></i> Create Account</button>
+      <button type="submit" id="modalSignupBtn"><i class="fas fa-paper-plane"></i> Create Account</button>
     </form>
-    <script>
-      document.getElementById('modalSignupForm').onsubmit = async function(e) {
-        e.preventDefault();
-        const btn = document.getElementById('modalSignupBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing Up...';
-        const formData = new FormData(this);
-        const res = await fetch('${BASE_URL}/signup', { method: 'POST', body: formData });
-        const text = await res.text();
-        if (text.includes('window.location.reload')) {
-          window.location.reload();
-        } else {
-          btn.disabled = false;
-          btn.innerHTML = '<i class="fas fa-paper-plane"></i> Create Account';
-          document.getElementById('signUpFormContainer').innerHTML = text;
-        }
-      };
-    </script>
   `);
 });
 app.get('/', (req, res) => {
