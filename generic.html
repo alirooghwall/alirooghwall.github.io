@@ -15,6 +15,7 @@
 	<body class="is-preload">
 
 		<div style="position: fixed; top: 1rem; left: 1rem; z-index: 10001; display: flex; align-items: center; gap: 0.5rem;">
+			<button onclick="history.back()" style="background: none; color: white; border: 1px solid white; padding: 0.5rem 1rem;" class="button">Back</button>
 			<a href="#navPanel" id="navPanelToggle">Menu</a>
 			<a href="https://mars-empire-mlm.onrender.com/signin" id="openSignIn" class="button primary">Sign In</a>
 			<a href="https://mars-empire-mlm.onrender.com/signup" id="openSignUp" class="button">Sign Up</a>
@@ -50,16 +51,13 @@
 					profileLink.style.display = 'inline-block';
 					logoutBtn.style.display = 'inline-block';
 				} else {
-					signInBtn.style.display = 'inline-block';
-					signUpBtn.style.display = 'inline-block';
-					dashboardLink.style.display = 'none';
-					profileLink.style.display = 'none';
-					logoutBtn.style.display = 'none';
+					window.location.href = 'https://mars-empire-mlm.onrender.com/signin';
 				}
 			})
 			.catch(() => {
 				// On static site, assume not logged in
 				console.log('Auth check failed, assuming not logged in');
+				window.location.href = 'https://mars-empire-mlm.onrender.com/signin';
 			});
 		}
 		function logout() {

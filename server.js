@@ -1,5 +1,4 @@
 require('dotenv').config();
-console.log('MONGO_URI:', process.env.MONGO_URI);
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -69,19 +68,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
-      frameSrc: ["'self'", "https://www.google.com"],
-    },
-  },
-}));
+app.use(helmet());
 app.use(morgan('combined'));
 
 // Passport config
@@ -168,7 +155,7 @@ if (!JWT_SECRET) {
 }
 if (!process.env.MONGO_URI) {
   console.error('❌ MONGO_URI is not set');
-  // process.exit(1);
+  process.exit(1);
 }
 if (!EMAIL_USER || !EMAIL_PASS) {
   console.error('❌ EMAIL_USER and EMAIL_PASS are not set');
@@ -186,16 +173,10 @@ const transporter = nodemailer.createTransport({
 });
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-  serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
-  socketTimeoutMS: 45000,
-  bufferCommands: true,
-  maxPoolSize: 10,
-})
+mongoose.connect(process.env.MONGO_URI)
   .then(() => logger.info('Connected to MongoDB...'))
   .catch((err) => {
-    logger.error('❌ MongoDB connection error:', err.message);
-    logger.error('Full error details:', err);
+    logger.error('❌ MongoDB connection error:', err);
     // process.exit(1);
   });
 
@@ -300,8 +281,7 @@ app.get('/check-auth', (req, res) => {
 app.get('/modal/signin', (req, res) => {
   res.send(`
     <style>input, select { background: #f9f9f9; color: #000; border: 1px solid #ccc; padding: 0.5rem; border-radius: 4px; }</style>
-    <form id="modalSigninForm">
-      <input type="hidden" name="redirect" value="/" />
+    <form method="post" action="${BASE_URL}/signin" id="modalSigninForm">
       <div class="input-group">
         <i class="fas fa-envelope"></i>
         <input name="email" type="email" placeholder="Email" required aria-label="Email" />
@@ -310,19 +290,35 @@ app.get('/modal/signin', (req, res) => {
         <i class="fas fa-lock"></i>
         <input name="password" type="password" placeholder="Password" required aria-label="Password" />
       </div>
-      <button type="submit" id="modalSigninBtn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
-      <hr style="border: none; border-top: 1px solid #ccc; margin: 1rem 0;">
-      <button type="button" onclick="window.location.href='https://mars-empire-mlm.onrender.com/auth/google'" style="background: linear-gradient(45deg, #db4437, #c23321);"><i class="fab fa-google"></i> Sign in with Google</button>
-      <p class="forgot"><a href="/forgot-password" target="_blank">Forgot password?</a></p>
-      <p><a href="/signup" target="_blank">Create an account</a></p>
+      <button type="submit" id="modalSigninBtn" style="pointer-events: auto; cursor: pointer;"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+      <p class="forgot"><a href="${BASE_URL}/forgot-password" target="_blank">Forgot password?</a></p>
+      <p><a href="${BASE_URL}/signup" target="_blank">Create an account</a></p>
     </form>
+    <script>
+      document.getElementById('modalSigninForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('modalSigninBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing In...';
+        const formData = new FormData(this);
+        const res = await fetch('${BASE_URL}/signin', { method: 'POST', body: formData });
+        const text = await res.text();
+        if (text.includes('window.location.reload')) {
+          window.location.reload();
+        } else {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+          document.getElementById('signInFormContainer').innerHTML = text;
+        }
+      };
+    </script>
   `);
 });
 
 app.get('/modal/signup', (req, res) => {
   res.send(`
     <style>input, select { background: #f9f9f9; color: #000; border: 1px solid #ccc; padding: 0.5rem; border-radius: 4px; }</style>
-    <form id="modalSignupForm">
+    <form method="post" action="${BASE_URL}/signup" id="modalSignupForm">
       <div class="input-group">
         <i class="fas fa-user"></i>
         <input name="name" placeholder="Name" required aria-label="Name" />
@@ -354,8 +350,26 @@ app.get('/modal/signup', (req, res) => {
         <i class="fas fa-user-friends"></i>
         <input name="leaderName" placeholder="Leader's Name" required aria-label="Leader's Name" />
       </div>
-      <button type="submit" id="modalSignupBtn"><i class="fas fa-paper-plane"></i> Create Account</button>
+      <button type="submit" id="modalSignupBtn" style="pointer-events: auto; cursor: pointer;"><i class="fas fa-paper-plane"></i> Create Account</button>
     </form>
+    <script>
+      document.getElementById('modalSignupForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('modalSignupBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing Up...';
+        const formData = new FormData(this);
+        const res = await fetch('${BASE_URL}/signup', { method: 'POST', body: formData });
+        const text = await res.text();
+        if (text.includes('window.location.reload')) {
+          window.location.reload();
+        } else {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-paper-plane"></i> Create Account';
+          document.getElementById('signUpFormContainer').innerHTML = text;
+        }
+      };
+    </script>
   `);
 });
 app.get('/', (req, res) => {
@@ -471,8 +485,7 @@ app.post('/signup', [
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    const msg = errors.array().map(e => e.msg).join(', ');
-    return res.send(`<script>alert("${msg}"); window.history.back();</script>`);
+    return res.status(400).send('<p style="color:red;">' + errors.array().map(e => e.msg).join(', ') + '</p>');
   }
 
   try {
@@ -482,7 +495,7 @@ app.post('/signup', [
     if (existing) {
       // If user exists and verified, treat as password change request
       if (existing.isVerified) {
-        return res.send(`<script>alert("Account already exists. Use forgot password to reset."); window.history.back();</script>`);
+        return res.status(400).send('<p style="color:red;">Account already exists. Use forgot password to reset.</p>');
       } else {
         // Resend verification if unverified
         const token = crypto.randomBytes(32).toString('hex');
@@ -495,14 +508,14 @@ app.post('/signup', [
           html: `<p>Click <a href="${BASE_URL}/verify/${token}">here</a> to verify your account.</p>`
         };
         await transporter.sendMail(mailOptions);
-        return res.send(`<script>alert("Verification email resent."); window.history.back();</script>`);
+        return res.send('<p style="color:green;">Verification email resent.</p>');
       }
     }
 
     // Check for duplicate name and phone
     const existingNamePhone = await User.findOne({ name, phone });
     if (existingNamePhone) {
-      return res.send(`<script>alert("A user with this name and phone number already exists. Please use different details or contact support."); window.history.back();</script>`);
+      return res.status(400).send('<p style="color:red;">A user with this name and phone number already exists. Please use different details or contact support.</p>');
     }
 
     const hashed = await bcrypt.hash(password, 10);
@@ -522,7 +535,7 @@ app.post('/signup', [
     res.redirect('/approval-status');
   } catch (err) {
     logger.error('Signup error:', err);
-    res.send(`<script>alert("Server error during signup"); window.history.back();</script>`);
+    res.status(500).send('<p style="color:red;">Server error</p>');
   }
 });
 
@@ -672,7 +685,7 @@ app.get('/signin', (req, res) => {
           </div>
           <button type="submit" id="submitBtn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
           <hr style="border: none; border-top: 1px solid #ccc; margin: 1rem 0;">
-          <button type="button" onclick="window.location.href='https://mars-empire-mlm.onrender.com/auth/google'" style="background: linear-gradient(45deg, #db4437, #c23321);"><i class="fab fa-google"></i> Sign in with Google</button>
+          <button type="button" onclick="window.location.href='/auth/google'" style="background: linear-gradient(45deg, #db4437, #c23321);"><i class="fab fa-google"></i> Sign in with Google</button>
         </form>
         <p class="forgot"><a href="/forgot-password">Forgot password?</a></p>
         <p><a href="/signup">Create an account</a></p>
@@ -703,8 +716,7 @@ app.post('/signin', [
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    const msg = errors.array().map(e => e.msg).join(', ');
-    return res.send(`<script>alert("${msg}"); window.history.back();</script>`);
+    return res.status(400).send('<p style="color:red;">' + errors.array().map(e => e.msg).join(', ') + '</p>');
   }
 
   try {
@@ -712,28 +724,28 @@ app.post('/signin', [
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.send(`<script>alert("User not found"); window.history.back();</script>`);
+      return res.status(400).send('<p style="color:red;">User not found</p>');
     }
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
-      return res.send(`<script>alert("Invalid password"); window.history.back();</script>`);
+      return res.status(400).send('<p style="color:red;">Invalid password</p>');
     }
 
     if (!user.isVerified) {
-      return res.send(`<script>alert("Please verify your email first"); window.history.back();</script>`);
+      return res.send('<p style="color:red;">Please verify your email first</p>');
     }
 
     if (user.status !== 'approved') {
-      return res.send(`<script>alert("Your account is pending admin approval"); window.history.back();</script>`);
+      return res.send('<p style="color:red;">Your account is pending admin approval</p>');
     }
 
     const token = jwt.sign({ email: user.email, isVerified: user.isVerified, accountType: user.accountType }, JWT_SECRET, { expiresIn: ['admin', 'master_admin'].includes(user.accountType) ? '2h' : '1d' });
     res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: ['admin', 'master_admin'].includes(user.accountType) ? 7200000 : 86400000 });
-    res.redirect(redirect || '/dashboard');
+    res.send('<script>window.location.reload();</script>');
   } catch (err) {
     logger.error('Signin error:', err);
-    res.send(`<script>alert("Server error"); window.history.back();</script>`);
+    res.status(500).send('<p style="color:red;">Server error</p>');
   }
 });
 
@@ -883,17 +895,12 @@ app.post('/admin/delete-tree/:id', requireAuth, requireAdmin, async (req, res) =
 });
 
 app.post('/admin/create-user', requireAdmin, async (req, res) => {
-  try {
-    const { name, email, password, phone, leaderName, accountType, mlmLevel, permissions } = req.body;
-    const hashed = await bcrypt.hash(password, 10);
-    const userId = 'ME' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
-    const perms = Array.isArray(permissions) ? permissions : permissions ? [permissions] : [];
-    await new User({ name, email, password: hashed, phone, leaderName, accountType, mlmLevel, userId, status: 'approved', isVerified: true, permissions: perms }).save();
-    res.redirect('/admin');
-  } catch (err) {
-    logger.error('Create user error:', err);
-    res.status(500).send('<script>alert("Error creating user: ' + err.message + '"); window.history.back();</script>');
-  }
+  const { name, email, password, phone, leaderName, accountType, mlmLevel, permissions } = req.body;
+  const hashed = await bcrypt.hash(password, 10);
+  const userId = 'ME' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
+  const perms = permissions ? permissions.split(',').map(p => p.trim()) : [];
+  await new User({ name, email, password: hashed, phone, leaderName, accountType, mlmLevel, userId, status: 'approved', isVerified: true, permissions: perms }).save();
+  res.redirect('/admin');
 });
 
 app.post('/admin/approve/:id', requireAdmin, async (req, res) => {
@@ -1043,7 +1050,7 @@ app.get('/tree', requireAuth, requireVerified, async (req, res) => {
   });
   const treeJson = JSON.stringify(treeData);
   const pendingConnections = req.user.accountType === 'admin' ? await Tree.find({ verified: false }).populate('userId leaderId') : [];
-  res.render('tree', { treeData, user: req.user, pendingConnections });
+  res.render('tree', { treeJson, user: req.user, pendingConnections });
 });
 
 app.post('/tree/verify/:id', requireAuth, requireAdmin, async (req, res) => {
@@ -1401,7 +1408,7 @@ app.listen(PORT, () => {
       bcrypt.hash('admin123', 10).then(hashed => {
         new User({
           name: 'Admin',
-          email: 'admin@alirooghwall.github.io',
+          email: 'alirooghwall999@gmail.com',
           password: hashed,
           accountType: 'admin',
           mlmLevel: 'expert',
@@ -1410,7 +1417,7 @@ app.listen(PORT, () => {
           userId: 'ADMIN001',
           status: 'approved',
           isVerified: true
-        }).save().then(() => logger.info('Admin user created: admin@alirooghwall.github.io / admin123')).catch(err => logger.error('Admin save error:', err));
+        }).save().then(() => logger.info('Admin user created: alirooghwall999@gmail.com / admin123')).catch(err => logger.error('Admin save error:', err));
       }).catch(err => logger.error('Hash error:', err));
     }
   }).catch(err => logger.error('Admin find error:', err));
