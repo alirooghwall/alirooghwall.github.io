@@ -49,25 +49,58 @@
 			fetch('/check-auth')
 			.then(r => r.json())
 			.then(data => {
-				const signInBtn = document.getElementById('openSignIn');
-				const signUpBtn = document.getElementById('openSignUp');
+				const signInBtn = document.querySelector('a[href="/signin"]');
+				const signUpBtn = document.querySelector('a[href="/signup"]');
 				const profileLink = document.getElementById('profileLink');
 				const logoutBtn = document.getElementById('logoutBtn');
+				const navLinks = document.querySelectorAll('#nav ul.links li a');
+				const protectedRoutes = ['/rules', '/articles', '/resources', '/checklists', '/tree', '/calculator', '/leaderboard', '/profile', '/dashboard'];
 				if (data.loggedIn) {
-					signInBtn.style.display = 'none';
-					signUpBtn.style.display = 'none';
+					if (signInBtn) signInBtn.style.display = 'none';
+					if (signUpBtn) signUpBtn.style.display = 'none';
 					profileLink.style.display = 'inline-block';
 					logoutBtn.style.display = 'inline-block';
+					// Show protected links
+					navLinks.forEach(link => {
+						const href = link.getAttribute('href');
+						if (protectedRoutes.includes(href)) {
+							link.parentElement.style.display = 'block';
+						}
+					});
 				} else {
-					signInBtn.style.display = 'inline-block';
-					signUpBtn.style.display = 'inline-block';
+					if (signInBtn) signInBtn.style.display = 'inline-block';
+					if (signUpBtn) signUpBtn.style.display = 'inline-block';
 					profileLink.style.display = 'none';
 					logoutBtn.style.display = 'none';
+					// Hide protected links
+					navLinks.forEach(link => {
+						const href = link.getAttribute('href');
+						if (protectedRoutes.includes(href)) {
+							link.parentElement.style.display = 'none';
+						}
+					});
 				}
 			})
 			.catch(() => {
 				// On static site, assume not logged in
 				console.log('Auth check failed, assuming not logged in');
+				const signInBtn = document.querySelector('a[href="/signin"]');
+				const signUpBtn = document.querySelector('a[href="/signup"]');
+				const profileLink = document.getElementById('profileLink');
+				const logoutBtn = document.getElementById('logoutBtn');
+				const navLinks = document.querySelectorAll('#nav ul.links li a');
+				const protectedRoutes = ['/rules', '/articles', '/resources', '/checklists', '/tree', '/calculator', '/leaderboard', '/profile', '/dashboard'];
+				if (signInBtn) signInBtn.style.display = 'inline-block';
+				if (signUpBtn) signUpBtn.style.display = 'inline-block';
+				profileLink.style.display = 'none';
+				logoutBtn.style.display = 'none';
+				// Hide protected links
+				navLinks.forEach(link => {
+					const href = link.getAttribute('href');
+					if (protectedRoutes.includes(href)) {
+						link.parentElement.style.display = 'none';
+					}
+				});
 			});
 		}
 		function logout() {
