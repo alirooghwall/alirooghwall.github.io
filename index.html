@@ -38,8 +38,8 @@
 			<a href="#navPanel" id="navPanelToggle">Menu</a>
 			<button class="button primary" id="openSignIn">Sign In</button>
 			<button class="button" id="openSignUp">Sign Up</button>
-			<button class="button primary" id="profileLink" style="display:none;" onclick="location.href='/profile'">Profile</button>
-			<form method="post" action="/logout" id="logoutForm" style="display:none;"><button type="submit" class="button">Logout</button></form>
+			<button class="button" id="profileLink" style="display:none; background: white; color: black;" onclick="location.href='/profile'">Profile</button>
+			<form method="post" action="/logout" id="logoutForm" style="display:none;"><button type="submit" class="button" style="background: white; color: black;">Logout</button></form>
 		</div>
 
 		<!-- Sign In Modal -->
@@ -73,6 +73,24 @@
 			signInModal.style.display = 'flex';
 			fetch('/modal/signin').then(r => r.text()).then(html => {
 				document.getElementById('signInFormContainer').innerHTML = html;
+				// Add submit handler
+				const form = document.getElementById('signInFormContainer').querySelector('form');
+				if (form) {
+					form.addEventListener('submit', function(e) {
+						e.preventDefault();
+						const formData = new FormData(form);
+						fetch('/signin', {
+							method: 'POST',
+							body: formData
+						}).then(r => r.text()).then(() => {
+							signInModal.style.display = 'none';
+							updateAuthUI();
+						}).catch(err => {
+							console.error('Sign in failed:', err);
+							alert('Sign in failed. Please try again.');
+						});
+					});
+				}
 			}).catch(err => {
 				console.error('Failed to load signin modal:', err);
 				document.getElementById('signInFormContainer').innerHTML = '<p>Failed to load form. Please refresh and try again.</p>';
@@ -83,6 +101,24 @@
 			signUpModal.style.display = 'flex';
 			fetch('/modal/signup').then(r => r.text()).then(html => {
 				document.getElementById('signUpFormContainer').innerHTML = html;
+				// Add submit handler
+				const form = document.getElementById('signUpFormContainer').querySelector('form');
+				if (form) {
+					form.addEventListener('submit', function(e) {
+						e.preventDefault();
+						const formData = new FormData(form);
+						fetch('/signup', {
+							method: 'POST',
+							body: formData
+						}).then(r => r.text()).then(() => {
+							signUpModal.style.display = 'none';
+							updateAuthUI();
+						}).catch(err => {
+							console.error('Sign up failed:', err);
+							alert('Sign up failed. Please try again.');
+						});
+					});
+				}
 			}).catch(err => {
 				console.error('Failed to load signup modal:', err);
 				document.getElementById('signUpFormContainer').innerHTML = '<p>Failed to load form. Please refresh and try again.</p>';
@@ -105,35 +141,38 @@
 		</script>
 
 		<script>
-		fetch('/check-auth')
-		.then(r => r.json())
-		.then(data => {
-			const signInBtn = document.getElementById('openSignIn');
-			const signUpBtn = document.getElementById('openSignUp');
-			const profileLink = document.getElementById('profileLink');
-			const logoutForm = document.getElementById('logoutForm');
-			const dashboardLi = document.getElementById('dashboardLink');
-			const profileLi = document.querySelector('a[href="/profile"]').parentElement;
-			if (data.loggedIn) {
-				signInBtn.style.display = 'none';
-				signUpBtn.style.display = 'none';
-				profileLink.style.display = 'inline-block';
-				logoutForm.style.display = 'inline';
-				dashboardLi.style.display = 'block';
-				profileLi.style.display = 'block';
-			} else {
-				signInBtn.style.display = 'inline-block';
-				signUpBtn.style.display = 'inline-block';
-				profileLink.style.display = 'none';
-				logoutForm.style.display = 'none';
-				dashboardLi.style.display = 'none';
-				profileLi.style.display = 'none';
-			}
-		})
-		.catch(() => {
-			// On static site, assume not logged in
-			console.log('Auth check failed, assuming not logged in');
-		});
+		function updateAuthUI() {
+			fetch('/check-auth')
+			.then(r => r.json())
+			.then(data => {
+				const signInBtn = document.getElementById('openSignIn');
+				const signUpBtn = document.getElementById('openSignUp');
+				const profileLink = document.getElementById('profileLink');
+				const logoutForm = document.getElementById('logoutForm');
+				const dashboardLi = document.getElementById('dashboardLink');
+				const profileLi = document.querySelector('a[href="/profile"]').parentElement;
+				if (data.loggedIn) {
+					signInBtn.style.display = 'none';
+					signUpBtn.style.display = 'none';
+					profileLink.style.display = 'inline-block';
+					logoutForm.style.display = 'inline';
+					dashboardLi.style.display = 'block';
+					profileLi.style.display = 'block';
+				} else {
+					signInBtn.style.display = 'inline-block';
+					signUpBtn.style.display = 'inline-block';
+					profileLink.style.display = 'none';
+					logoutForm.style.display = 'none';
+					dashboardLi.style.display = 'none';
+					profileLi.style.display = 'none';
+				}
+			})
+			.catch(() => {
+				// On static site, assume not logged in
+				console.log('Auth check failed, assuming not logged in');
+			});
+		}
+		updateAuthUI();
 		</script>
 
 		<!-- Wrapper -->
