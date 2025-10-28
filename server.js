@@ -1,5 +1,4 @@
 require('dotenv').config();
-logger.info('MONGO_URI:', process.env.MONGO_URI);
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -164,10 +163,6 @@ app.use(express.static(path.join(__dirname)));
 // Sanity checks
 if (!JWT_SECRET) {
   logger.error('❌ JWT_SECRET is not set');
-  process.exit(1);
-}
-if (!process.env.MONGO_URI) {
-  logger.error('❌ MONGO_URI is not set');
   process.exit(1);
 }
 if (!EMAIL_USER || !EMAIL_PASS) {
@@ -376,92 +371,7 @@ app.get('/generic', requireAuth, requireVerified, (req, res) => {
 
 // Signup with beautified UI
 app.get('/signup', (req, res) => {
-  const saved = req.cookies?.signupData ? JSON.parse(req.cookies.signupData) : {};
-  res.send(`
-    <!doctype html>
-    <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <title>Sign Up | MARS EMPIRE</title>
-      <meta name="description" content="Join MARS EMPIRE for exclusive MLM resources and AI companion.">
-      <link rel="stylesheet" href="assets/css/main.css">
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-      <style>
-        body { background: linear-gradient(135deg, #1e1e2e, #2a2a3e); color: #ffffff; font-family: 'Source Sans Pro', sans-serif; margin: 0; padding: 0; }
-        main { max-width: 400px; margin: 5rem auto; padding: 2rem; background: rgba(255,255,255,0.1); border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); animation: fadeIn 0.5s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        h1 { text-align: center; color: #ff6b6b; margin-bottom: 1.5rem; }
-        form { display: flex; flex-direction: column; }
-        .input-group { position: relative; margin-bottom: 1rem; }
-        input { padding: 0.75rem 0.75rem 0.75rem 2.5rem; border: 1px solid #ccc; border-radius: 8px; background: #333; color: #fff; font-size: 1rem; transition: border-color 0.3s; }
-        input:focus { border-color: #ff6b6b; outline: none; }
-        .input-group i { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #ccc; }
-        button { padding: 0.75rem; background: linear-gradient(45deg, #ff6b6b, #ff5252); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: background 0.3s; }
-        button:hover { background: linear-gradient(45deg, #ff5252, #ff3838); }
-        button:disabled { background: #666; cursor: not-allowed; }
-        p { text-align: center; margin-top: 1rem; }
-        a { color: #4ecdc4; text-decoration: none; transition: color 0.3s; }
-        a:hover { color: #45b7aa; }
-        .error { color: #ff6b6b; font-size: 0.9rem; margin-top: 0.5rem; }
-      </style>
-    </head>
-    <body>
-      <main>
-        <h1><i class="fas fa-rocket"></i> Sign Up</h1>
-        <form method="post" action="/signup" id="signupForm">
-          <div class="input-group">
-            <i class="fas fa-user"></i>
-            <input name="name" value="${saved.name || ''}" placeholder="Name" required aria-label="Name" />
-          </div>
-          <div class="input-group">
-            <i class="fas fa-envelope"></i>
-            <input name="email" type="email" value="${saved.email || ''}" placeholder="Email" required aria-label="Email" />
-          </div>
-          <div class="input-group">
-            <i class="fas fa-lock"></i>
-            <input name="password" type="password" placeholder="Password (min 8 chars)" required aria-label="Password" minlength="8" />
-          </div>
-          <div class="input-group">
-            <i class="fas fa-user-tag"></i>
-            <select name="accountType" required aria-label="Account Type">
-              <option value="student" ${saved.accountType === 'student' ? 'selected' : ''}>Student</option>
-              <option value="participant" ${saved.accountType === 'participant' ? 'selected' : ''}>Participant</option>
-            </select>
-          </div>
-          <div class="input-group">
-            <i class="fas fa-level-up-alt"></i>
-            <input name="mlmLevel" value="${saved.mlmLevel || ''}" placeholder="MLM Level (e.g., beginner)" required aria-label="MLM Level" />
-          </div>
-          <div class="input-group">
-            <i class="fas fa-phone"></i>
-            <input name="phone" value="${saved.phone || ''}" placeholder="Phone" required aria-label="Phone" />
-          </div>
-          <div class="input-group">
-            <i class="fas fa-user-friends"></i>
-            <input name="leaderName" value="${saved.leaderName || ''}" placeholder="Leader's Name" required aria-label="Leader's Name" />
-          </div>
-          <button type="submit" id="submitBtn"><i class="fas fa-paper-plane"></i> Create Account</button>
-        </form>
-        <p><a href="/signin">Already have an account? Sign In</a></p>
-        <p><a href="/">Back to Home</a></p>
-      </main>
-      <script>
-        const form = document.getElementById('signupForm');
-        const submitBtn = document.getElementById('submitBtn');
-        form.addEventListener('submit', () => {
-          submitBtn.disabled = true;
-          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing Up...';
-        });
-        document.querySelectorAll('input').forEach(input => {
-          input.addEventListener('input', () => {
-            const data = { name: document.querySelector('[name=name]').value, email: document.querySelector('[name=email]').value };
-            document.cookie = 'signupData=' + JSON.stringify(data) + '; path=/; secure; samesite=strict';
-          });
-        });
-      </script>
-    </body>
-    </html>
-  `);
+  res.sendFile(path.join(__dirname, 'signup.html'));
 });
 
 app.post('/signup', [
@@ -631,74 +541,7 @@ app.post('/resend-verification', async (req, res) => {
 
 // Signin with beautified UI
 app.get('/signin', (req, res) => {
-  const saved = req.cookies?.signinData ? JSON.parse(req.cookies.signinData) : {};
-  const redirect = req.query.redirect || '/';
-  res.send(`
-    <!doctype html>
-    <html lang="en">
-    <head>
-      <meta charset="utf-8">
-      <title>Sign In | MARS EMPIRE</title>
-      <meta name="description" content="Sign in to access MARS EMPIRE resources.">
-      <link rel="stylesheet" href="assets/css/main.css">
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-      <style>
-        body { background: linear-gradient(135deg, #1e1e2e, #2a2a3e); color: #ffffff; font-family: 'Source Sans Pro', sans-serif; margin: 0; padding: 0; }
-        main { max-width: 400px; margin: 5rem auto; padding: 2rem; background: rgba(255,255,255,0.1); border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); animation: fadeIn 0.5s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        h1 { text-align: center; color: #4ecdc4; margin-bottom: 1.5rem; }
-        form { display: flex; flex-direction: column; }
-        .input-group { position: relative; margin-bottom: 1rem; }
-        input { padding: 0.75rem 0.75rem 0.75rem 2.5rem; border: 1px solid #ccc; border-radius: 8px; background: #333; color: #fff; font-size: 1rem; transition: border-color 0.3s; }
-        input:focus { border-color: #4ecdc4; outline: none; }
-        .input-group i { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #ccc; }
-        button { padding: 0.75rem; background: linear-gradient(45deg, #4ecdc4, #45b7aa); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: background 0.3s; }
-        button:hover { background: linear-gradient(45deg, #45b7aa, #3da08e); }
-        button:disabled { background: #666; cursor: not-allowed; }
-        p { text-align: center; margin-top: 1rem; }
-        a { color: #ff6b6b; text-decoration: none; transition: color 0.3s; }
-        a:hover { color: #ff5252; }
-        .forgot { font-size: 0.9rem; margin-top: 0.5rem; }
-      </style>
-    </head>
-    <body>
-      <main>
-        <h1><i class="fas fa-sign-in-alt"></i> Sign In</h1>
-        <form method="post" action="/signin" id="signinForm">
-          <input type="hidden" name="redirect" value="${redirect}" />
-          <div class="input-group">
-            <i class="fas fa-envelope"></i>
-            <input name="email" type="email" value="${saved.email || ''}" placeholder="Email" required aria-label="Email" />
-          </div>
-          <div class="input-group">
-            <i class="fas fa-lock"></i>
-            <input name="password" type="password" placeholder="Password" required aria-label="Password" />
-          </div>
-          <button type="submit" id="submitBtn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
-          <hr style="border: none; border-top: 1px solid #ccc; margin: 1rem 0;">
-          <button type="button" onclick="window.location.href='https://mars-empire-mlm.onrender.com/auth/google'" style="background: linear-gradient(45deg, #db4437, #c23321);"><i class="fab fa-google"></i> Sign in with Google</button>
-        </form>
-        <p class="forgot"><a href="/forgot-password">Forgot password?</a></p>
-        <p><a href="/signup">Create an account</a></p>
-        <p><a href="/">Back to Home</a></p>
-      </main>
-      <script>
-        const form = document.getElementById('signinForm');
-        const submitBtn = document.getElementById('submitBtn');
-        form.addEventListener('submit', () => {
-          submitBtn.disabled = true;
-          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing In...';
-        });
-        document.querySelectorAll('input').forEach(input => {
-          input.addEventListener('input', () => {
-            const data = { email: document.querySelector('[name=email]').value };
-            document.cookie = 'signinData=' + JSON.stringify(data) + '; path=/; secure; samesite=strict';
-          });
-        });
-      </script>
-    </body>
-    </html>
-  `);
+  res.sendFile(path.join(__dirname, 'signin.html'));
 });
 
 app.post('/signin', [
