@@ -1,5 +1,5 @@
 require('dotenv').config();
-console.log('MONGO_URI:', process.env.MONGO_URI);
+logger.info('MONGO_URI:', process.env.MONGO_URI);
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -163,19 +163,19 @@ app.use(express.static(path.join(__dirname)));
 
 // Sanity checks
 if (!JWT_SECRET) {
-  console.error('❌ JWT_SECRET is not set');
+  logger.error('❌ JWT_SECRET is not set');
   process.exit(1);
 }
 if (!process.env.MONGO_URI) {
-  console.error('❌ MONGO_URI is not set');
+  logger.error('❌ MONGO_URI is not set');
   process.exit(1);
 }
 if (!EMAIL_USER || !EMAIL_PASS) {
-  console.error('❌ EMAIL_USER and EMAIL_PASS are not set');
+  logger.error('❌ EMAIL_USER and EMAIL_PASS are not set');
   process.exit(1);
 }
 if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-  console.error('❌ GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are not set');
+  logger.error('❌ GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are not set');
   process.exit(1);
 }
 
@@ -979,14 +979,14 @@ app.get('/checklists', requireAuth, requireVerified, async (req, res) => {
   res.render('checklists', { userChecklists, predefined, user: req.user });
 });
 
-app.post('/checklists/create', requireAuth, async (req, res) => {
+app.post('/checklists/create', requireAuth, requireVerified, async (req, res) => {
   const { title, items } = req.body;
   const itemList = items.split('\n').map(text => ({ text: text.trim(), completed: false }));
   await new Checklist({ title, items: itemList, userId: req.user.email }).save();
   res.redirect('/checklists');
 });
 
-app.post('/checklists/update', requireAuth, async (req, res) => {
+app.post('/checklists/update', requireAuth, requireVerified, async (req, res) => {
   const { id, index, completed } = req.body;
   const checklist = await Checklist.findById(id);
   if (checklist.userId === req.user.email || checklist.isPredefined) {
