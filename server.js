@@ -185,10 +185,16 @@ const transporter = nodemailer.createTransport({
 });
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI, {
+  serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
+  socketTimeoutMS: 45000,
+  bufferCommands: true,
+  maxPoolSize: 10,
+})
   .then(() => logger.info('Connected to MongoDB...'))
   .catch((err) => {
-    logger.error('❌ MongoDB connection error:', err);
+    logger.error('❌ MongoDB connection error:', err.message);
+    logger.error('Full error details:', err);
     // process.exit(1);
   });
 
