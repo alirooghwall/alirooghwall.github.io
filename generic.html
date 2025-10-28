@@ -16,27 +16,16 @@
 
 		<div style="position: fixed; top: 1rem; left: 1rem; z-index: 10001; display: flex; align-items: center; gap: 0.5rem;">
 			<a href="#navPanel" id="navPanelToggle">Menu</a>
-			<button class="button primary" id="openSignIn">Sign In</button>
-			<button class="button" id="openSignUp">Sign Up</button>
-			<a href="/profile" id="profileLink" style="display:none;" class="button">Profile</a>
-			<form method="post" action="/logout" id="logoutForm" style="display:none;"><button type="submit" class="button">Logout</button></form>
+			<a href="https://mars-empire-mlm.onrender.com/signin" id="openSignIn" class="button primary">Sign In</a>
+			<a href="https://mars-empire-mlm.onrender.com/signup" id="openSignUp" class="button">Sign Up</a>
+			<button class="button primary" id="dashboardLink" style="display:none; background: white; color: black; border: 1px solid white; padding: 0.5rem 1rem;" onclick="location.href='https://mars-empire-mlm.onrender.com/dashboard'">Dashboard</button>
+			<button class="button primary" id="profileLink" style="display:none; background: white; color: black; border: 1px solid white; padding: 0.5rem 1rem;" onclick="location.href='https://mars-empire-mlm.onrender.com/profile'">Profile</button>
+			<button id="logoutBtn" style="display:none; background: none; color: rgb(255, 255, 255); border: 1px solid white; padding: 0.5rem 1rem;" class="button" onclick="logout()">Logout</button>
 		</div>
 
-		<!-- Sign In Modal -->
-		<div id="signInModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.7);z-index:10002;align-items:center;justify-content:center;">
-			<div style="background:white;color:black;padding:2rem;border-radius:12px;max-width:400px;width:90%;position:relative;border:1px solid #ccc;">
-				<button id="closeSignIn" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#000;font-size:1.5rem;cursor:pointer;">&times;</button>
-				<div id="signInFormContainer">Loading...</div>
-			</div>
-		</div>
 
-		<!-- Sign Up Modal -->
-		<div id="signUpModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.7);z-index:10002;align-items:center;justify-content:center;">
-			<div style="background:white;color:black;padding:2rem;border-radius:12px;max-width:400px;width:90%;position:relative;border:1px solid #ccc;">
-				<button id="closeSignUp" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#000;font-size:1.5rem;cursor:pointer;">&times;</button>
-				<div id="signUpFormContainer">Loading...</div>
-			</div>
-		</div>
+
+
 
 
 
@@ -45,75 +34,45 @@
 
 
 		<script>
-		// Modal logic
-		const signInModal = document.getElementById('signInModal');
-		const signUpModal = document.getElementById('signUpModal');
-		document.getElementById('openSignIn').addEventListener('click', function() {
-			signUpModal.style.display = 'none';
-			signInModal.style.display = 'flex';
-			fetch('https://mars-empire-mlm.onrender.com/modal/signin').then(r => r.text()).then(html => {
-				document.getElementById('signInFormContainer').innerHTML = html;
-			}).catch(err => {
-				console.error('Failed to load signin modal:', err);
-				document.getElementById('signInFormContainer').innerHTML = '<p>Failed to load form. Please refresh and try again.</p>';
+		function updateAuthUI() {
+			fetch('https://mars-empire-mlm.onrender.com/check-auth')
+			.then(r => r.json())
+			.then(data => {
+				const signInBtn = document.getElementById('openSignIn');
+				const signUpBtn = document.getElementById('openSignUp');
+				const dashboardLink = document.getElementById('dashboardLink');
+				const profileLink = document.getElementById('profileLink');
+				const logoutBtn = document.getElementById('logoutBtn');
+				if (data.loggedIn) {
+					signInBtn.style.display = 'none';
+					signUpBtn.style.display = 'none';
+					dashboardLink.style.display = 'inline-block';
+					profileLink.style.display = 'inline-block';
+					logoutBtn.style.display = 'inline-block';
+				} else {
+					signInBtn.style.display = 'inline-block';
+					signUpBtn.style.display = 'inline-block';
+					dashboardLink.style.display = 'none';
+					profileLink.style.display = 'none';
+					logoutBtn.style.display = 'none';
+				}
+			})
+			.catch(() => {
+				// On static site, assume not logged in
+				console.log('Auth check failed, assuming not logged in');
 			});
-		});
-		document.getElementById('openSignUp').addEventListener('click', function() {
-			signInModal.style.display = 'none';
-			signUpModal.style.display = 'flex';
-			fetch('https://mars-empire-mlm.onrender.com/modal/signup').then(r => r.text()).then(html => {
-				document.getElementById('signUpFormContainer').innerHTML = html;
+		}
+		function logout() {
+			fetch('https://mars-empire-mlm.onrender.com/logout', {
+				method: 'POST'
+			}).then(() => {
+				updateAuthUI();
 			}).catch(err => {
-				console.error('Failed to load signup modal:', err);
-				document.getElementById('signUpFormContainer').innerHTML = '<p>Failed to load form. Please refresh and try again.</p>';
+				console.error('Logout failed:', err);
+				updateAuthUI();
 			});
-		});
-		document.getElementById('closeSignIn').addEventListener('click', function() {
-			signInModal.style.display = 'none';
-		});
-		document.getElementById('closeSignUp').addEventListener('click', function() {
-			signUpModal.style.display = 'none';
-		});
-		window.addEventListener('click', function(e) {
-			if (e.target === signInModal) {
-				signInModal.style.display = 'none';
-			}
-			if (e.target === signUpModal) {
-				signUpModal.style.display = 'none';
-			}
-		});
-		</script>
-
-		<script>
-		fetch('https://mars-empire-mlm.onrender.com/check-auth')
-		.then(r => r.json())
-		.then(data => {
-			const signInBtn = document.getElementById('openSignIn');
-			const signUpBtn = document.getElementById('openSignUp');
-			const profileLink = document.getElementById('profileLink');
-			const logoutForm = document.getElementById('logoutForm');
-			const dashboardLi = document.getElementById('dashboardLink');
-			const profileLi = document.querySelector('a[href="/profile"]').parentElement;
-			if (data.loggedIn) {
-				signInBtn.style.display = 'none';
-				signUpBtn.style.display = 'none';
-				profileLink.style.display = 'inline-block';
-				logoutForm.style.display = 'inline';
-				dashboardLi.style.display = 'block';
-				profileLi.style.display = 'block';
-			} else {
-				signInBtn.style.display = 'inline-block';
-				signUpBtn.style.display = 'inline-block';
-				profileLink.style.display = 'none';
-				logoutForm.style.display = 'none';
-				dashboardLi.style.display = 'none';
-				profileLi.style.display = 'none';
-			}
-		})
-		.catch(() => {
-			// On static site, assume not logged in
-			console.log('Auth check failed, assuming not logged in');
-		});
+		}
+		updateAuthUI();
 		</script>
 
 		<!-- Wrapper -->
@@ -132,9 +91,9 @@
 							<li><a href="index.html">MARS EMPIRE</a></li>
 							<li class="active"><a href="generic.html">MLM Companion 'AI'</a></li>
 							<li><a href="elements.html">Resources</a></li>
-							<li><a href="/rules">Rules</a></li>
-							<li><a href="/checklists">Checklists</a></li>
-							<li><a href="/tree">Tree View</a></li>
+							<li><a href="https://mars-empire-mlm.onrender.com/rules">Rules</a></li>
+							<li><a href="https://mars-empire-mlm.onrender.com/checklists">Checklists</a></li>
+							<li><a href="https://mars-empire-mlm.onrender.com/tree">Tree View</a></li>
 						</ul>
 
 
@@ -179,7 +138,7 @@
 				<!-- Footer -->
 					<footer id="footer">
 						<section>
-							<form method="post" action="#">
+							<form method="post" action="https://mars-empire-mlm.onrender.com/contact">
 								<div class="fields">
 									<div class="field">
 										<label for="name">Name</label>

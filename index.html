@@ -6,13 +6,12 @@
 	<head>
 	<link rel="icon" type="image/png" href="images/Untitled.png">
 
-		<title>MARS EMPIRE | BizMLM Companion | Learn & Ask Questions 
-</title>
+		<title>MARS EMPIRE | BizMLM Companion | Learn & Ask Questions</title>
 
  
 
 		
-		<meta name="description" content="BizMLM Student Helper is a free personal website designed to assist students with questions about BizMLM. Explore guides, FAQs, and chat with our AI-powered helper bot to get instant answers.">
+		<meta name="description" content="BizMLM Companion is a free personal website designed to assist students with questions about BizMLM. Explore guides, FAQs, and chat with our AI-powered helper bot to get instant answers.">
 		<meta property="og:title" content="MARS EMPIRE | BizMLM Student Helper | Learn & Ask Questions" />
 		<meta property="og:description" content="A personal website to help students learn BizMLM concepts and get instant answers via a chatbot." />
 		<meta property="og:image" content="https://alirooghwall.github.io/images/Untitled.png" />
@@ -38,8 +37,9 @@
 			<a href="#navPanel" id="navPanelToggle">Menu</a>
 			<a href="https://mars-empire-mlm.onrender.com/signin" id="openSignIn" class="button primary">Sign In</a>
 			<a href="https://mars-empire-mlm.onrender.com/signup" id="openSignUp" class="button">Sign Up</a>
-			<button class="button primary" id="profileLink" style="display:none; background: white; color: black; border: 1px solid #ccc; padding: 0.5rem 1rem;" onclick="location.href='https://mars-empire-mlm.onrender.com/profile'">Profile</button>
-			<button id="logoutBtn" style="display:none; background: none; color: rgb(255, 255, 255); border: 1px solid #ccc; padding: 0.5rem 1rem;" class="button" onclick="logout()">Logout</button>
+			<button class="button primary" id="dashboardLink" style="display:none; background: white; color: black; border: 1px solid white; padding: 0.5rem 1rem;" onclick="location.href='https://mars-empire-mlm.onrender.com/dashboard'">Dashboard</button>
+			<button class="button primary" id="profileLink" style="display:none; background: white; color: black; border: 1px solid white; padding: 0.5rem 1rem;" onclick="location.href='https://mars-empire-mlm.onrender.com/profile'">Profile</button>
+			<button id="logoutBtn" style="display:none; background: none; color: rgb(255, 255, 255); border: 1px solid white; padding: 0.5rem 1rem;" class="button" onclick="logout()">Logout</button>
 		</div>
 
 
@@ -51,16 +51,19 @@
 			.then(data => {
 				const signInBtn = document.getElementById('openSignIn');
 				const signUpBtn = document.getElementById('openSignUp');
+				const dashboardLink = document.getElementById('dashboardLink');
 				const profileLink = document.getElementById('profileLink');
 				const logoutBtn = document.getElementById('logoutBtn');
 				if (data.loggedIn) {
 					signInBtn.style.display = 'none';
 					signUpBtn.style.display = 'none';
+					dashboardLink.style.display = 'inline-block';
 					profileLink.style.display = 'inline-block';
 					logoutBtn.style.display = 'inline-block';
 				} else {
 					signInBtn.style.display = 'inline-block';
 					signUpBtn.style.display = 'inline-block';
+					dashboardLink.style.display = 'none';
 					profileLink.style.display = 'none';
 					logoutBtn.style.display = 'none';
 				}
@@ -95,7 +98,7 @@
 						<h4>MULTI-LEVEL MARKETING COMPANION</h4>
 
 						<!--
-						<p>Your personal resource for learning, exploring, and getting instant answers about BizMLM. Ask questions, explore guides, and chat with our helpful assistant anytime!</a>.</p>
+						<p>Your personal resource for learning, exploring, and getting instant answers about BizMLM. Ask questions, explore guides, and chat with our helpful assistant anytime!</p>
 						-->
 						<ul class="actions">
 							<li><a href="#header" class="button icon solid solo fa-arrow-down scrolly">Continue</a></li>
@@ -146,7 +149,7 @@
 									<p id="jalaali">تاریخ هجری شمسی: بارگذاری...</p>
 								</div>
 							</section>
-								<a href="#" class="image main"><img src="images/pic01.jpg" alt="" /></a>
+								<a href="#" class="image main"><img src="images/pic01.jpg" alt="MARS EMPIRE featured image" /></a>
 								<ul class="actions special">
 									<li><a href="#" class="button large">Full Story</a></li>
 								</ul>
@@ -160,7 +163,7 @@
 										<h2><a href="#">Sed magna<br />
 										ipsum faucibus</a></h2>
 									</header>
-									<a href="#" class="image fit"><img src="images/pic02.jpg" alt="" /></a>
+									<a href="#" class="image fit"><img src="images/pic02.jpg" alt="Blog post image 1" /></a>
 									<p>Donec eget ex magna. Interdum et malesuada fames ac ante ipsum primis in faucibus. Pellentesque venenatis dolor imperdiet dolor mattis sagittis magna etiam.</p>
 									<ul class="actions special">
 										<li><a href="#" class="button">Full Story</a></li>
@@ -172,7 +175,7 @@
 										<h2><a href="#">Primis eget<br />
 										imperdiet lorem</a></h2>
 									</header>
-									<a href="#" class="image fit"><img src="images/pic03.jpg" alt="" /></a>
+									<a href="#" class="image fit"><img src="images/pic03.jpg" alt="Blog post image 2" /></a>
 									<p>Donec eget ex magna. Interdum et malesuada fames ac ante ipsum primis in faucibus. Pellentesque venenatis dolor imperdiet dolor mattis sagittis magna etiam.</p>
 									<ul class="actions special">
 										<li><a href="#" class="button">Full Story</a></li>
@@ -184,7 +187,7 @@
 										<h2><a href="#">Ante mattis<br />
 										interdum dolor</a></h2>
 									</header>
-									<a href="#" class="image fit"><img src="images/pic04.jpg" alt="" /></a>
+									<a href="#" class="image fit"><img src="images/pic04.jpg" alt="Blog post image 3" /></a>
 									<p>Donec eget ex magna. Interdum et malesuada fames ac ante ipsum primis in faucibus. Pellentesque venenatis dolor imperdiet dolor mattis sagittis magna etiam.</p>
 									<ul class="actions special">
 										<li><a href="#" class="button">Full Story</a></li>
@@ -196,7 +199,7 @@
 										<h2><a href="#">Tempus sed<br />
 										nulla imperdiet</a></h2>
 									</header>
-									<a href="#" class="image fit"><img src="images/pic05.jpg" alt="" /></a>
+									<a href="#" class="image fit"><img src="images/pic05.jpg" alt="Blog post image 4" /></a>
 									<p>Donec eget ex magna. Interdum et malesuada fames ac ante ipsum primis in faucibus. Pellentesque venenatis dolor imperdiet dolor mattis sagittis magna etiam.</p>
 									<ul class="actions special">
 										<li><a href="#" class="button">Full Story</a></li>
@@ -208,7 +211,7 @@
 										<h2><a href="#">Odio magna<br />
 										sed consectetur</a></h2>
 									</header>
-									<a href="#" class="image fit"><img src="images/pic06.jpg" alt="" /></a>
+									<a href="#" class="image fit"><img src="images/pic06.jpg" alt="Blog post image 5" /></a>
 									<p>Donec eget ex magna. Interdum et malesuada fames ac ante ipsum primis in faucibus. Pellentesque venenatis dolor imperdiet dolor mattis sagittis magna etiam.</p>
 									<ul class="actions special">
 										<li><a href="#" class="button">Full Story</a></li>
@@ -220,7 +223,7 @@
 										<h2><a href="#">Augue lorem<br />
 										primis vestibulum</a></h2>
 									</header>
-									<a href="#" class="image fit"><img src="images/pic07.jpg" alt="" /></a>
+									<a href="#" class="image fit"><img src="images/pic07.jpg" alt="Blog post image 6" /></a>
 									<p>Donec eget ex magna. Interdum et malesuada fames ac ante ipsum primis in faucibus. Pellentesque venenatis dolor imperdiet dolor mattis sagittis magna etiam.</p>
 									<ul class="actions special">
 										<li><a href="#" class="button">Full Story</a></li>
@@ -270,7 +273,7 @@
 				<!-- Footer -->
 					<footer id="footer">
 						<section>
-							<form method="post" action="#">
+							<form method="post" action="https://mars-empire-mlm.onrender.com/contact">
 								<div class="fields">
 									<div class="field">
 										<label for="name">Name</label>
@@ -318,7 +321,7 @@
 
 				<!-- Copyright -->
 					<div id="copyright">
-						<ul><li>&copy; Ali </li><li>MARS EMPIRE<a href="MARS EMPIRE://html5up.net"></a></li></ul>
+												<ul><li>&copy; Ali </li><li><a href="https://html5up.net">MARS EMPIRE</a></li></ul>
 					</div>
 
 			</div>

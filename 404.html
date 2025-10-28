@@ -5,7 +5,54 @@
   <link rel="stylesheet" href="assets/css/main.css">
 </head>
 <body>
+  <div style="position: fixed; top: 1rem; left: 1rem; z-index: 10001; display: flex; align-items: center; gap: 0.5rem;">
+    <a href="https://mars-empire-mlm.onrender.com/signin" class="button primary">Sign In</a>
+    <a href="https://mars-empire-mlm.onrender.com/signup" class="button">Sign Up</a>
+    <button class="button primary" id="dashboardLink" style="display:none; background: white; color: black; border: 1px solid white; padding: 0.5rem 1rem;" onclick="location.href='https://mars-empire-mlm.onrender.com/dashboard'">Dashboard</button>
+    <button class="button primary" id="profileLink" style="display:none; background: white; color: black; border: 1px solid white; padding: 0.5rem 1rem;" onclick="location.href='https://mars-empire-mlm.onrender.com/profile'">Profile</button>
+    <button id="logoutBtn" style="display:none; background: none; color: rgb(255, 255, 255); border: 1px solid white; padding: 0.5rem 1rem;" class="button" onclick="logout()">Logout</button>
+  </div>
+  <script>
+    function updateAuthUI() {
+      fetch('https://mars-empire-mlm.onrender.com/check-auth')
+      .then(r => r.json())
+      .then(data => {
+        const signInBtn = document.querySelector('a[href*="signin"]');
+        const signUpBtn = document.querySelector('a[href*="signup"]');
+        const dashboardLink = document.getElementById('dashboardLink');
+        const profileLink = document.getElementById('profileLink');
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (data.loggedIn) {
+          signInBtn.style.display = 'none';
+          signUpBtn.style.display = 'none';
+          dashboardLink.style.display = 'inline-block';
+          profileLink.style.display = 'inline-block';
+          logoutBtn.style.display = 'inline-block';
+        } else {
+          signInBtn.style.display = 'inline-block';
+          signUpBtn.style.display = 'inline-block';
+          dashboardLink.style.display = 'none';
+          profileLink.style.display = 'none';
+          logoutBtn.style.display = 'none';
+        }
+      })
+      .catch(() => {
+        console.log('Auth check failed, assuming not logged in');
+      });
+    }
+    function logout() {
+      fetch('https://mars-empire-mlm.onrender.com/logout', {
+        method: 'POST'
+      }).then(() => {
+        updateAuthUI();
+      }).catch(err => {
+        console.error('Logout failed:', err);
+        updateAuthUI();
+      });
+    }
+    updateAuthUI();
+  </script>
   <h1>404 - Page Not Found</h1>
-  <p><a href="/">Back to Home</a></p>
+  <p><a href="index.html">Back to Home</a></p>
 </body>
 </html>
