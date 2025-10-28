@@ -293,7 +293,7 @@ app.get('/check-auth', (req, res) => {
 app.get('/modal/signin', (req, res) => {
   res.send(`
     <style>input, select { background: #f9f9f9; color: #000; border: 1px solid #ccc; padding: 0.5rem; border-radius: 4px; }</style>
-    <form method="post" action="/signin" id="modalSigninForm">
+    <form id="modalSigninForm">
       <input type="hidden" name="redirect" value="/" />
       <div class="input-group">
         <i class="fas fa-envelope"></i>
@@ -315,7 +315,7 @@ app.get('/modal/signin', (req, res) => {
 app.get('/modal/signup', (req, res) => {
   res.send(`
     <style>input, select { background: #f9f9f9; color: #000; border: 1px solid #ccc; padding: 0.5rem; border-radius: 4px; }</style>
-    <form method="post" action="/signup" id="modalSignupForm">
+    <form id="modalSignupForm">
       <div class="input-group">
         <i class="fas fa-user"></i>
         <input name="name" placeholder="Name" required aria-label="Name" />
