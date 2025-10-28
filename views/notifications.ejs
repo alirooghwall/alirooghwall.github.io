@@ -15,7 +15,7 @@
 
       <% if (user.accountType === 'admin' || user.accountType === 'master_admin') { %>
         <h2>Create New Notification</h2>
-        <form method="post" action="/notifications/create">
+        <form id="createNotificationForm">
           <input name="userId" placeholder="User ID" required />
           <input name="title" placeholder="Title" required />
           <textarea name="message" placeholder="Message"></textarea>
@@ -25,7 +25,7 @@
             <option value="error">Error</option>
             <option value="success">Success</option>
           </select>
-          <button type="submit">Create Notification</button>
+          <button type="button" onclick="submitForm('createNotificationForm', '/notifications/create')">Create Notification</button>
         </form>
       <% } %>
 
@@ -35,9 +35,7 @@
           <li class="<%= n.read ? 'read' : 'unread' %>">
             <strong><%= n.title %></strong>: <%= n.message %> (Type: <%= n.type %>, Created: <%= n.createdAt %>)
             <% if (!n.read) { %>
-              <form method="post" action="/notifications/mark-read/<%= n._id %>" style="display:inline;">
-                <button type="submit" class="crud-btn">Mark as Read</button>
-              </form>
+              <button onclick="markRead('<%= n._id %>')" class="crud-btn">Mark as Read</button>
             <% } %>
           </li>
         <% }); %>
@@ -45,5 +43,32 @@
     </section>
   </main>
   <%- include('footer') %>
+  <script>
+    async function submitForm(formId, action) {
+      const form = document.getElementById(formId);
+      const formData = new FormData(form);
+      try {
+        const response = await fetch(action, {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        });
+        if (response.ok) {
+          location.reload();
+        } else {
+          alert('Error: ' + response.statusText);
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+    async function markRead(id) {
+      await fetch('/notifications/mark-read/' + id, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      location.reload();
+    }
+  </script>
 </body>
 </html>

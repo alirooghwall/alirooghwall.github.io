@@ -50,7 +50,7 @@
 				</ul>
 				<ul class="actions stacked">
 					<li><a href="/profile" class="button primary fit">Profile</a></li>
-					<li><form method="post" action="/logout"><button type="submit" class="button fit">Logout</button></form></li>
+					<li><button onclick="logout()" class="button fit">Logout</button></li>
 				</ul>
 			</nav>
 			<div style="text-align: center; margin: 1rem;"><button onclick="history.back()" class="button">← Back</button></div>
@@ -98,11 +98,11 @@
 					<% }); %>
 					<% if (['admin', 'manager'].includes(user.accountType)) { %>
 						<h2>Assign Checklist to User</h2>
-						<form method="post" action="/checklists/assign">
+						<form id="assignForm">
 							<input name="title" placeholder="Checklist Title" required />
 							<textarea name="items" placeholder="Items (one per line)" required></textarea>
 							<input name="userId" placeholder="User Email" required />
-							<button type="submit">Assign</button>
+							<button type="button" onclick="submitForm('assignForm', '/checklists/assign')">Assign</button>
 						</form>
 					<% } %>
 					<% if (assignedChecklists && assignedChecklists.length > 0) { %>
@@ -138,9 +138,35 @@
 				await fetch('/checklists/update', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
+					credentials: 'include',
 					body: JSON.stringify({ id, index, completed })
 				});
 				location.reload();
+			}
+			async function logout() {
+				await fetch('/logout', {
+					method: 'POST',
+					credentials: 'include'
+				});
+				window.location.href = '/';
+			}
+			async function submitForm(formId, action) {
+				const form = document.getElementById(formId);
+				const formData = new FormData(form);
+				try {
+					const response = await fetch(action, {
+						method: 'POST',
+						credentials: 'include',
+						body: formData
+					});
+					if (response.ok) {
+						location.reload();
+					} else {
+						alert('Error: ' + response.statusText);
+					}
+				} catch (error) {
+					alert('Error: ' + error.message);
+				}
 			}
 		</script>
 		<script src="assets/js/jquery.min.js"></script>

@@ -47,7 +47,7 @@
     
     <div id="users" class="tab-content">
       <h2>Create New User</h2>
-      <form method="post" action="/admin/create-user">
+      <form id="create-user-form" action="/admin/create-user">
         <input name="name" placeholder="Name" required />
         <input name="email" type="email" placeholder="Email" required />
         <input name="password" placeholder="Password" required />
@@ -73,7 +73,7 @@
           <option value="advanced">Advanced</option>
           <option value="expert">Expert</option>
         </select>
-        <button type="submit">Create User</button>
+        <button type="button" onclick="submitForm('create-user-form')">Create User</button>
       </form>
       
       <h2>Pending Approvals</h2>
@@ -83,7 +83,7 @@
             <header>
               <h3><%= u.name %> (<%= u.email %>)</h3>
             </header>
-            <form method="post" action="/admin/edit-user/<%= u._id %>">
+            <form id="edit-user-<%= u._id %>" action="/admin/edit-user/<%= u._id %>">
               <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
                 <input name="name" value="<%= u.name %>" placeholder="Name" required style="flex: 1; min-width: 150px;" />
                 <input name="email" value="<%= u.email %>" placeholder="Email" required style="flex: 1; min-width: 150px;" />
@@ -99,12 +99,15 @@
                 <input name="mlmLevel" value="<%= u.mlmLevel %>" placeholder="MLM Level" style="flex: 1; min-width: 150px;" />
               </div>
               <ul class="actions special">
-                <li><button type="submit">Edit</button></li>
-                <li><form method="post" action="/admin/approve/<%= u._id %>" style="display:inline;"><button type="submit">Approve</button></form></li>
-                <li><form method="post" action="/admin/reject/<%= u._id %>" style="display:inline;"><button type="submit">Reject</button></form></li>
-                <li><form method="post" action="/admin/delete-user/<%= u._id %>" style="display:inline;"><button type="submit" onclick="return confirm('Delete user?')">Delete</button></form></li>
+                <li><button type="button" onclick="submitForm('edit-user-<%= u._id %>')">Edit</button></li>
+                <li><button type="button" onclick="submitForm('approve-<%= u._id %>')">Approve</button></li>
+                <li><button type="button" onclick="submitForm('reject-<%= u._id %>')">Reject</button></li>
+                <li><button type="button" onclick="submitForm('delete-user-<%= u._id %>')">Delete</button></li>
               </ul>
             </form>
+            <form id="approve-<%= u._id %>" action="/admin/approve/<%= u._id %>" style="display:none;"></form>
+            <form id="reject-<%= u._id %>" action="/admin/reject/<%= u._id %>" style="display:none;"></form>
+            <form id="delete-user-<%= u._id %>" action="/admin/delete-user/<%= u._id %>" style="display:none;"></form>
           </article>
         <% }); %>
       </section>
@@ -116,7 +119,7 @@
             <header>
               <h3><%= u.name %> (<%= u.email %>)</h3>
             </header>
-            <form method="post" action="/admin/edit-user/<%= u._id %>">
+            <form id="edit-user-all-<%= u._id %>" action="/admin/edit-user/<%= u._id %>">
               <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
                 <input name="name" value="<%= u.name %>" placeholder="Name" required style="flex: 1; min-width: 150px;" />
                 <input name="email" value="<%= u.email %>" placeholder="Email" required style="flex: 1; min-width: 150px;" />
@@ -133,10 +136,11 @@
                 <input name="mlmLevel" value="<%= u.mlmLevel %>" placeholder="MLM Level" style="flex: 1; min-width: 150px;" />
               </div>
               <ul class="actions special">
-                <li><button type="submit">Edit</button></li>
-                <li><form method="post" action="/admin/delete-user/<%= u._id %>" style="display:inline;"><button type="submit" onclick="return confirm('Delete user?')">Delete</button></form></li>
+                <li><button type="button" onclick="submitForm('edit-user-all-<%= u._id %>')">Edit</button></li>
+                <li><button type="button" onclick="submitForm('delete-user-all-<%= u._id %>')">Delete</button></li>
               </ul>
             </form>
+            <form id="delete-user-all-<%= u._id %>" action="/admin/delete-user/<%= u._id %>" style="display:none;"></form>
           </article>
         <% }); %>
       </section>
@@ -144,57 +148,57 @@
     
     <div id="content" class="tab-content">
       <h2>Rules</h2>
-      <form method="post" action="/rules/create">
+      <form id="create-rule-form" action="/rules/create">
         <input name="title" placeholder="Title" required />
         <textarea name="content" placeholder="Content"></textarea>
         <input name="category" placeholder="Category" />
-        <button type="submit">Create Rule</button>
+        <button type="button" onclick="submitForm('create-rule-form')">Create Rule</button>
       </form>
       <ul>
         <% rules.forEach(r => { %>
           <li>
-            <form method="post" action="/rules/update/<%= r._id %>" style="display:inline;">
+            <form id="update-rule-<%= r._id %>" action="/rules/update/<%= r._id %>" style="display:inline;">
               <input name="title" value="<%= r.title %>" required />
               <textarea name="content"><%= r.content %></textarea>
               <input name="category" value="<%= r.category %>" />
-              <button type="submit" class="crud-btn">Update</button>
+              <button type="button" onclick="submitForm('update-rule-<%= r._id %>')" class="crud-btn">Update</button>
             </form>
-            <form method="post" action="/rules/delete/<%= r._id %>" style="display:inline;">
-              <button type="submit" class="crud-btn" onclick="return confirm('Delete rule?')">Delete</button>
+            <form id="delete-rule-<%= r._id %>" action="/rules/delete/<%= r._id %>" style="display:inline;">
+              <button type="button" onclick="submitForm('delete-rule-<%= r._id %>')" class="crud-btn">Delete</button>
             </form>
           </li>
         <% }); %>
       </ul>
       
       <h2>Articles</h2>
-      <form method="post" action="/articles/create">
+      <form id="create-article-form" action="/articles/create">
         <input name="title" placeholder="Title" required />
         <textarea name="content" placeholder="Content"></textarea>
         <input name="category" placeholder="Category" />
         <input name="tags" placeholder="Tags (comma separated)" />
         <label><input name="published" type="checkbox" /> Published</label>
-        <button type="submit">Create Article</button>
+        <button type="button" onclick="submitForm('create-article-form')">Create Article</button>
       </form>
       <ul>
         <% articles.forEach(a => { %>
           <li>
-            <form method="post" action="/articles/update/<%= a._id %>" style="display:inline;">
+            <form id="update-article-<%= a._id %>" action="/articles/update/<%= a._id %>" style="display:inline;">
               <input name="title" value="<%= a.title %>" required />
               <textarea name="content"><%= a.content %></textarea>
               <input name="category" value="<%= a.category %>" />
               <input name="tags" value="<%= a.tags.join(',') %>" />
               <label><input name="published" type="checkbox" <%= a.published?'checked':'' %> /> Published</label>
-              <button type="submit" class="crud-btn">Update</button>
+              <button type="button" onclick="submitForm('update-article-<%= a._id %>')" class="crud-btn">Update</button>
             </form>
-            <form method="post" action="/articles/delete/<%= a._id %>" style="display:inline;">
-              <button type="submit" class="crud-btn" onclick="return confirm('Delete article?')">Delete</button>
+            <form id="delete-article-<%= a._id %>" action="/articles/delete/<%= a._id %>" style="display:inline;">
+              <button type="button" onclick="submitForm('delete-article-<%= a._id %>')" class="crud-btn">Delete</button>
             </form>
           </li>
         <% }); %>
       </ul>
       
       <h2>Resources</h2>
-      <form method="post" action="/resources/create">
+      <form id="create-resource-form" action="/resources/create">
         <input name="title" placeholder="Title" required />
         <textarea name="description" placeholder="Description"></textarea>
         <select name="type">
@@ -210,12 +214,12 @@
           <option value="participants">Participants</option>
           <option value="managers">Managers</option>
         </select>
-        <button type="submit">Create Resource</button>
+        <button type="button" onclick="submitForm('create-resource-form')">Create Resource</button>
       </form>
       <ul>
         <% resources.forEach(res => { %>
           <li>
-            <form method="post" action="/resources/update/<%= res._id %>" style="display:inline;">
+            <form id="update-resource-<%= res._id %>" action="/resources/update/<%= res._id %>" style="display:inline;">
               <input name="title" value="<%= res.title %>" required />
               <textarea name="description"><%= res.description %></textarea>
               <select name="type">
@@ -231,10 +235,10 @@
                 <option value="participants" <%= res.accessLevel==='participants'?'selected':'' %>>Participants</option>
                 <option value="managers" <%= res.accessLevel==='managers'?'selected':'' %>>Managers</option>
               </select>
-              <button type="submit" class="crud-btn">Update</button>
+              <button type="button" onclick="submitForm('update-resource-<%= res._id %>')" class="crud-btn">Update</button>
             </form>
-            <form method="post" action="/resources/delete/<%= res._id %>" style="display:inline;">
-              <button type="submit" class="crud-btn" onclick="return confirm('Delete resource?')">Delete</button>
+            <form id="delete-resource-<%= res._id %>" action="/resources/delete/<%= res._id %>" style="display:inline;">
+              <button type="button" onclick="submitForm('delete-resource-<%= res._id %>')" class="crud-btn">Delete</button>
             </form>
           </li>
         <% }); %>
@@ -246,17 +250,17 @@
       <ul>
         <% treeConnections.forEach(t => { %>
           <li>
-            <form method="post" action="/admin/edit-tree/<%= t._id %>" style="display:inline;">
+            <form id="edit-tree-<%= t._id %>" action="/admin/edit-tree/<%= t._id %>" style="display:inline;">
               <input name="userId" value="<%= t.userId %>" required />
               <input name="leaderId" value="<%= t.leaderId %>" />
               <select name="verified">
                 <option value="true" <%= t.verified?'selected':'' %>>Verified</option>
                 <option value="false" <%= !t.verified?'selected':'' %>>Not Verified</option>
               </select>
-              <button type="submit" class="crud-btn">Edit</button>
+              <button type="button" onclick="submitForm('edit-tree-<%= t._id %>')" class="crud-btn">Edit</button>
             </form>
-            <form method="post" action="/admin/delete-tree/<%= t._id %>" style="display:inline;">
-              <button type="submit" class="crud-btn" onclick="return confirm('Delete tree connection?')">Delete</button>
+            <form id="delete-tree-<%= t._id %>" action="/admin/delete-tree/<%= t._id %>" style="display:inline;">
+              <button type="button" onclick="submitForm('delete-tree-<%= t._id %>')" class="crud-btn">Delete</button>
             </form>
           </li>
         <% }); %>
@@ -283,6 +287,23 @@
         document.getElementById(tab.dataset.tab).classList.add('active');
       });
     });
+    function submitForm(id) {
+      const form = document.getElementById(id);
+      fetch(form.action, {
+        method: 'POST',
+        credentials: 'include',
+        body: new FormData(form)
+      }).then(response => {
+        if (response.ok) {
+          location.reload();
+        } else {
+          alert('Error: ' + response.status);
+        }
+      }).catch(err => {
+        console.error('Error:', err);
+        alert('Error submitting form');
+      });
+    }
   </script>
 </body>
 </html>

@@ -16,10 +16,10 @@
     <h1>Reports</h1>
     
     <h2>Create New Report</h2>
-    <form method="post" action="/reports/create">
+    <form id="createReportForm">
       <input name="type" placeholder="Type" required />
       <textarea name="data" placeholder="Data"></textarea>
-      <button type="submit">Create Report</button>
+      <button type="button" onclick="submitForm('createReportForm', '/reports/create')">Create Report</button>
     </form>
     
     <h2>All Reports</h2>
@@ -33,5 +33,25 @@
     
     <a href="/profile">Back to Profile</a>
   </main>
+  <script>
+    async function submitForm(formId, action) {
+      const form = document.getElementById(formId);
+      const formData = new FormData(form);
+      try {
+        const response = await fetch(action, {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        });
+        if (response.ok) {
+          location.reload();
+        } else {
+          alert('Error: ' + response.statusText);
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+  </script>
 </body>
 </html>

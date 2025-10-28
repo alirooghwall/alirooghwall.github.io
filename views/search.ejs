@@ -48,5 +48,14 @@
     </section>
   </main>
   <%- include('footer') %>
+  <script>
+    async function logout() {
+      await fetch('/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      window.location.href = '/';
+    }
+  </script>
 </body>
 </html>

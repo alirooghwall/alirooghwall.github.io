@@ -9,11 +9,31 @@
 <body>
   <main style="max-width:600px;margin:3rem auto;padding:1rem;">
     <h1>File Upload</h1>
-    <form method="post" action="/upload" enctype="multipart/form-data">
+    <form id="upload-form" action="/upload" enctype="multipart/form-data">
       <input type="file" name="file" required />
-      <button type="submit">Upload</button>
+      <button type="button" onclick="submitForm('upload-form')">Upload</button>
     </form>
     <a href="/profile">Back to Profile</a>
   </main>
+  <script>
+    function submitForm(id) {
+      const form = document.getElementById(id);
+      fetch(form.action, {
+        method: 'POST',
+        credentials: 'include',
+        body: new FormData(form)
+      }).then(response => {
+        if (response.ok) {
+          alert('Upload successful');
+          location.reload();
+        } else {
+          alert('Error: ' + response.status);
+        }
+      }).catch(err => {
+        console.error('Error:', err);
+        alert('Error uploading file');
+      });
+    }
+  </script>
 </body>
 </html>

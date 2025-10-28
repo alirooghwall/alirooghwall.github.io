@@ -45,7 +45,7 @@
 				</ul>
 				<ul class="actions stacked">
 					<li><a href="/profile" class="button primary fit">Profile</a></li>
-					<li><form method="post" action="/logout"><button type="submit" class="button fit">Logout</button></form></li>
+					<li><button onclick="logout()" class="button fit">Logout</button></li>
 				</ul>
 			</nav>
 			<div style="text-align: center; margin: 1rem;"><button onclick="history.back()" class="button">← Back</button></div>
@@ -109,6 +109,13 @@
 				document.getElementById('breakdown').textContent = `Based on ${rate * 100}% commission rate on $${(personalSales + teamSales).toFixed(2)} sales + $${recruits * 10} bonus for recruits.`;
 				document.getElementById('result').style.display = 'block';
 			});
+			async function logout() {
+				await fetch('/logout', {
+					method: 'POST',
+					credentials: 'include'
+				});
+				window.location.href = '/';
+			}
 		</script>
 		<script src="assets/js/jquery.min.js"></script>
 		<script src="assets/js/jquery.scrollex.min.js"></script>

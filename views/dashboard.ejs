@@ -45,7 +45,7 @@
 				</ul>
 				<ul class="actions stacked">
 					<li><a href="/profile" class="button primary fit">Profile</a></li>
-					<li><form method="post" action="/logout"><button type="submit" class="button fit">Logout</button></form></li>
+					<li><button onclick="logout()" class="button fit">Logout</button></li>
 				</ul>
 			</nav>
 			<div style="text-align: center; margin: 1rem;"><button onclick="history.back()" class="button">← Back</button></div>
@@ -104,5 +104,18 @@
 		<script src="assets/js/breakpoints.min.js"></script>
 		<script src="assets/js/util.js"></script>
 		<script src="assets/js/main.js"></script>
+		<script>
+			function logout() {
+				fetch('/logout', {
+					method: 'POST',
+					credentials: 'include'
+				}).then(() => {
+					location.href = '/';
+				}).catch(err => {
+					console.error('Logout failed:', err);
+					location.href = '/';
+				});
+			}
+		</script>
 	</body>
 </html>

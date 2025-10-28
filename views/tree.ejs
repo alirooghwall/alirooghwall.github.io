@@ -43,7 +43,7 @@
 				</ul>
 				<ul class="actions stacked">
 					<li><a href="/profile" class="button primary fit">Profile</a></li>
-					<li><form method="post" action="/logout"><button type="submit" class="button fit">Logout</button></form></li>
+					<li><button onclick="logout()" class="button fit">Logout</button></li>
 				</ul>
 			</nav>
 			<div style="text-align: center; margin: 1rem;"><button onclick="history.back()" class="button">← Back</button></div>
@@ -59,9 +59,7 @@
 							<ul>
 								<% pendingConnections.forEach(t => { %>
 									<li><%= t.userId %> under <%= t.leaderId %>
-										<form method="post" action="/tree/verify/<%= t._id %>" style="display:inline;">
-											<button type="submit">Verify</button>
-										</form>
+										<button onclick="verify('<%= t._id %>')">Verify</button>
 									</li>
 								<% }); %>
 							</ul>
@@ -97,6 +95,22 @@
 				.attr('x', d => d.children ? -13 : 13)
 				.style('text-anchor', d => d.children ? 'end' : 'start')
 				.text(d => d.data.name);
+		</script>
+		<script>
+			async function logout() {
+				await fetch('/logout', {
+					method: 'POST',
+					credentials: 'include'
+				});
+				window.location.href = '/';
+			}
+			async function verify(id) {
+				await fetch('/tree/verify/' + id, {
+					method: 'POST',
+					credentials: 'include'
+				});
+				location.reload();
+			}
 		</script>
 		<script src="assets/js/jquery.min.js"></script>
 		<script src="assets/js/jquery.scrollex.min.js"></script>

@@ -34,7 +34,7 @@
       </ul>
       <ul class="actions stacked">
         <li><a href="/profile" class="button primary fit">Profile</a></li>
-        <li><form method="post" action="/logout"><button type="submit" class="button fit">Logout</button></form></li>
+        <li><button onclick="logout()" class="button fit">Logout</button></li>
       </ul>
     </nav>
     <div style="text-align: center; margin: 1rem;"><button onclick="history.back()" class="button">← Back</button></div>
@@ -45,23 +45,23 @@
         </header>
         
         <h2>Create New Setting</h2>
-        <form method="post" action="/settings/create">
+        <form id="create-setting-form" action="/settings/create">
           <input name="key" placeholder="Key" required />
           <textarea name="value" placeholder="Value"></textarea>
-          <button type="submit">Create Setting</button>
+          <button type="button" onclick="submitForm('create-setting-form')">Create Setting</button>
         </form>
         
         <h2>All Settings</h2>
         <ul>
           <% settings.forEach(s => { %>
             <li>
-              <form method="post" action="/settings/update/<%= s._id %>" style="display:inline;">
+              <form id="update-setting-<%= s._id %>" action="/settings/update/<%= s._id %>" style="display:inline;">
                 <input name="key" value="<%= s.key %>" readonly />
                 <textarea name="value"><%= s.value %></textarea>
-                <button type="submit" class="crud-btn">Update</button>
+                <button type="button" onclick="submitForm('update-setting-<%= s._id %>')" class="crud-btn">Update</button>
               </form>
-              <form method="post" action="/settings/delete/<%= s._id %>" style="display:inline;">
-                <button type="submit" class="crud-btn" onclick="return confirm('Delete setting?')">Delete</button>
+              <form id="delete-setting-<%= s._id %>" action="/settings/delete/<%= s._id %>" style="display:inline;">
+                <button type="button" onclick="submitForm('delete-setting-<%= s._id %>')" class="crud-btn">Delete</button>
               </form>
             </li>
           <% }); %>
@@ -77,5 +77,31 @@
   <script src="assets/js/breakpoints.min.js"></script>
   <script src="assets/js/util.js"></script>
   <script src="assets/js/main.js"></script>
+  <script>
+    function submitForm(id) {
+      const form = document.getElementById(id);
+      fetch(form.action, {
+        method: 'POST',
+        credentials: 'include',
+        body: new FormData(form)
+      }).then(response => {
+        if (response.ok) {
+          location.reload();
+        } else {
+          alert('Error: ' + response.status);
+        }
+      }).catch(err => {
+        console.error('Error:', err);
+        alert('Error submitting form');
+      });
+    }
+    async function logout() {
+      await fetch('/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      window.location.href = '/';
+    }
+  </script>
 </body>
 </html>

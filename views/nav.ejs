@@ -32,7 +32,7 @@
 			</select>
 		</li>
 		<% if (user) { %>
-			<li><form method="post" action="/logout" style="display:inline;"><button type="submit" style="background:none;border:none;color:#fff;cursor:pointer;">Logout</button></form></li>
+			<li><button onclick="logout()" style="background:none;border:none;color:#fff;cursor:pointer;">Logout</button></li>
 		<% } %>
 	</ul>
 </nav>
