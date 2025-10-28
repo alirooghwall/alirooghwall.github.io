@@ -36,9 +36,9 @@
 
 		<div style="position: fixed; top: 1rem; left: 1rem; z-index: 10001; display: flex; align-items: center; gap: 0.5rem;">
 			<a href="#navPanel" id="navPanelToggle">Menu</a>
-			<a href="/signin" class="button primary">Sign In</a>
-			<a href="/signup" class="button">Sign Up</a>
-			<button class="button primary" id="profileLink" style="display:none; background: white; color: black; border: 1px solid #ccc; padding: 0.5rem 1rem;" onclick="location.href='/profile'">Profile</button>
+			<a href="https://mars-empire-mlm.onrender.com/signin" id="openSignIn" class="button primary">Sign In</a>
+			<a href="https://mars-empire-mlm.onrender.com/signup" id="openSignUp" class="button">Sign Up</a>
+			<button class="button primary" id="profileLink" style="display:none; background:none; color: black; border: 1px solid #ccc; padding: 0.5rem 1rem;" onclick="location.href='https://mars-empire-mlm.onrender.com/profile'">Profile</button>
 			<button id="logoutBtn" style="display:none; background: none; color: rgb(255, 255, 255); border: 1px solid #ccc; padding: 0.5rem 1rem;" class="button" onclick="logout()">Logout</button>
 		</div>
 
@@ -46,7 +46,7 @@
 
 		<script>
 		function updateAuthUI() {
-			fetch('/check-auth')
+			fetch('https://mars-empire-mlm.onrender.com/check-auth')
 			.then(r => r.json())
 			.then(data => {
 				const signInBtn = document.getElementById('openSignIn');
@@ -71,7 +71,7 @@
 			});
 		}
 		function logout() {
-			fetch('/logout', {
+			fetch('https://mars-empire-mlm.onrender.com/logout', {
 				method: 'POST'
 			}).then(() => {
 				updateAuthUI();
@@ -113,13 +113,13 @@
 							<li class="active"><a href="index.html">MARS EMPIRE</a></li>
 							<li><a href="generic.html">MLM Companion 'AI'</a></li>
 							<li><a href="elements.html">Resources</a></li>
-							<li><a href="/rules">Rules</a></li>
-							<li><a href="/articles">Articles</a></li>
-							<li><a href="/resources">Study Materials</a></li>
-							<li><a href="/checklists">Checklists</a></li>
-							<li><a href="/tree">Tree View</a></li>
-							<li><a href="/calculator">Calculator</a></li>
-							<li><a href="/leaderboard">Leaderboard</a></li>
+							<li><a href="https://mars-empire-mlm.onrender.com/rules">Rules</a></li>
+							<li><a href="https://mars-empire-mlm.onrender.com/articles">Articles</a></li>
+							<li><a href="https://mars-empire-mlm.onrender.com/resources">Study Materials</a></li>
+							<li><a href="https://mars-empire-mlm.onrender.com/checklists">Checklists</a></li>
+							<li><a href="https://mars-empire-mlm.onrender.com/tree">Tree View</a></li>
+							<li><a href="https://mars-empire-mlm.onrender.com/calculator">Calculator</a></li>
+							<li><a href="https://mars-empire-mlm.onrender.com/leaderboard">Leaderboard</a></li>
 						</ul>
 					</nav>
 					
