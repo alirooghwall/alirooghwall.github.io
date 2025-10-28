@@ -168,7 +168,7 @@ if (!JWT_SECRET) {
 }
 if (!process.env.MONGO_URI) {
   console.error('❌ MONGO_URI is not set');
-  process.exit(1);
+  // process.exit(1);
 }
 if (!EMAIL_USER || !EMAIL_PASS) {
   console.error('❌ EMAIL_USER and EMAIL_PASS are not set');
