@@ -32,7 +32,7 @@
 				</ul>
 				<ul class="actions stacked">
 					<li><a href="/profile" class="button primary fit">Profile</a></li>
-					<li><form method="post" action="/logout"><button type="submit" class="button fit">Logout</button></form></li>
+					<li><button onclick="logout()" class="button fit">Logout</button></li>
 				</ul>
 			</nav>
 			<div style="text-align: center; margin: 1rem;"><button onclick="history.back()" class="button">← Back</button></div>
@@ -129,6 +129,15 @@
 			</div>
 			<%- include('footer') %>
 		</div>
+		<script>
+			async function logout() {
+				await fetch('/logout', {
+					method: 'POST',
+					credentials: 'include'
+				});
+				window.location.href = '/';
+			}
+		</script>
 		<script src="assets/js/jquery.min.js"></script>
 		<script src="assets/js/jquery.scrollex.min.js"></script>
 		<script src="assets/js/jquery.scrolly.min.js"></script>

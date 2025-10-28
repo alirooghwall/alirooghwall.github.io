@@ -32,7 +32,7 @@
       </ul>
       <ul class="actions stacked">
         <li><a href="/profile" class="button primary fit">Profile</a></li>
-        <li><form method="post" action="/logout"><button type="submit" class="button fit">Logout</button></form></li>
+        <li><button onclick="logout()" class="button fit">Logout</button></li>
       </ul>
     </nav>
     <div style="text-align: center; margin: 1rem;"><button onclick="history.back()" class="button">← Back</button></div>
@@ -44,7 +44,7 @@
         </header>
         <% if (['admin', 'manager', 'editor'].includes(user.accountType)) { %>
           <h2>Add New Resource</h2>
-          <form method="post" action="/resources/create">
+          <form id="createResourceForm">
             <input name="title" placeholder="Resource Title" required style="width:100%;padding:0.5rem;" />
             <textarea name="description" placeholder="Description" rows="3" style="width:100%;padding:0.5rem;"></textarea>
             <select name="type" style="width:100%;padding:0.5rem;">
@@ -60,7 +60,7 @@
               <option value="participants">Participants</option>
               <option value="managers">Managers</option>
             </select>
-            <button type="submit" style="padding:0.5rem 1rem;">Add Resource</button>
+            <button type="button" onclick="submitForm('createResourceForm', '/resources/create')" style="padding:0.5rem 1rem;">Add Resource</button>
           </form>
         <% } %>
         <h2>Available Resources</h2>
@@ -77,7 +77,7 @@
               <a href="<%= resource.url %>">Download/View</a>
             <% } %>
             <% if (['admin', 'manager', 'editor'].includes(user.accountType)) { %>
-              <form method="post" action="/resources/update/<%= resource._id %>" style="display:inline;">
+              <form id="updateResource<%= resource._id %>">
                 <input name="title" value="<%= resource.title %>" required />
                 <textarea name="description"><%= resource.description %></textarea>
                 <select name="type">
@@ -93,10 +93,10 @@
                   <option value="participants" <%= resource.accessLevel === 'participants' ? 'selected' : '' %>>Participants</option>
                   <option value="managers" <%= resource.accessLevel === 'managers' ? 'selected' : '' %>>Managers</option>
                 </select>
-                <button type="submit">Update</button>
+                <button type="button" onclick="submitForm('updateResource<%= resource._id %>', '/resources/update/<%= resource._id %>')">Update</button>
               </form>
-              <form method="post" action="/resources/delete/<%= resource._id %>" style="display:inline;" onsubmit="return confirm('Delete resource?')">
-                <button type="submit">Delete</button>
+              <form id="deleteResource<%= resource._id %>">
+                <button type="button" onclick="if(confirm('Delete resource?')) submitForm('deleteResource<%= resource._id %>', '/resources/delete/<%= resource._id %>')">Delete</button>
               </form>
             <% } %>
           </article>
@@ -105,6 +105,33 @@
     </div>
     <%- include('footer') %>
   </div>
+  <script>
+    async function logout() {
+      await fetch('/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      window.location.href = '/';
+    }
+    async function submitForm(formId, action) {
+      const form = document.getElementById(formId);
+      const formData = new FormData(form);
+      try {
+        const response = await fetch(action, {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        });
+        if (response.ok) {
+          location.reload();
+        } else {
+          alert('Error: ' + response.statusText);
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+  </script>
   <script src="assets/js/jquery.min.js"></script>
   <script src="assets/js/jquery.scrollex.min.js"></script>
   <script src="assets/js/jquery.scrolly.min.js"></script>

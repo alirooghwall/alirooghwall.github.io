@@ -46,7 +46,7 @@
 				</ul>
 				<ul class="actions stacked">
 					<li class="active"><a href="/profile" class="button primary fit">Profile</a></li>
-					<li><form method="post" action="/logout"><button type="submit" class="button fit">Logout</button></form></li>
+					<li><button onclick="logout()" class="button fit">Logout</button></li>
 				</ul>
 			</nav>
 			<div style="text-align: center; margin: 1rem;"><button onclick="history.back()" class="button">← Back</button></div>
@@ -63,7 +63,7 @@
 					<p><strong>Leader:</strong> <%= user.leaderName %></p>
 					<p><strong>Status:</strong> <%= user.status %></p>
 					<p><strong>Verified:</strong> <%= user.isVerified ? 'Yes' : 'No' %></p>
-					<form method="post" action="/update-profile">
+					<form id="update-profile-form" action="/update-profile">
 						<label for="name">Name</label>
 						<input name="name" value="<%= user.name %>" required />
 						<label for="email">Email</label>
@@ -72,7 +72,7 @@
 						<input name="phone" value="<%= user.phone %>" />
 						<label for="leaderName">Leader Name</label>
 						<input name="leaderName" value="<%= user.leaderName %>" />
-						<button type="submit">Update</button>
+						<button type="button" onclick="submitForm('update-profile-form')">Update</button>
 					</form>
 					<% if (user.accountType === 'admin') { %>
 						<p><a href="/admin">Admin Dashboard</a></p>
@@ -88,5 +88,35 @@
 		<script src="assets/js/breakpoints.min.js"></script>
 		<script src="assets/js/util.js"></script>
 		<script src="assets/js/main.js"></script>
+		<script>
+			function logout() {
+				fetch('/logout', {
+					method: 'POST',
+					credentials: 'include'
+				}).then(() => {
+					location.href = '/';
+				}).catch(err => {
+					console.error('Logout failed:', err);
+					location.href = '/';
+				});
+			}
+			function submitForm(id) {
+				const form = document.getElementById(id);
+				fetch(form.action, {
+					method: 'POST',
+					credentials: 'include',
+					body: new FormData(form)
+				}).then(response => {
+					if (response.ok) {
+						location.reload();
+					} else {
+						alert('Error: ' + response.status);
+					}
+				}).catch(err => {
+					console.error('Error:', err);
+					alert('Error submitting form');
+				});
+			}
+		</script>
 	</body>
 </html>

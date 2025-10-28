@@ -32,7 +32,7 @@
       </ul>
       <ul class="actions stacked">
         <li><a href="/profile" class="button primary fit">Profile</a></li>
-        <li><form method="post" action="/logout"><button type="submit" class="button fit">Logout</button></form></li>
+        <li><button onclick="logout()" class="button fit">Logout</button></li>
       </ul>
     </nav>
     <div style="text-align: center; margin: 1rem;"><button onclick="history.back()" class="button">← Back</button></div>
@@ -44,13 +44,13 @@
         </header>
         <% if (['admin', 'manager', 'editor'].includes(user.accountType)) { %>
           <h2>Create New Article</h2>
-          <form method="post" action="/articles/create">
+          <form id="createArticleForm">
             <input name="title" placeholder="Article Title" required style="width:100%;padding:0.5rem;" />
             <textarea name="content" placeholder="Article Content" rows="10" style="width:100%;padding:0.5rem;"></textarea>
             <input name="category" placeholder="Category (e.g., Strategy, Success)" style="width:100%;padding:0.5rem;" />
             <input name="tags" placeholder="Tags (comma separated)" style="width:100%;padding:0.5rem;" />
             <label><input name="published" type="checkbox" /> Publish immediately</label>
-            <button type="submit" style="padding:0.5rem 1rem;">Create Article</button>
+            <button type="button" onclick="submitForm('createArticleForm', '/articles/create')" style="padding:0.5rem 1rem;">Create Article</button>
           </form>
         <% } %>
         <h2>Published Articles</h2>
@@ -62,16 +62,16 @@
             </header>
             <p><%= article.content.substring(0, 200) %>...</p>
             <% if (['admin', 'manager', 'editor'].includes(user.accountType)) { %>
-              <form method="post" action="/articles/update/<%= article._id %>" style="display:inline;">
+              <form id="updateArticle<%= article._id %>">
                 <input name="title" value="<%= article.title %>" required />
                 <textarea name="content"><%= article.content %></textarea>
                 <input name="category" value="<%= article.category %>" />
                 <input name="tags" value="<%= article.tags.join(',') %>" />
                 <label><input name="published" type="checkbox" <%= article.published ? 'checked' : '' %> /> Published</label>
-                <button type="submit">Update</button>
+                <button type="button" onclick="submitForm('updateArticle<%= article._id %>', '/articles/update/<%= article._id %>')">Update</button>
               </form>
-              <form method="post" action="/articles/delete/<%= article._id %>" style="display:inline;" onsubmit="return confirm('Delete article?')">
-                <button type="submit">Delete</button>
+              <form id="deleteArticle<%= article._id %>">
+                <button type="button" onclick="if(confirm('Delete article?')) submitForm('deleteArticle<%= article._id %>', '/articles/delete/<%= article._id %>')">Delete</button>
               </form>
             <% } %>
           </article>
@@ -80,6 +80,33 @@
     </div>
     <%- include('footer') %>
   </div>
+  <script>
+    async function logout() {
+      await fetch('/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      window.location.href = '/';
+    }
+    async function submitForm(formId, action) {
+      const form = document.getElementById(formId);
+      const formData = new FormData(form);
+      try {
+        const response = await fetch(action, {
+          method: 'POST',
+          credentials: 'include',
+          body: formData
+        });
+        if (response.ok) {
+          location.reload();
+        } else {
+          alert('Error: ' + response.statusText);
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+  </script>
   <script src="assets/js/jquery.min.js"></script>
   <script src="assets/js/jquery.scrollex.min.js"></script>
   <script src="assets/js/jquery.scrolly.min.js"></script>
