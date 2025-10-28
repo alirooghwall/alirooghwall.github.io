@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Search | MARS EMPIRE</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <%- include('nav') %>
+  <main>
+    <section>
+      <h1>Search</h1>
+      <form method="get" action="/search">
+        <input type="text" name="q" value="<%= query %>" placeholder="Search articles, resources, users..." required />
+        <button type="submit"><i class="fas fa-search"></i> Search</button>
+      </form>
+      <% if (query) { %>
+        <h2>Results for "<%= query %>"</h2>
+        <% if (articles.length > 0) { %>
+          <h3>Articles</h3>
+          <ul>
+            <% articles.forEach(article => { %>
+              <li><a href="/articles/<%= article._id %>"><%= article.title %></a> by <%= article.author ? article.author.name : 'Unknown' %></li>
+            <% }); %>
+          </ul>
+        <% } %>
+        <% if (resources.length > 0) { %>
+          <h3>Resources</h3>
+          <ul>
+            <% resources.forEach(resource => { %>
+              <li><a href="/resources/<%= resource._id %>"><%= resource.title %></a></li>
+            <% }); %>
+          </ul>
+        <% } %>
+        <% if (users.length > 0) { %>
+          <h3>Users</h3>
+          <ul>
+            <% users.forEach(user => { %>
+              <li><%= user.name %> (<%= user.userId %>)</li>
+            <% }); %>
+          </ul>
+        <% } %>
+        <% if (articles.length === 0 && resources.length === 0 && users.length === 0) { %>
+          <p>No results found.</p>
+        <% } %>
+      <% } %>
+    </section>
+  </main>
+  <%- include('footer') %>
+</body>
+</html>

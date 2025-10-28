@@ -4,6 +4,7 @@
 		<% if (user) { %>
 			<li><a href="/dashboard">Dashboard</a></li>
 			<li><a href="/profile">Profile</a></li>
+			<li><a href="/search">Search</a></li>
 			<li><a href="/rules">Rules</a></li>
 			<li><a href="/articles">Articles</a></li>
 			<li><a href="/resources">Resources</a></li>
@@ -23,6 +24,13 @@
 		<% } %>
 	</ul>
 	<ul class="icons">
+		<li>
+			<select onchange="window.location.href='/change-lang/' + this.value">
+				<option value="fa" <%= req.i18n.language === 'fa' ? 'selected' : '' %>><%= req.t('dari') %></option>
+				<option value="ps" <%= req.i18n.language === 'ps' ? 'selected' : '' %>><%= req.t('pashto') %></option>
+				<option value="en" <%= req.i18n.language === 'en' ? 'selected' : '' %>><%= req.t('english') %></option>
+			</select>
+		</li>
 		<% if (user) { %>
 			<li><form method="post" action="/logout" style="display:inline;"><button type="submit" style="background:none;border:none;color:#fff;cursor:pointer;">Logout</button></form></li>
 		<% } %>

@@ -192,6 +192,8 @@ const Log = require('./models/Log');
 const Upload = require('./models/Upload');
 const Setting = require('./models/Setting');
 
+const emailTemplates = require('./utils/emailTemplates');
+
 const checklistSchema = new mongoose.Schema({
   title: String,
   items: [{ text: String, completed: { type: Boolean, default: false } }],
@@ -526,7 +528,7 @@ app.post('/signup', [
       from: EMAIL_USER,
       to: email,
       subject: 'Verify your email - MARS EMPIRE',
-      html: `<p>Click <a href="${BASE_URL}/verify/${token}">here</a> to verify your account. Your account will be reviewed by an admin before approval.</p>`
+      html: emailTemplates.verification(token)
     };
     await transporter.sendMail(mailOptions);
 
@@ -625,7 +627,7 @@ app.post('/resend-verification', async (req, res) => {
       from: EMAIL_USER,
       to: email,
       subject: 'Verify your email - MARS EMPIRE',
-      html: `<p>Click <a href="${BASE_URL}/verify/${token}">here</a> to verify your account.</p>`
+      html: emailTemplates.verification(token)
     };
     await transporter.sendMail(mailOptions);
 
@@ -798,7 +800,7 @@ app.post('/forgot-password', async (req, res) => {
       from: EMAIL_USER,
       to: email,
       subject: 'Reset your password - MARS EMPIRE',
-      html: `<p>Click <a href="${BASE_URL}/reset-password/${token}">here</a> to reset your password.</p>`
+      html: emailTemplates.passwordReset(token)
     };
     await transporter.sendMail(mailOptions);
 
@@ -1175,6 +1177,11 @@ app.post('/notifications/create', requireAdmin, async (req, res) => {
   res.redirect('/notifications');
 });
 
+app.post('/notifications/mark-read/:id', requireAuth, async (req, res) => {
+  await Notification.updateOne({ _id: req.params.id, userId: req.user._id }, { read: true });
+  res.redirect('/notifications');
+});
+
 // Logs routes
 app.get('/logs', requireAuth, requireVerified, requirePermission('view_logs'), async (req, res) => {
   const logs = await Log.find({}).sort({ timestamp: -1 }).limit(100);
@@ -1299,6 +1306,15 @@ app.post('/complete-profile', requireAuth, async (req, res) => {
   res.redirect('/dashboard');
 });
 
+// Search
+app.get('/search', requireAuth, requireVerified, async (req, res) => {
+  const query = req.query.q || '';
+  const articles = query ? await Article.find({ published: true, $or: [{ title: new RegExp(query, 'i') }, { content: new RegExp(query, 'i') }] }).populate('author') : [];
+  const resources = query ? await Resource.find({ $or: [{ title: new RegExp(query, 'i') }, { description: new RegExp(query, 'i') }] }) : [];
+  const users = query ? await User.find({ status: 'approved', $or: [{ name: new RegExp(query, 'i') }, { userId: new RegExp(query, 'i') }] }).select('name userId') : [];
+  res.render('search', { articles, resources, users, query, user: req.user });
+});
+
 // Logout
 app.post('/logout', (req, res) => {
   res.clearCookie('token');
@@ -1310,6 +1326,12 @@ app.post('/contact', (req, res) => {
   const { name, email, message } = req.body;
   logger.info(`Contact from ${name} (${email}): ${message}`);
   res.send('<script>alert("Message sent!"); window.location.href="/";</script>');
+});
+
+// Change language
+app.get('/change-lang/:lng', (req, res) => {
+  res.cookie('i18next', req.params.lng, { maxAge: 900000, httpOnly: false });
+  res.redirect('back');
 });
 
 // SEO and misc
