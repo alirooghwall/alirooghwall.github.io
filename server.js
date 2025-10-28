@@ -844,7 +844,8 @@ app.post('/signin', [
 
     const token = jwt.sign({ email: user.email, isVerified: user.isVerified, accountType: user.accountType }, JWT_SECRET, { expiresIn: ['admin', 'master_admin'].includes(user.accountType) ? '2h' : '1d' });
     res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: ['admin', 'master_admin'].includes(user.accountType) ? 7200000 : 86400000 });
-    res.send('<script>window.location.reload();</script>');
+    const redirectUrl = ['admin', 'master_admin'].includes(user.accountType) ? '/admin' : (redirect || '/dashboard');
+    res.redirect(redirectUrl);
   } catch (err) {
     logger.error('Signin error:', err);
     res.status(500).send('<p style="color:red;">Server error</p>');

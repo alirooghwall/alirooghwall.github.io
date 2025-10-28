@@ -138,6 +138,7 @@
 				await fetch('/checklists/update', {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/json' },
+					credentials: 'include',
 					body: JSON.stringify({ id, index, completed })
 				});
 				location.reload();

@@ -5,13 +5,16 @@
   <link rel="stylesheet" href="assets/css/main.css">
 </head>
 <body>
-  <div style="position: fixed; top: 1rem; left: 1rem; z-index: 10001; display: flex; align-items: center; gap: 0.5rem;">
+  <div style="position: fixed; top: 1rem; left: 1rem; z-index: 10001;">
     <button onclick="history.back()" style="background: none; color: white; border: 1px solid white; padding: 0.5rem 1rem;" class="button">Back</button>
-    <a href="https://mars-empire-mlm.onrender.com/signin.html" class="button primary">Sign In</a>
-    <a href="https://mars-empire-mlm.onrender.com/signup.html" class="button">Sign Up</a>
-    <button class="button primary" id="dashboardLink" style="display:none; background: white; color: black; border: 1px solid white; padding: 0.5rem 1rem;" onclick="location.href='https://mars-empire-mlm.onrender.com/dashboard'">Dashboard</button>
-    <button class="button primary" id="profileLink" style="display:none; background: white; color: black; border: 1px solid white; padding: 0.5rem 1rem;" onclick="location.href='https://mars-empire-mlm.onrender.com/profile'">Profile</button>
-    <button id="logoutBtn" style="display:none; background: none; color: white !important; border: 1px solid white; padding: 0.5rem 1rem;" class="button" onclick="logout()">Logout</button>
+  </div>
+
+  <div style="position: fixed; top: 1rem; left: 1rem; z-index: 10001; display: flex; align-items: center; gap: 0.5rem;">
+    <a href="https://mars-empire-mlm.onrender.com/signin" style="background: none; color: white; border: 1px solid white; padding: 0.5rem 1rem;" class="button primary">Sign In</a>
+    <a href="https://mars-empire-mlm.onrender.com/signup" style="background: none; color: white; border: 1px solid white; padding: 0.5rem 1rem;" class="button">Sign Up</a>
+    <button class="button primary" id="dashboardLink" style="display:none; background: none; color: white; border: 1px solid white; padding: 0.5rem 1rem;" onclick="location.href='https://mars-empire-mlm.onrender.com/dashboard'">Dashboard</button>
+    <button class="button primary" id="profileLink" style="display:none; background: none; color: white; border: 1px solid white; padding: 0.5rem 1rem;" onclick="location.href='https://mars-empire-mlm.onrender.com/profile'">Profile</button>
+    <button id="logoutBtn" style="display:none; background: none; color: white; border: 1px solid white; padding: 0.5rem 1rem;" class="button" onclick="logout()">Logout</button>
   </div>
   <script>
     function updateAuthUI() {
