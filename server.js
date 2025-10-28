@@ -186,6 +186,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // Connect to MongoDB
+<<<<<<< HEAD
 (async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI, {
@@ -201,6 +202,20 @@ const transporter = nodemailer.createTransport({
     // Continue starting server even if DB fails
   }
 })();
+=======
+mongoose.connect(process.env.MONGO_URI, {
+  serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
+  socketTimeoutMS: 45000,
+  bufferCommands: true,
+  maxPoolSize: 10,
+})
+  .then(() => logger.info('Connected to MongoDB...'))
+  .catch((err) => {
+    logger.error('❌ MongoDB connection error:', err.message);
+    logger.error('Full error details:', err);
+    // process.exit(1);
+  });
+>>>>>>> 7aae70eeef16f442c75d12c8be0acfe5019d91ba
 
 // Models
 const User = require('./models/User');
