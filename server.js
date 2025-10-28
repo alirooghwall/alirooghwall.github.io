@@ -1,4 +1,5 @@
 require('dotenv').config();
+console.log('MONGO_URI:', process.env.MONGO_URI);
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -185,58 +186,18 @@ const transporter = nodemailer.createTransport({
 });
 
 // Connect to MongoDB
-(async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
-      socketTimeoutMS: 45000,
-      bufferCommands: true,
-      maxPoolSize: 10,
-    });
-    logger.info('Connected to MongoDB...');
-
-    // Start server after successful connection
-    app.listen(PORT, () => {
-      logger.info(`🚀 Server running on port ${PORT}`);
-      // Init after server starts
-      Checklist.findOne({ isPredefined: true }).then(existing => {
-        if (!existing) {
-          new Checklist({
-            title: 'MLM Basics',
-            items: [
-              { text: 'Understand MLM structure', completed: false },
-              { text: 'Learn about BizMLM products', completed: false },
-              { text: 'Set up your profile', completed: false }
-            ],
-            isPredefined: true
-          }).save().then(() => logger.info('Predefined checklists added')).catch(err => logger.error('Checklist save error:', err));
-        }
-      }).catch(err => logger.error('Checklist find error:', err));
-      User.findOne({ accountType: 'admin' }).then(admin => {
-        if (!admin) {
-          bcrypt.hash('admin123', 10).then(hashed => {
-            new User({
-              name: 'Admin',
-              email: 'admin@alirooghwall.github.io',
-              password: hashed,
-              accountType: 'admin',
-              mlmLevel: 'expert',
-              phone: '0000000000',
-              leaderName: 'None',
-              userId: 'ADMIN001',
-              status: 'approved',
-              isVerified: true
-            }).save().then(() => logger.info('Admin user created: admin@alirooghwall.github.io / admin123')).catch(err => logger.error('Admin save error:', err));
-          }).catch(err => logger.error('Hash error:', err));
-        }
-      }).catch(err => logger.error('Admin find error:', err));
-    });
-  } catch (err) {
+mongoose.connect(process.env.MONGO_URI, {
+  serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
+  socketTimeoutMS: 45000,
+  bufferCommands: true,
+  maxPoolSize: 10,
+})
+  .then(() => logger.info('Connected to MongoDB...'))
+  .catch((err) => {
     logger.error('❌ MongoDB connection error:', err.message);
     logger.error('Full error details:', err);
-    process.exit(1);
-  }
-})();
+    // process.exit(1);
+  });
 
 // Models
 const User = require('./models/User');
@@ -1419,3 +1380,38 @@ app.post('/ai/track-progress', requireAuth, (req, res) => {
   res.json({ success: true });
 });
 
+app.listen(PORT, () => {
+  logger.info(`🚀 Server running on port ${PORT}`);
+  // Init after server starts
+  Checklist.findOne({ isPredefined: true }).then(existing => {
+    if (!existing) {
+      new Checklist({
+        title: 'MLM Basics',
+        items: [
+          { text: 'Understand MLM structure', completed: false },
+          { text: 'Learn about BizMLM products', completed: false },
+          { text: 'Set up your profile', completed: false }
+        ],
+        isPredefined: true
+      }).save().then(() => logger.info('Predefined checklists added')).catch(err => logger.error('Checklist save error:', err));
+    }
+  }).catch(err => logger.error('Checklist find error:', err));
+  User.findOne({ accountType: 'admin' }).then(admin => {
+    if (!admin) {
+      bcrypt.hash('admin123', 10).then(hashed => {
+        new User({
+          name: 'Admin',
+          email: 'admin@alirooghwall.github.io',
+          password: hashed,
+          accountType: 'admin',
+          mlmLevel: 'expert',
+          phone: '0000000000',
+          leaderName: 'None',
+          userId: 'ADMIN001',
+          status: 'approved',
+          isVerified: true
+        }).save().then(() => logger.info('Admin user created: admin@alirooghwall.github.io / admin123')).catch(err => logger.error('Admin save error:', err));
+      }).catch(err => logger.error('Hash error:', err));
+    }
+  }).catch(err => logger.error('Admin find error:', err));
+});
