@@ -38,8 +38,8 @@
 			<a href="#navPanel" id="navPanelToggle">Menu</a>
 			<button class="button primary" id="openSignIn">Sign In</button>
 			<button class="button" id="openSignUp">Sign Up</button>
-			<button class="button" id="profileLink" style="display:none; background: white; color: black;" onclick="location.href='/profile'">Profile</button>
-			<form method="post" action="/logout" id="logoutForm" style="display:none;"><button type="submit" class="button" style="background: white; color: black;">Logout</button></form>
+			<button class="button primary" id="profileLink" style="display:none; background: white; color: black;" onclick="location.href='/profile'">Profile</button>
+			<button id="logoutBtn" style="display:none; background: white; color: black;" class="button" onclick="logout()">Logout</button>
 		</div>
 
 		<!-- Sign In Modal -->
@@ -148,21 +148,21 @@
 				const signInBtn = document.getElementById('openSignIn');
 				const signUpBtn = document.getElementById('openSignUp');
 				const profileLink = document.getElementById('profileLink');
-				const logoutForm = document.getElementById('logoutForm');
+				const logoutBtn = document.getElementById('logoutBtn');
 				const dashboardLi = document.getElementById('dashboardLink');
 				const profileLi = document.querySelector('a[href="/profile"]').parentElement;
 				if (data.loggedIn) {
 					signInBtn.style.display = 'none';
 					signUpBtn.style.display = 'none';
 					profileLink.style.display = 'inline-block';
-					logoutForm.style.display = 'inline';
+					logoutBtn.style.display = 'inline-block';
 					dashboardLi.style.display = 'block';
 					profileLi.style.display = 'block';
 				} else {
 					signInBtn.style.display = 'inline-block';
 					signUpBtn.style.display = 'inline-block';
 					profileLink.style.display = 'none';
-					logoutForm.style.display = 'none';
+					logoutBtn.style.display = 'none';
 					dashboardLi.style.display = 'none';
 					profileLi.style.display = 'none';
 				}
@@ -170,6 +170,15 @@
 			.catch(() => {
 				// On static site, assume not logged in
 				console.log('Auth check failed, assuming not logged in');
+			});
+		}
+		function logout() {
+			fetch('/logout', {
+				method: 'POST'
+			}).then(() => {
+				updateAuthUI();
+			}).catch(err => {
+				console.error('Logout failed:', err);
 			});
 		}
 		updateAuthUI();
