@@ -9,9 +9,10 @@
 <body>
   <main style="max-width:600px;margin:3rem auto;padding:1rem;">
     <h1>File Upload</h1>
-    
-    <p>Upload functionality is under development.</p>
-    
+    <form method="post" action="/upload" enctype="multipart/form-data">
+      <input type="file" name="file" required />
+      <button type="submit">Upload</button>
+    </form>
     <a href="/profile">Back to Profile</a>
   </main>
 </body>

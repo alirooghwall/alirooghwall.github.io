@@ -7,6 +7,7 @@ const articleSchema = new mongoose.Schema({
   category: String,
   tags: [String],
   published: { type: Boolean, default: false },
+  attachments: [{ filename: String, originalName: String }],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

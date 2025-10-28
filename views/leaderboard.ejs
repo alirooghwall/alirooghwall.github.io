@@ -59,7 +59,7 @@
 								<tbody>
 									<% topByScore.forEach((user, index) => { %>
 									<tr>
-										<td><%= index + 1 %></td>
+										<td><%= index + 1 %> <% if (index === 0) { %>👑<% } %></td>
 										<td><%= user.name %></td>
 										<td><%= user.score %></td>
 										<td><%= user.sales %></td>

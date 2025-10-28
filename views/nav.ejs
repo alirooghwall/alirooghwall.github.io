@@ -1,0 +1,30 @@
+<nav id="nav">
+	<ul class="links">
+		<li><a href="/">Home</a></li>
+		<% if (user) { %>
+			<li><a href="/dashboard">Dashboard</a></li>
+			<li><a href="/profile">Profile</a></li>
+			<li><a href="/rules">Rules</a></li>
+			<li><a href="/articles">Articles</a></li>
+			<li><a href="/resources">Resources</a></li>
+			<li><a href="/checklists">Checklists</a></li>
+			<li><a href="/tree">Tree</a></li>
+			<li><a href="/calculator">Calculator</a></li>
+			<li><a href="/leaderboard">Leaderboard</a></li>
+			<% if (user.permissions && user.permissions.includes('upload_files')) { %>
+				<li><a href="/upload">Upload</a></li>
+			<% } %>
+			<% if (user.accountType === 'admin' || user.accountType === 'master_admin') { %>
+				<li><a href="/admin">Admin</a></li>
+			<% } %>
+		<% } else { %>
+			<li><a href="/signin">Sign In</a></li>
+			<li><a href="/signup">Sign Up</a></li>
+		<% } %>
+	</ul>
+	<ul class="icons">
+		<% if (user) { %>
+			<li><form method="post" action="/logout" style="display:inline;"><button type="submit" style="background:none;border:none;color:#fff;cursor:pointer;">Logout</button></form></li>
+		<% } %>
+	</ul>
+</nav>

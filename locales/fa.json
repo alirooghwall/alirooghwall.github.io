@@ -1,0 +1,29 @@
+{
+  "nav": {
+    "home": "کور",
+    "dashboard": "ډشبورډ",
+    "profile": "پروفایل",
+    "rules": "قواعد",
+    "articles": "مقالات",
+    "resources": "سرچینې",
+    "checklists": "چک لیستونه",
+    "tree": "ونه",
+    "calculator": "محاسبه کوونکی",
+    "leaderboard": "لیدر بورډ",
+    "upload": "اپلوډ",
+    "admin": "ادمین",
+    "signin": "ننوتل",
+    "signup": "نوم لیکنه",
+    "logout": "وتل"
+  },
+  "common": {
+    "welcome": "ښه راغلاست",
+    "name": "نوم",
+    "email": "ایمیل",
+    "password": "پاسورډ",
+    "phone": "تلفن",
+    "leaderName": "د لیدر نوم",
+    "mlmLevel": "MLM سطح",
+    "submit": "سپارل"
+  }
+}

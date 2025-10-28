@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema({
   verificationToken: String,
   resetToken: String,
   resetExpires: Date,
+  googleId: String,
   score: { type: Number, default: 0 }, // For leaderboard
   sales: { type: Number, default: 0 }, // For leaderboard
   recruited: { type: Number, default: 0 }, // For leaderboard

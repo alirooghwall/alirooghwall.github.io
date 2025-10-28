@@ -7,21 +7,115 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const path = require('path');
 const nodemailer = require('nodemailer');
-const crypto = require('crypto');
-const cookieParser = require('cookie-parser');
+const multer = require('multer');
+const upload = multer({ 
+  dest: 'uploads/', 
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|txt|mp4|avi|mp3|wav/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb('Error: File type not allowed!');
+    }
+  }
+});
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const cache = require('memory-cache');
+const cookieParser = require('cookie-parser');
 const winston = require('winston');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const csv = require('csv-parser');
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const { body, validationResult } = require('express-validator');
 
+// i18n setup
+const i18next = require('i18next');
+const i18nextMiddleware = require('i18next-http-middleware');
+const i18nextFsBackend = require('i18next-fs-backend');
+
+i18next
+  .use(i18nextFsBackend)
+  .use(i18nextMiddleware.LanguageDetector)
+  .init({
+    fallbackLng: 'fa',
+    lng: 'fa',
+    ns: ['translation'],
+    defaultNS: 'translation',
+    backend: {
+      loadPath: path.join(__dirname, 'locales/{{lng}}/{{ns}}.json')
+    },
+    detection: {
+      order: ['querystring', 'cookie', 'header'],
+      caches: ['cookie']
+    }
+  });
+
+// JWT and email config
+const JWT_SECRET = process.env.JWT_SECRET;
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.EMAIL_PASS;
+const BASE_URL = process.env.BASE_URL || 'https://mars-empire-mlm.onrender.com';
+const PORT = process.env.PORT || 3000;
+
 const app = express();
+app.use(i18nextMiddleware.handle(i18next));
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(helmet());
 app.use(morgan('combined'));
+
+// Passport config
+app.use(passport.initialize());
+passport.serializeUser((user, done) => done(null, user.id));
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (err) {
+    done(err, null);
+  }
+});
+
+passport.use(new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: `${BASE_URL}/auth/google/callback`
+}, async (accessToken, refreshToken, profile, done) => {
+  try {
+    const email = profile.emails[0].value;
+    let user = await User.findOne({ email });
+    if (user) {
+      return done(null, user);
+    }
+    // Create new user
+    const name = profile.displayName;
+    const userId = 'ME' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
+    user = new User({
+      name,
+      email,
+      password: '', // No password for Google users
+      accountType: 'participant',
+      mlmLevel: 'beginner',
+      phone: '',
+      leaderName: '',
+      userId,
+      status: 'approved',
+      isVerified: true,
+      googleId: profile.id
+    });
+    await user.save();
+    done(null, user);
+  } catch (err) {
+    done(err, null);
+  }
+}));
 
 // Winston logger
 const logger = winston.createLogger({
@@ -54,13 +148,6 @@ app.use(limiter);
 // Serve static files
 app.use(express.static(path.join(__dirname)));
 
-// JWT and email config
-const JWT_SECRET = process.env.JWT_SECRET;
-const EMAIL_USER = process.env.EMAIL_USER;
-const EMAIL_PASS = process.env.EMAIL_PASS;
-const BASE_URL = process.env.BASE_URL || 'https://mars-empire-mlm.onrender.com';
-const PORT = process.env.PORT || 3000;
-
 // Sanity checks
 if (!JWT_SECRET) {
   console.error('❌ JWT_SECRET is not set');
@@ -72,6 +159,10 @@ if (!process.env.MONGO_URI) {
 }
 if (!EMAIL_USER || !EMAIL_PASS) {
   console.error('❌ EMAIL_USER and EMAIL_PASS are not set');
+  process.exit(1);
+}
+if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+  console.error('❌ GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are not set');
   process.exit(1);
 }
 
@@ -86,7 +177,7 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => logger.info('Connected to MongoDB...'))
   .catch((err) => {
     logger.error('❌ MongoDB connection error:', err);
-    process.exit(1);
+    // process.exit(1);
   });
 
 // Models
@@ -591,6 +682,8 @@ app.get('/signin', (req, res) => {
             <input name="password" type="password" placeholder="Password" required aria-label="Password" />
           </div>
           <button type="submit" id="submitBtn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+          <hr style="border: none; border-top: 1px solid #ccc; margin: 1rem 0;">
+          <button type="button" onclick="window.location.href='/auth/google'" style="background: linear-gradient(45deg, #db4437, #c23321);"><i class="fab fa-google"></i> Sign in with Google</button>
         </form>
         <p class="forgot"><a href="/forgot-password">Forgot password?</a></p>
         <p><a href="/signup">Create an account</a></p>
@@ -652,6 +745,19 @@ app.post('/signin', [
     logger.error('Signin error:', err);
     res.status(500).send('<p style="color:red;">Server error</p>');
   }
+});
+
+// Google Auth routes
+app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+app.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/signin' }), async (req, res) => {
+  const token = jwt.sign({ email: req.user.email, isVerified: req.user.isVerified, accountType: req.user.accountType }, JWT_SECRET, { expiresIn: ['admin', 'master_admin'].includes(req.user.accountType) ? '2h' : '1d' });
+  res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: ['admin', 'master_admin'].includes(req.user.accountType) ? 7200000 : 86400000 });
+  // Check if user needs to complete profile
+  if (!req.user.phone || !req.user.leaderName) {
+    return res.redirect('/complete-profile');
+  }
+  res.redirect('/dashboard');
 });
 
 // Forgot password
@@ -819,6 +925,54 @@ app.post('/admin/reject-profile/:id', requireAdmin, async (req, res) => {
   res.redirect('/admin');
 });
 
+// Bulk import users
+app.post('/admin/import-users', requireAdmin, upload.single('csvFile'), async (req, res) => {
+  if (!req.file) return res.send('No file uploaded.');
+  const results = [];
+  require('fs').createReadStream(req.file.path)
+    .pipe(csv())
+    .on('data', (data) => results.push(data))
+    .on('end', async () => {
+      for (const row of results) {
+        const hashed = await bcrypt.hash(row.password || 'default123', 10);
+        const userId = 'ME' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
+        await new User({
+          name: row.name,
+          email: row.email,
+          password: hashed,
+          accountType: row.accountType || 'participant',
+          mlmLevel: row.mlmLevel || 'beginner',
+          phone: row.phone || '',
+          leaderName: row.leaderName || '',
+          userId,
+          status: 'approved',
+          isVerified: true
+        }).save();
+      }
+      res.redirect('/admin');
+    });
+});
+
+// Export users
+app.get('/admin/export-users', requireAdmin, async (req, res) => {
+  const users = await User.find({}).select('name email userId accountType mlmLevel phone leaderName status');
+  const csvWriter = createCsvWriter({
+    path: 'users.csv',
+    header: [
+      {id: 'name', title: 'Name'},
+      {id: 'email', title: 'Email'},
+      {id: 'userId', title: 'UserID'},
+      {id: 'accountType', title: 'AccountType'},
+      {id: 'mlmLevel', title: 'MLMLevel'},
+      {id: 'phone', title: 'Phone'},
+      {id: 'leaderName', title: 'LeaderName'},
+      {id: 'status', title: 'Status'}
+    ]
+  });
+  await csvWriter.writeRecords(users);
+  res.download('users.csv');
+});
+
 // Checklists
 app.get('/checklists', requireAuth, requireVerified, async (req, res) => {
   const userChecklists = await Checklist.find({ userId: req.user.email });
@@ -914,10 +1068,16 @@ app.get('/calculator', requireAuth, requireVerified, (req, res) => {
 
 // Leaderboard
 app.get('/leaderboard', requireAuth, requireVerified, async (req, res) => {
-  const topByScore = await User.find({ status: 'approved' }).sort({ score: -1 }).limit(10).select('name score sales recruited');
-  const topBySales = await User.find({ status: 'approved' }).sort({ sales: -1 }).limit(10).select('name score sales recruited');
-  const topByRecruited = await User.find({ status: 'approved' }).sort({ recruited: -1 }).limit(10).select('name score sales recruited');
-  res.render('leaderboard', { topByScore, topBySales, topByRecruited, user: req.user });
+  const cacheKey = 'leaderboard';
+  let data = cache.get(cacheKey);
+  if (!data) {
+    const topByScore = await User.find({ status: 'approved' }).sort({ score: -1 }).limit(10).select('name score sales recruited');
+    const topBySales = await User.find({ status: 'approved' }).sort({ sales: -1 }).limit(10).select('name score sales recruited');
+    const topByRecruited = await User.find({ status: 'approved' }).sort({ recruited: -1 }).limit(10).select('name score sales recruited');
+    data = { topByScore, topBySales, topByRecruited };
+    cache.put(cacheKey, data, 300000); // 5 min
+  }
+  res.render('leaderboard', { ...data, user: req.user });
 });
 
 app.get('/rules', requireAuth, requireVerified, async (req, res) => {
@@ -948,9 +1108,10 @@ app.get('/articles', requireAuth, requireVerified, async (req, res) => {
   res.render('articles', { articles, user: req.user });
 });
 
-app.post('/articles/create', requireEditor, async (req, res) => {
+app.post('/articles/create', requireEditor, upload.array('files', 10), async (req, res) => {
   const { title, content, category, tags, published } = req.body;
-  await new Article({ title, content, category, tags: tags.split(','), published: published === 'on', author: req.user._id }).save();
+  const attachments = req.files ? req.files.map(f => ({ filename: f.filename, originalName: f.originalname })) : [];
+  await new Article({ title, content, category, tags: tags.split(','), published: published === 'on', author: req.user._id, attachments }).save();
   res.redirect('/articles');
 });
 
@@ -972,9 +1133,10 @@ app.get('/resources', requireAuth, requireVerified, async (req, res) => {
   res.render('resources', { resources, user: req.user });
 });
 
-app.post('/resources/create', requireEditor, async (req, res) => {
+app.post('/resources/create', requireEditor, upload.single('file'), async (req, res) => {
   const { title, description, type, url, category, accessLevel } = req.body;
-  await new Resource({ title, description, type, url, category, accessLevel, uploadedBy: req.user._id }).save();
+  const file = req.file ? { filename: req.file.filename, originalName: req.file.originalname } : null;
+  await new Resource({ title, description, type, url, category, accessLevel, uploadedBy: req.user._id, file }).save();
   res.redirect('/resources');
 });
 
@@ -1024,9 +1186,17 @@ app.get('/upload', requireAuth, requireVerified, requirePermission('upload_files
   res.render('upload', { user: req.user });
 });
 
-app.post('/upload', requireAuth, requirePermission('upload_files'), (req, res) => {
-  // Placeholder for file upload
-  res.send('Upload functionality placeholder');
+app.post('/upload', requireAuth, requirePermission('upload_files'), upload.single('file'), async (req, res) => {
+  if (!req.file) return res.send('No file uploaded.');
+  const newUpload = new Upload({
+    filename: req.file.filename,
+    originalName: req.file.originalname,
+    mimetype: req.file.mimetype,
+    size: req.file.size,
+    uploadedBy: req.user._id
+  });
+  await newUpload.save();
+  res.send('File uploaded successfully!');
 });
 
 // Settings routes
@@ -1069,6 +1239,64 @@ app.post('/profile/request-update', requireAuth, async (req, res) => {
     requestedChanges: { name, email, phone, leaderName, mlmLevel }
   }).save();
   res.send('<p>Update request submitted for admin approval. <a href="/profile">Back</a></p>');
+});
+
+// Complete profile for Google users
+app.get('/complete-profile', requireAuth, (req, res) => {
+  res.send(`
+    <!doctype html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <title>Complete Profile | MARS EMPIRE</title>
+      <link rel="stylesheet" href="assets/css/main.css">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+      <style>
+        body { background: linear-gradient(135deg, #1e1e2e, #2a2a3e); color: #ffffff; font-family: 'Source Sans Pro', sans-serif; margin: 0; padding: 0; }
+        main { max-width: 400px; margin: 5rem auto; padding: 2rem; background: rgba(255,255,255,0.1); border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        h1 { text-align: center; color: #4ecdc4; margin-bottom: 1.5rem; }
+        form { display: flex; flex-direction: column; }
+        .input-group { position: relative; margin-bottom: 1rem; }
+        input, select { padding: 0.75rem 0.75rem 0.75rem 2.5rem; border: 1px solid #ccc; border-radius: 8px; background: #333; color: #fff; font-size: 1rem; width: 100%; box-sizing: border-box; }
+        input:focus, select:focus { border-color: #4ecdc4; outline: none; }
+        .input-group i { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #ccc; }
+        button { padding: 0.75rem; background: linear-gradient(45deg, #4ecdc4, #45b7aa); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; }
+        button:hover { background: linear-gradient(45deg, #45b7aa, #3da08e); }
+      </style>
+    </head>
+    <body>
+      <main>
+        <h1><i class="fas fa-user-edit"></i> Complete Your Profile</h1>
+        <form method="post" action="/complete-profile">
+          <div class="input-group">
+            <i class="fas fa-phone"></i>
+            <input name="phone" placeholder="Phone" required aria-label="Phone" />
+          </div>
+          <div class="input-group">
+            <i class="fas fa-user-friends"></i>
+            <input name="leaderName" placeholder="Leader's Name" required aria-label="Leader's Name" />
+          </div>
+          <div class="input-group">
+            <i class="fas fa-level-up-alt"></i>
+            <select name="mlmLevel" required aria-label="MLM Level">
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+              <option value="expert">Expert</option>
+            </select>
+          </div>
+          <button type="submit"><i class="fas fa-save"></i> Complete Profile</button>
+        </form>
+      </main>
+    </body>
+    </html>
+  `);
+});
+
+app.post('/complete-profile', requireAuth, async (req, res) => {
+  const { phone, leaderName, mlmLevel } = req.body;
+  await User.updateOne({ email: req.user.email }, { phone, leaderName, mlmLevel });
+  res.redirect('/dashboard');
 });
 
 // Logout

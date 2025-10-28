@@ -5,7 +5,7 @@ const resourceSchema = new mongoose.Schema({
   description: String,
   type: { type: String, enum: ['document', 'video', 'link', 'file'] },
   url: String,
-  filePath: String,
+  file: { filename: String, originalName: String },
   uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   category: String,
   accessLevel: { type: String, enum: ['public', 'participants', 'managers'], default: 'public' },

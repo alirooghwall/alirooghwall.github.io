@@ -1,0 +1,29 @@
+{
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "rules": "Rules",
+    "articles": "Articles",
+    "resources": "Resources",
+    "checklists": "Checklists",
+    "tree": "Tree",
+    "calculator": "Calculator",
+    "leaderboard": "Leaderboard",
+    "upload": "Upload",
+    "admin": "Admin",
+    "signin": "Sign In",
+    "signup": "Sign Up",
+    "logout": "Logout"
+  },
+  "common": {
+    "welcome": "Welcome",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "phone": "Phone",
+    "leaderName": "Leader Name",
+    "mlmLevel": "MLM Level",
+    "submit": "Submit"
+  }
+}
