@@ -294,6 +294,7 @@ app.get('/modal/signin', (req, res) => {
   res.send(`
     <style>input, select { background: #f9f9f9; color: #000; border: 1px solid #ccc; padding: 0.5rem; border-radius: 4px; }</style>
     <form method="post" action="/signin" id="modalSigninForm">
+      <input type="hidden" name="redirect" value="/" />
       <div class="input-group">
         <i class="fas fa-envelope"></i>
         <input name="email" type="email" placeholder="Email" required aria-label="Email" />
@@ -463,7 +464,8 @@ app.post('/signup', [
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).send('<p style="color:red;">' + errors.array().map(e => e.msg).join(', ') + '</p>');
+    const msg = errors.array().map(e => e.msg).join(', ');
+    return res.send(`<script>alert("${msg}"); window.history.back();</script>`);
   }
 
   try {
@@ -473,7 +475,7 @@ app.post('/signup', [
     if (existing) {
       // If user exists and verified, treat as password change request
       if (existing.isVerified) {
-        return res.status(400).send('<p style="color:red;">Account already exists. Use forgot password to reset.</p>');
+        return res.send(`<script>alert("Account already exists. Use forgot password to reset."); window.history.back();</script>`);
       } else {
         // Resend verification if unverified
         const token = crypto.randomBytes(32).toString('hex');
@@ -486,14 +488,14 @@ app.post('/signup', [
           html: `<p>Click <a href="${BASE_URL}/verify/${token}">here</a> to verify your account.</p>`
         };
         await transporter.sendMail(mailOptions);
-        return res.send('<p style="color:green;">Verification email resent.</p>');
+        return res.send(`<script>alert("Verification email resent."); window.history.back();</script>`);
       }
     }
 
     // Check for duplicate name and phone
     const existingNamePhone = await User.findOne({ name, phone });
     if (existingNamePhone) {
-      return res.status(400).send('<p style="color:red;">A user with this name and phone number already exists. Please use different details or contact support.</p>');
+      return res.send(`<script>alert("A user with this name and phone number already exists. Please use different details or contact support."); window.history.back();</script>`);
     }
 
     const hashed = await bcrypt.hash(password, 10);
@@ -513,7 +515,7 @@ app.post('/signup', [
     res.redirect('/approval-status');
   } catch (err) {
     logger.error('Signup error:', err);
-    res.status(500).send('<p style="color:red;">Server error</p>');
+    res.send(`<script>alert("Server error during signup"); window.history.back();</script>`);
   }
 });
 
@@ -694,7 +696,8 @@ app.post('/signin', [
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).send('<p style="color:red;">' + errors.array().map(e => e.msg).join(', ') + '</p>');
+    const msg = errors.array().map(e => e.msg).join(', ');
+    return res.send(`<script>alert("${msg}"); window.history.back();</script>`);
   }
 
   try {
@@ -702,28 +705,28 @@ app.post('/signin', [
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).send('<p style="color:red;">User not found</p>');
+      return res.send(`<script>alert("User not found"); window.history.back();</script>`);
     }
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
-      return res.status(400).send('<p style="color:red;">Invalid password</p>');
+      return res.send(`<script>alert("Invalid password"); window.history.back();</script>`);
     }
 
     if (!user.isVerified) {
-      return res.send('<p style="color:red;">Please verify your email first</p>');
+      return res.send(`<script>alert("Please verify your email first"); window.history.back();</script>`);
     }
 
     if (user.status !== 'approved') {
-      return res.send('<p style="color:red;">Your account is pending admin approval</p>');
+      return res.send(`<script>alert("Your account is pending admin approval"); window.history.back();</script>`);
     }
 
     const token = jwt.sign({ email: user.email, isVerified: user.isVerified, accountType: user.accountType }, JWT_SECRET, { expiresIn: ['admin', 'master_admin'].includes(user.accountType) ? '2h' : '1d' });
     res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: ['admin', 'master_admin'].includes(user.accountType) ? 7200000 : 86400000 });
-    res.send('<script>window.location.reload();</script>');
+    res.redirect(redirect || '/dashboard');
   } catch (err) {
     logger.error('Signin error:', err);
-    res.status(500).send('<p style="color:red;">Server error</p>');
+    res.send(`<script>alert("Server error"); window.history.back();</script>`);
   }
 });
 
@@ -873,12 +876,17 @@ app.post('/admin/delete-tree/:id', requireAuth, requireAdmin, async (req, res) =
 });
 
 app.post('/admin/create-user', requireAdmin, async (req, res) => {
-  const { name, email, password, phone, leaderName, accountType, mlmLevel, permissions } = req.body;
-  const hashed = await bcrypt.hash(password, 10);
-  const userId = 'ME' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
-  const perms = permissions ? permissions.split(',').map(p => p.trim()) : [];
-  await new User({ name, email, password: hashed, phone, leaderName, accountType, mlmLevel, userId, status: 'approved', isVerified: true, permissions: perms }).save();
-  res.redirect('/admin');
+  try {
+    const { name, email, password, phone, leaderName, accountType, mlmLevel, permissions } = req.body;
+    const hashed = await bcrypt.hash(password, 10);
+    const userId = 'ME' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
+    const perms = Array.isArray(permissions) ? permissions : permissions ? [permissions] : [];
+    await new User({ name, email, password: hashed, phone, leaderName, accountType, mlmLevel, userId, status: 'approved', isVerified: true, permissions: perms }).save();
+    res.redirect('/admin');
+  } catch (err) {
+    logger.error('Create user error:', err);
+    res.status(500).send('<script>alert("Error creating user: ' + err.message + '"); window.history.back();</script>');
+  }
 });
 
 app.post('/admin/approve/:id', requireAdmin, async (req, res) => {

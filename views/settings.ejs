@@ -11,34 +11,71 @@
     textarea { width: 300px; height: 100px; }
   </style>
 </head>
-<body>
-  <main style="max-width:800px;margin:3rem auto;padding:1rem;">
-    <h1>Settings Management</h1>
-    
-    <h2>Create New Setting</h2>
-    <form method="post" action="/settings/create">
-      <input name="key" placeholder="Key" required />
-      <textarea name="value" placeholder="Value"></textarea>
-      <button type="submit">Create Setting</button>
-    </form>
-    
-    <h2>All Settings</h2>
-    <ul>
-      <% settings.forEach(s => { %>
-        <li>
-          <form method="post" action="/settings/update/<%= s._id %>" style="display:inline;">
-            <input name="key" value="<%= s.key %>" readonly />
-            <textarea name="value"><%= s.value %></textarea>
-            <button type="submit" class="crud-btn">Update</button>
-          </form>
-          <form method="post" action="/settings/delete/<%= s._id %>" style="display:inline;">
-            <button type="submit" class="crud-btn" onclick="return confirm('Delete setting?')">Delete</button>
-          </form>
-        </li>
-      <% }); %>
-    </ul>
-    
-    <a href="/admin">Back to Admin</a>
-  </main>
+<body class="is-preload">
+  <div id="wrapper">
+    <header id="header">
+      <a href="/" class="logo">MARS EMPIRE</a>
+      <nav>
+        <a href="#menu">Menu</a>
+      </nav>
+    </header>
+    <nav id="menu">
+      <ul class="links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/rules">Rules</a></li>
+        <li><a href="/articles">Articles</a></li>
+        <li><a href="/resources">Resources</a></li>
+        <li><a href="/checklists">Checklists</a></li>
+        <li><a href="/tree">Tree</a></li>
+        <li><a href="/calculator">Calculator</a></li>
+        <li><a href="/leaderboard">Leaderboard</a></li>
+        <li class="active"><a href="/admin">Admin</a></li>
+      </ul>
+      <ul class="actions stacked">
+        <li><a href="/profile" class="button primary fit">Profile</a></li>
+        <li><form method="post" action="/logout"><button type="submit" class="button fit">Logout</button></form></li>
+      </ul>
+    </nav>
+    <div style="text-align: center; margin: 1rem;"><button onclick="history.back()" class="button">← Back</button></div>
+    <div id="main">
+      <section class="post">
+        <header class="major">
+          <h1>Settings Management</h1>
+        </header>
+        
+        <h2>Create New Setting</h2>
+        <form method="post" action="/settings/create">
+          <input name="key" placeholder="Key" required />
+          <textarea name="value" placeholder="Value"></textarea>
+          <button type="submit">Create Setting</button>
+        </form>
+        
+        <h2>All Settings</h2>
+        <ul>
+          <% settings.forEach(s => { %>
+            <li>
+              <form method="post" action="/settings/update/<%= s._id %>" style="display:inline;">
+                <input name="key" value="<%= s.key %>" readonly />
+                <textarea name="value"><%= s.value %></textarea>
+                <button type="submit" class="crud-btn">Update</button>
+              </form>
+              <form method="post" action="/settings/delete/<%= s._id %>" style="display:inline;">
+                <button type="submit" class="crud-btn" onclick="return confirm('Delete setting?')">Delete</button>
+              </form>
+            </li>
+          <% }); %>
+        </ul>
+      </section>
+    </div>
+    <%- include('footer') %>
+  </div>
+  <script src="assets/js/jquery.min.js"></script>
+  <script src="assets/js/jquery.scrollex.min.js"></script>
+  <script src="assets/js/jquery.scrolly.min.js"></script>
+  <script src="assets/js/browser.min.js"></script>
+  <script src="assets/js/breakpoints.min.js"></script>
+  <script src="assets/js/util.js"></script>
+  <script src="assets/js/main.js"></script>
 </body>
 </html>

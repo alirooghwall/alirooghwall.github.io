@@ -10,21 +10,32 @@
 <body class="is-preload">
   <div id="wrapper">
     <header id="header">
-      <a href="index.html" class="logo">ARTICLES</a>
+      <a href="/" class="logo">MARS EMPIRE</a>
+      <nav>
+        <a href="#menu">Menu</a>
+      </nav>
     </header>
-    <nav id="nav">
+    <nav id="menu">
       <ul class="links">
-        <li><a href="index.html">MARS EMPIRE</a></li>
-        <li><a href="generic.html">MLM Companion 'AI'</a></li>
-        <li><a href="elements.html">Resources</a></li>
-        <li><a href="/rules">Rules</a></li>
-        <li><a href="/checklists">Checklists</a></li>
-        <li><a href="/tree">Tree View</a></li>
-      </ul>
-      <ul class="icons">
+        <li><a href="/">Home</a></li>
         <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/rules">Rules</a></li>
+        <li class="active"><a href="/articles">Articles</a></li>
+        <li><a href="/resources">Resources</a></li>
+        <li><a href="/checklists">Checklists</a></li>
+        <li><a href="/tree">Tree</a></li>
+        <li><a href="/calculator">Calculator</a></li>
+        <li><a href="/leaderboard">Leaderboard</a></li>
+        <% if (user.accountType === 'admin' || user.accountType === 'master_admin') { %>
+        <li><a href="/admin">Admin</a></li>
+        <% } %>
+      </ul>
+      <ul class="actions stacked">
+        <li><a href="/profile" class="button primary fit">Profile</a></li>
+        <li><form method="post" action="/logout"><button type="submit" class="button fit">Logout</button></form></li>
       </ul>
     </nav>
+    <div style="text-align: center; margin: 1rem;"><button onclick="history.back()" class="button">← Back</button></div>
     <div id="main">
       <section class="post">
         <header class="major">
@@ -67,6 +78,7 @@
         <% }); %>
       </section>
     </div>
+    <%- include('footer') %>
   </div>
   <script src="assets/js/jquery.min.js"></script>
   <script src="assets/js/jquery.scrollex.min.js"></script>

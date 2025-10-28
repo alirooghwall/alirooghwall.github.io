@@ -35,6 +35,7 @@
 					<li><form method="post" action="/logout"><button type="submit" class="button fit">Logout</button></form></li>
 				</ul>
 			</nav>
+			<div style="text-align: center; margin: 1rem;"><button onclick="history.back()" class="button">← Back</button></div>
 			<div id="main">
 				<section>
 					<header class="major">
@@ -126,9 +127,7 @@
 					</div>
 				</section>
 			</div>
-			<footer id="footer">
-				<p class="copyright">&copy; MARS EMPIRE. All rights reserved.</p>
-			</footer>
+			<%- include('footer') %>
 		</div>
 		<script src="assets/js/jquery.min.js"></script>
 		<script src="assets/js/jquery.scrollex.min.js"></script>

@@ -6,14 +6,21 @@
   <title>Admin Dashboard | MARS EMPIRE</title>
   <link rel="stylesheet" href="/assets/css/main.css">
   <style>
+    body { background: linear-gradient(135deg, #1e1e2e, #2a2a3e); color: #ffffff; font-family: 'Source Sans Pro', sans-serif; margin: 0; padding: 0; }
+    main { color: #ffffff; }
     .tabs { display: flex; border-bottom: 1px solid #ccc; margin-bottom: 1rem; }
-    .tab { padding: 0.5rem 1rem; cursor: pointer; background: #f0f0f0; border: 1px solid #ccc; border-bottom: none; }
-    .tab.active { background: white; border-bottom: 1px solid white; }
+    .tab { padding: 0.5rem 1rem; cursor: pointer; background: #333; color: #fff; border: 1px solid #ccc; border-bottom: none; }
+    .tab.active { background: #555; border-bottom: 1px solid #555; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     .crud-btn { margin-left: 0.5rem; }
-    input, select, textarea { margin: 0.2rem; width: 200px; }
+    input, select, textarea { margin: 0.2rem; width: 200px; background: #f9f9f9; color: #000; border: 1px solid #ccc; padding: 0.5rem; border-radius: 4px; }
     textarea { width: 300px; height: 100px; }
+    button { background: linear-gradient(45deg, #4ecdc4, #45b7aa); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+    button:hover { background: linear-gradient(45deg, #45b7aa, #3da08e); }
+    ul { list-style: none; padding: 0; }
+    li { margin-bottom: 1rem; background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; }
+    form { display: inline; }
   </style>
 </head>
 <body>
@@ -27,6 +34,8 @@
       <div class="tab" data-tab="tree">Tree</div>
       <div class="tab" data-tab="settings">Settings</div>
     </div>
+    
+    <div style="text-align: center; margin: 1rem;"><button onclick="history.back()" class="button">← Back</button></div>
     
     <div id="overview" class="tab-content active">
       <h2>Overview</h2>
@@ -52,68 +61,85 @@
           <option value="admin">Admin</option>
           <option value="master_admin">Master Admin</option>
         </select>
-        <input name="permissions" placeholder="Permissions (comma separated, e.g., view_users,edit_content)" />
-        <input name="mlmLevel" placeholder="MLM Level" />
+        <label>Permissions:</label><br>
+        <input type="checkbox" name="permissions" value="view_users" /> View Users<br>
+        <input type="checkbox" name="permissions" value="edit_content" /> Edit Content<br>
+        <input type="checkbox" name="permissions" value="upload_files" /> Upload Files<br>
+        <input type="checkbox" name="permissions" value="view_reports" /> View Reports<br>
+        <input type="checkbox" name="permissions" value="view_logs" /> View Logs<br>
+        <select name="mlmLevel">
+          <option value="beginner">Beginner</option>
+          <option value="intermediate">Intermediate</option>
+          <option value="advanced">Advanced</option>
+          <option value="expert">Expert</option>
+        </select>
         <button type="submit">Create User</button>
       </form>
       
       <h2>Pending Approvals</h2>
-      <ul>
+      <section class="posts">
         <% pendingUsers.forEach(u => { %>
-          <li>
-            <form method="post" action="/admin/edit-user/<%= u._id %>" style="display:inline;">
-              <input name="name" value="<%= u.name %>" required />
-              <input name="email" value="<%= u.email %>" required />
-              <input name="phone" value="<%= u.phone %>" />
-              <input name="leaderName" value="<%= u.leaderName %>" />
-              <select name="accountType">
-                <option value="student" <%= u.accountType==='student'?'selected':'' %>>Student</option>
-                <option value="participant" <%= u.accountType==='participant'?'selected':'' %>>Participant</option>
-                <option value="editor" <%= u.accountType==='editor'?'selected':'' %>>Editor</option>
-                <option value="manager" <%= u.accountType==='manager'?'selected':'' %>>Manager</option>
-                <option value="admin" <%= u.accountType==='admin'?'selected':'' %>>Admin</option>
-              </select>
-              <input name="mlmLevel" value="<%= u.mlmLevel %>" />
-              <button type="submit" class="crud-btn">Edit</button>
+          <article>
+            <header>
+              <h3><%= u.name %> (<%= u.email %>)</h3>
+            </header>
+            <form method="post" action="/admin/edit-user/<%= u._id %>">
+              <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+                <input name="name" value="<%= u.name %>" placeholder="Name" required style="flex: 1; min-width: 150px;" />
+                <input name="email" value="<%= u.email %>" placeholder="Email" required style="flex: 1; min-width: 150px;" />
+                <input name="phone" value="<%= u.phone %>" placeholder="Phone" style="flex: 1; min-width: 150px;" />
+                <input name="leaderName" value="<%= u.leaderName %>" placeholder="Leader Name" style="flex: 1; min-width: 150px;" />
+                <select name="accountType" style="flex: 1; min-width: 150px;">
+                  <option value="student" <%= u.accountType==='student'?'selected':'' %>>Student</option>
+                  <option value="participant" <%= u.accountType==='participant'?'selected':'' %>>Participant</option>
+                  <option value="editor" <%= u.accountType==='editor'?'selected':'' %>>Editor</option>
+                  <option value="manager" <%= u.accountType==='manager'?'selected':'' %>>Manager</option>
+                  <option value="admin" <%= u.accountType==='admin'?'selected':'' %>>Admin</option>
+                </select>
+                <input name="mlmLevel" value="<%= u.mlmLevel %>" placeholder="MLM Level" style="flex: 1; min-width: 150px;" />
+              </div>
+              <ul class="actions special">
+                <li><button type="submit">Edit</button></li>
+                <li><form method="post" action="/admin/approve/<%= u._id %>" style="display:inline;"><button type="submit">Approve</button></form></li>
+                <li><form method="post" action="/admin/reject/<%= u._id %>" style="display:inline;"><button type="submit">Reject</button></form></li>
+                <li><form method="post" action="/admin/delete-user/<%= u._id %>" style="display:inline;"><button type="submit" onclick="return confirm('Delete user?')">Delete</button></form></li>
+              </ul>
             </form>
-            <form method="post" action="/admin/approve/<%= u._id %>" style="display:inline;">
-              <button type="submit">Approve</button>
-            </form>
-            <form method="post" action="/admin/reject/<%= u._id %>" style="display:inline;">
-              <button type="submit">Reject</button>
-            </form>
-            <form method="post" action="/admin/delete-user/<%= u._id %>" style="display:inline;">
-              <button type="submit" class="crud-btn" onclick="return confirm('Delete user?')">Delete</button>
-            </form>
-          </li>
+          </article>
         <% }); %>
-      </ul>
+      </section>
       
       <h2>All Users</h2>
-      <ul>
+      <section class="posts">
         <% allUsers.forEach(u => { %>
-          <li>
-            <form method="post" action="/admin/edit-user/<%= u._id %>" style="display:inline;">
-              <input name="name" value="<%= u.name %>" required />
-              <input name="email" value="<%= u.email %>" required />
-              <input name="phone" value="<%= u.phone %>" />
-              <input name="leaderName" value="<%= u.leaderName %>" />
-              <select name="accountType">
-                <option value="student" <%= u.accountType==='student'?'selected':'' %>>Student</option>
-                <option value="participant" <%= u.accountType==='participant'?'selected':'' %>>Participant</option>
-                <option value="editor" <%= u.accountType==='editor'?'selected':'' %>>Editor</option>
-                <option value="manager" <%= u.accountType==='manager'?'selected':'' %>>Manager</option>
-                <option value="admin" <%= u.accountType==='admin'?'selected':'' %>>Admin</option>
-              </select>
-              <input name="mlmLevel" value="<%= u.mlmLevel %>" />
-              <button type="submit" class="crud-btn">Edit</button>
+          <article>
+            <header>
+              <h3><%= u.name %> (<%= u.email %>)</h3>
+            </header>
+            <form method="post" action="/admin/edit-user/<%= u._id %>">
+              <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+                <input name="name" value="<%= u.name %>" placeholder="Name" required style="flex: 1; min-width: 150px;" />
+                <input name="email" value="<%= u.email %>" placeholder="Email" required style="flex: 1; min-width: 150px;" />
+                <input name="phone" value="<%= u.phone %>" placeholder="Phone" style="flex: 1; min-width: 150px;" />
+                <input name="leaderName" value="<%= u.leaderName %>" placeholder="Leader Name" style="flex: 1; min-width: 150px;" />
+                <select name="accountType" style="flex: 1; min-width: 150px;">
+                  <option value="student" <%= u.accountType==='student'?'selected':'' %>>Student</option>
+                  <option value="participant" <%= u.accountType==='participant'?'selected':'' %>>Participant</option>
+                  <option value="editor" <%= u.accountType==='editor'?'selected':'' %>>Editor</option>
+                  <option value="manager" <%= u.accountType==='manager'?'selected':'' %>>Manager</option>
+                  <option value="admin" <%= u.accountType==='admin'?'selected':'' %>>Admin</option>
+                  <option value="master_admin" <%= u.accountType==='master_admin'?'selected':'' %>>Master Admin</option>
+                </select>
+                <input name="mlmLevel" value="<%= u.mlmLevel %>" placeholder="MLM Level" style="flex: 1; min-width: 150px;" />
+              </div>
+              <ul class="actions special">
+                <li><button type="submit">Edit</button></li>
+                <li><form method="post" action="/admin/delete-user/<%= u._id %>" style="display:inline;"><button type="submit" onclick="return confirm('Delete user?')">Delete</button></form></li>
+              </ul>
             </form>
-            <form method="post" action="/admin/delete-user/<%= u._id %>" style="display:inline;">
-              <button type="submit" class="crud-btn" onclick="return confirm('Delete user?')">Delete</button>
-            </form>
-          </li>
+          </article>
         <% }); %>
-      </ul>
+      </section>
     </div>
     
     <div id="content" class="tab-content">
@@ -244,6 +270,7 @@
     
     <a href="/profile">Back to Profile</a>
   </main>
+  <%- include('footer') %>
   
   <script>
     const tabs = document.querySelectorAll('.tab');
