@@ -36,144 +36,13 @@
 
 		<div style="position: fixed; top: 1rem; left: 1rem; z-index: 10001; display: flex; align-items: center; gap: 0.5rem;">
 			<a href="#navPanel" id="navPanelToggle">Menu</a>
-			<button class="button primary" id="openSignIn">Sign In</button>
-			<button class="button" id="openSignUp">Sign Up</button>
+			<a href="/signin" id="openSignIn" class="button primary">Sign In</a>
+			<a href="/signup" id="openSignUp" class="button">Sign Up</a>
 			<button class="button primary" id="profileLink" style="display:none; background: white; color: black;" onclick="location.href='/profile'">Profile</button>
 			<button id="logoutBtn" style="display:none; background: white; color: black;" class="button" onclick="logout()">Logout</button>
 		</div>
 
-		<!-- Sign In Modal -->
-		<div id="signInModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.7);z-index:10002;align-items:center;justify-content:center;">
-			<div style="background:white;color:black;padding:2rem;border-radius:12px;max-width:400px;width:90%;position:relative;border:1px solid #ccc;">
-				<button id="closeSignIn" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#000;font-size:1.5rem;cursor:pointer;">&times;</button>
-				<div id="signInFormContainer">
-					<style>input, select { background: #f9f9f9; color: #000; border: 1px solid #ccc; padding: 0.5rem; border-radius: 4px; }</style>
-					<form id="modalSigninForm">
-						<input type="hidden" name="redirect" value="/" />
-						<div class="input-group">
-							<i class="fas fa-envelope"></i>
-							<input name="email" type="email" placeholder="Email" required aria-label="Email" />
-						</div>
-						<div class="input-group">
-							<i class="fas fa-lock"></i>
-							<input name="password" type="password" placeholder="Password" required aria-label="Password" />
-						</div>
-						<button type="submit" id="modalSigninBtn"><i class="fas fa-sign-in-alt"></i> Sign In</button>
-						<hr style="border: none; border-top: 1px solid #ccc; margin: 1rem 0;">
-						<button type="button" onclick="window.location.href='https://mars-empire-mlm.onrender.com/auth/google'" style="background: linear-gradient(45deg, #db4437, #c23321);"><i class="fab fa-google"></i> Sign in with Google</button>
-						<p class="forgot"><a href="/forgot-password" target="_blank">Forgot password?</a></p>
-						<p><a href="/signup" target="_blank">Create an account</a></p>
-					</form>
-				</div>
-			</div>
-		</div>
 
-		<!-- Sign Up Modal -->
-		<div id="signUpModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.7);z-index:10002;align-items:center;justify-content:center;">
-			<div style="background:white;color:black;padding:2rem;border-radius:12px;max-width:400px;width:90%;position:relative;border:1px solid #ccc;">
-				<button id="closeSignUp" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#000;font-size:1.5rem;cursor:pointer;">&times;</button>
-				<div id="signUpFormContainer">
-					<style>input, select { background: #f9f9f9; color: #000; border: 1px solid #ccc; padding: 0.5rem; border-radius: 4px; }</style>
-					<form id="modalSignupForm">
-						<div class="input-group">
-							<i class="fas fa-user"></i>
-							<input name="name" placeholder="Name" required aria-label="Name" />
-						</div>
-						<div class="input-group">
-							<i class="fas fa-envelope"></i>
-							<input name="email" type="email" placeholder="Email" required aria-label="Email" />
-						</div>
-						<div class="input-group">
-							<i class="fas fa-lock"></i>
-							<input name="password" type="password" placeholder="Password (min 8 chars)" required aria-label="Password" minlength="8" />
-						</div>
-						<div class="input-group">
-							<i class="fas fa-user-tag"></i>
-							<select name="accountType" required aria-label="Account Type">
-								<option value="student">Student</option>
-								<option value="participant">Participant</option>
-							</select>
-						</div>
-						<div class="input-group">
-							<i class="fas fa-level-up-alt"></i>
-							<input name="mlmLevel" placeholder="MLM Level (e.g., beginner)" required aria-label="MLM Level" />
-						</div>
-						<div class="input-group">
-							<i class="fas fa-phone"></i>
-							<input name="phone" placeholder="Phone" required aria-label="Phone" />
-						</div>
-						<div class="input-group">
-							<i class="fas fa-user-friends"></i>
-							<input name="leaderName" placeholder="Leader's Name" required aria-label="Leader's Name" />
-						</div>
-						<button type="submit" id="modalSignupBtn"><i class="fas fa-paper-plane"></i> Create Account</button>
-					</form>
-				</div>
-			</div>
-		</div>
-
-
-
-
-
-
-
-		<script>
-		// Modal logic
-		const signInModal = document.getElementById('signInModal');
-		const signUpModal = document.getElementById('signUpModal');
-		document.getElementById('openSignIn').addEventListener('click', function() {
-			signUpModal.style.display = 'none';
-			signInModal.style.display = 'flex';
-		});
-		document.getElementById('openSignUp').addEventListener('click', function() {
-			signInModal.style.display = 'none';
-			signUpModal.style.display = 'flex';
-		});
-		document.getElementById('closeSignIn').addEventListener('click', function() {
-			signInModal.style.display = 'none';
-		});
-		document.getElementById('closeSignUp').addEventListener('click', function() {
-			signUpModal.style.display = 'none';
-		});
-		window.addEventListener('click', function(e) {
-			if (e.target === signInModal) {
-				signInModal.style.display = 'none';
-			}
-			if (e.target === signUpModal) {
-				signUpModal.style.display = 'none';
-			}
-		});
-		// Form submit handlers
-		document.getElementById('modalSigninForm').addEventListener('submit', function(e) {
-			e.preventDefault();
-			const formData = new FormData(this);
-			fetch('/signin', {
-				method: 'POST',
-				body: formData
-			}).then(r => r.text()).then(() => {
-				signInModal.style.display = 'none';
-				updateAuthUI();
-			}).catch(err => {
-				console.error('Sign in failed:', err);
-				alert('Sign in failed. Please try again.');
-			});
-		});
-		document.getElementById('modalSignupForm').addEventListener('submit', function(e) {
-			e.preventDefault();
-			const formData = new FormData(this);
-			fetch('/signup', {
-				method: 'POST',
-				body: formData
-			}).then(r => r.text()).then(() => {
-				signUpModal.style.display = 'none';
-				updateAuthUI();
-			}).catch(err => {
-				console.error('Sign up failed:', err);
-				alert('Sign up failed. Please try again.');
-			});
-		});
-		</script>
 
 		<script>
 		function updateAuthUI() {
@@ -184,22 +53,16 @@
 				const signUpBtn = document.getElementById('openSignUp');
 				const profileLink = document.getElementById('profileLink');
 				const logoutBtn = document.getElementById('logoutBtn');
-				const dashboardLi = document.getElementById('dashboardLink');
-				const profileLi = document.querySelector('a[href="/profile"]').parentElement;
 				if (data.loggedIn) {
 					signInBtn.style.display = 'none';
 					signUpBtn.style.display = 'none';
 					profileLink.style.display = 'inline-block';
 					logoutBtn.style.display = 'inline-block';
-					dashboardLi.style.display = 'block';
-					profileLi.style.display = 'block';
 				} else {
 					signInBtn.style.display = 'inline-block';
 					signUpBtn.style.display = 'inline-block';
 					profileLink.style.display = 'none';
 					logoutBtn.style.display = 'none';
-					dashboardLi.style.display = 'none';
-					profileLi.style.display = 'none';
 				}
 			})
 			.catch(() => {
