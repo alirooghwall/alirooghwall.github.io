@@ -53,9 +53,9 @@
         <input name="password" placeholder="Password" required />
         <input name="phone" placeholder="Phone" />
         <input name="leaderName" placeholder="Leader Name" />
-        <select name="accountType">
+        <select name="accountType" required>
+          <option value="participant" selected>Participant</option>
           <option value="student">Student</option>
-          <option value="participant">Participant</option>
           <option value="editor">Editor</option>
           <option value="manager">Manager</option>
           <option value="admin">Admin</option>
@@ -67,8 +67,8 @@
         <input type="checkbox" name="permissions" value="upload_files" /> Upload Files<br>
         <input type="checkbox" name="permissions" value="view_reports" /> View Reports<br>
         <input type="checkbox" name="permissions" value="view_logs" /> View Logs<br>
-        <select name="mlmLevel">
-          <option value="beginner">Beginner</option>
+        <select name="mlmLevel" required>
+          <option value="beginner" selected>Beginner</option>
           <option value="intermediate">Intermediate</option>
           <option value="advanced">Advanced</option>
           <option value="expert">Expert</option>
