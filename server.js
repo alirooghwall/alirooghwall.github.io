@@ -751,7 +751,7 @@ app.post('/admin/delete-tree/:id', requireAuth, requireAdmin, async (req, res) =
   res.redirect('/admin');
 });
 
-app.post('/admin/create-user', requireAdmin, async (req, res) => {
+app.post('/admin/create-user', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { name, email, password, phone, leaderName, accountType, mlmLevel, permissions } = req.body;
     const hashed = await bcrypt.hash(password, 10);
@@ -765,17 +765,17 @@ app.post('/admin/create-user', requireAdmin, async (req, res) => {
   }
 });
 
-app.post('/admin/approve/:id', requireAdmin, async (req, res) => {
+app.post('/admin/approve/:id', requireAuth, requireAdmin, async (req, res) => {
   await User.updateOne({ _id: req.params.id }, { status: 'approved' });
   res.redirect('/admin');
 });
 
-app.post('/admin/reject/:id', requireAdmin, async (req, res) => {
+app.post('/admin/reject/:id', requireAuth, requireAdmin, async (req, res) => {
   await User.updateOne({ _id: req.params.id }, { status: 'rejected' });
   res.redirect('/admin');
 });
 
-app.post('/admin/approve-profile/:id', requireAdmin, async (req, res) => {
+app.post('/admin/approve-profile/:id', requireAuth, requireAdmin, async (req, res) => {
   const request = await ProfileUpdateRequest.findById(req.params.id).populate('userId');
   if (!request || request.status !== 'pending') return res.redirect('/admin');
   await User.updateOne({ _id: request.userId._id }, request.requestedChanges);
@@ -784,13 +784,13 @@ app.post('/admin/approve-profile/:id', requireAdmin, async (req, res) => {
   res.redirect('/admin');
 });
 
-app.post('/admin/reject-profile/:id', requireAdmin, async (req, res) => {
+app.post('/admin/reject-profile/:id', requireAuth, requireAdmin, async (req, res) => {
   await ProfileUpdateRequest.updateOne({ _id: req.params.id }, { status: 'rejected' });
   res.redirect('/admin');
 });
 
 // Bulk import users
-app.post('/admin/import-users', requireAdmin, upload.single('csvFile'), async (req, res) => {
+app.post('/admin/import-users', requireAuth, requireAdmin, upload.single('csvFile'), async (req, res) => {
   if (!req.file) return res.send('No file uploaded.');
   const results = [];
   require('fs').createReadStream(req.file.path)
@@ -818,7 +818,7 @@ app.post('/admin/import-users', requireAdmin, upload.single('csvFile'), async (r
 });
 
 // Export users
-app.get('/admin/export-users', requireAdmin, async (req, res) => {
+app.get('/admin/export-users', requireAuth, requireAdmin, async (req, res) => {
   const users = await User.find({}).select('name email userId accountType mlmLevel phone leaderName status');
   const csvWriter = createCsvWriter({
     path: 'users.csv',
@@ -1033,7 +1033,7 @@ app.get('/notifications', requireAuth, requireVerified, async (req, res) => {
   res.render('notifications', { notifications, user: req.user });
 });
 
-app.post('/notifications/create', requireAdmin, async (req, res) => {
+app.post('/notifications/create', requireAuth, requireAdmin, async (req, res) => {
   const { userId, title, message, type } = req.body;
   await new Notification({ userId, title, message, type }).save();
   res.redirect('/notifications');
@@ -1074,19 +1074,19 @@ app.get('/settings', requireAuth, requireVerified, requireAdmin, async (req, res
   res.render('settings', { settings, user: req.user });
 });
 
-app.post('/settings/create', requireAdmin, async (req, res) => {
+app.post('/settings/create', requireAuth, requireAdmin, async (req, res) => {
   const { key, value } = req.body;
   await new Setting({ key, value }).save();
   res.redirect('/settings');
 });
 
-app.post('/settings/update/:id', requireAdmin, async (req, res) => {
+app.post('/settings/update/:id', requireAuth, requireAdmin, async (req, res) => {
   const { value } = req.body;
   await Setting.updateOne({ _id: req.params.id }, { value });
   res.redirect('/settings');
 });
 
-app.post('/settings/delete/:id', requireAdmin, async (req, res) => {
+app.post('/settings/delete/:id', requireAuth, requireAdmin, async (req, res) => {
   await Setting.deleteOne({ _id: req.params.id });
   res.redirect('/settings');
 });

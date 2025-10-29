@@ -83,7 +83,7 @@
             <header>
               <h3><%= u.name %> (<%= u.email %>)</h3>
             </header>
-            <form id="edit-user-<%= u._id %>" action="/admin/edit-user/<%= u._id %>">
+            <form id="edit-user-<%= u._id %>" action="/admin/edit-user/<%= u._id %>" method="post">
               <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
                 <input name="name" value="<%= u.name %>" placeholder="Name" required style="flex: 1; min-width: 150px;" />
                 <input name="email" value="<%= u.email %>" placeholder="Email" required style="flex: 1; min-width: 150px;" />
@@ -119,7 +119,7 @@
             <header>
               <h3><%= u.name %> (<%= u.email %>)</h3>
             </header>
-            <form id="edit-user-all-<%= u._id %>" action="/admin/edit-user/<%= u._id %>">
+            <form id="edit-user-all-<%= u._id %>" action="/admin/edit-user/<%= u._id %>" method="post">
               <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
                 <input name="name" value="<%= u.name %>" placeholder="Name" required style="flex: 1; min-width: 150px;" />
                 <input name="email" value="<%= u.email %>" placeholder="Email" required style="flex: 1; min-width: 150px;" />
@@ -148,7 +148,7 @@
     
     <div id="content" class="tab-content">
       <h2>Rules</h2>
-      <form id="create-rule-form" action="/rules/create">
+      <form id="create-rule-form" action="/rules/create" method="post">
         <input name="title" placeholder="Title" required />
         <textarea name="content" placeholder="Content"></textarea>
         <input name="category" placeholder="Category" />
@@ -157,13 +157,13 @@
       <ul>
         <% rules.forEach(r => { %>
           <li>
-            <form id="update-rule-<%= r._id %>" action="/rules/update/<%= r._id %>" style="display:inline;">
+            <form id="update-rule-<%= r._id %>" action="/rules/update/<%= r._id %>" method="post" style="display:inline;">
               <input name="title" value="<%= r.title %>" required />
               <textarea name="content"><%= r.content %></textarea>
               <input name="category" value="<%= r.category %>" />
               <button type="button" onclick="submitForm('update-rule-<%= r._id %>')" class="crud-btn">Update</button>
             </form>
-            <form id="delete-rule-<%= r._id %>" action="/rules/delete/<%= r._id %>" style="display:inline;">
+            <form id="delete-rule-<%= r._id %>" action="/rules/delete/<%= r._id %>" method="post" style="display:inline;">
               <button type="button" onclick="submitForm('delete-rule-<%= r._id %>')" class="crud-btn">Delete</button>
             </form>
           </li>
@@ -171,7 +171,7 @@
       </ul>
       
       <h2>Articles</h2>
-      <form id="create-article-form" action="/articles/create">
+      <form id="create-article-form" action="/articles/create" method="post">
         <input name="title" placeholder="Title" required />
         <textarea name="content" placeholder="Content"></textarea>
         <input name="category" placeholder="Category" />
@@ -182,7 +182,7 @@
       <ul>
         <% articles.forEach(a => { %>
           <li>
-            <form id="update-article-<%= a._id %>" action="/articles/update/<%= a._id %>" style="display:inline;">
+            <form id="update-article-<%= a._id %>" action="/articles/update/<%= a._id %>" method="post" style="display:inline;">
               <input name="title" value="<%= a.title %>" required />
               <textarea name="content"><%= a.content %></textarea>
               <input name="category" value="<%= a.category %>" />
@@ -190,7 +190,7 @@
               <label><input name="published" type="checkbox" <%= a.published?'checked':'' %> /> Published</label>
               <button type="button" onclick="submitForm('update-article-<%= a._id %>')" class="crud-btn">Update</button>
             </form>
-            <form id="delete-article-<%= a._id %>" action="/articles/delete/<%= a._id %>" style="display:inline;">
+            <form id="delete-article-<%= a._id %>" action="/articles/delete/<%= a._id %>" method="post" style="display:inline;">
               <button type="button" onclick="submitForm('delete-article-<%= a._id %>')" class="crud-btn">Delete</button>
             </form>
           </li>
@@ -198,7 +198,7 @@
       </ul>
       
       <h2>Resources</h2>
-      <form id="create-resource-form" action="/resources/create">
+      <form id="create-resource-form" action="/resources/create" method="post">
         <input name="title" placeholder="Title" required />
         <textarea name="description" placeholder="Description"></textarea>
         <select name="type">
@@ -219,7 +219,7 @@
       <ul>
         <% resources.forEach(res => { %>
           <li>
-            <form id="update-resource-<%= res._id %>" action="/resources/update/<%= res._id %>" style="display:inline;">
+            <form id="update-resource-<%= res._id %>" action="/resources/update/<%= res._id %>" method="post" style="display:inline;">
               <input name="title" value="<%= res.title %>" required />
               <textarea name="description"><%= res.description %></textarea>
               <select name="type">
@@ -237,7 +237,7 @@
               </select>
               <button type="button" onclick="submitForm('update-resource-<%= res._id %>')" class="crud-btn">Update</button>
             </form>
-            <form id="delete-resource-<%= res._id %>" action="/resources/delete/<%= res._id %>" style="display:inline;">
+            <form id="delete-resource-<%= res._id %>" action="/resources/delete/<%= res._id %>" method="post" style="display:inline;">
               <button type="button" onclick="submitForm('delete-resource-<%= res._id %>')" class="crud-btn">Delete</button>
             </form>
           </li>
@@ -250,7 +250,7 @@
       <ul>
         <% treeConnections.forEach(t => { %>
           <li>
-            <form id="edit-tree-<%= t._id %>" action="/admin/edit-tree/<%= t._id %>" style="display:inline;">
+            <form id="edit-tree-<%= t._id %>" action="/admin/edit-tree/<%= t._id %>" method="post" style="display:inline;">
               <input name="userId" value="<%= t.userId %>" required />
               <input name="leaderId" value="<%= t.leaderId %>" />
               <select name="verified">
@@ -259,7 +259,7 @@
               </select>
               <button type="button" onclick="submitForm('edit-tree-<%= t._id %>')" class="crud-btn">Edit</button>
             </form>
-            <form id="delete-tree-<%= t._id %>" action="/admin/delete-tree/<%= t._id %>" style="display:inline;">
+            <form id="delete-tree-<%= t._id %>" action="/admin/delete-tree/<%= t._id %>" method="post" style="display:inline;">
               <button type="button" onclick="submitForm('delete-tree-<%= t._id %>')" class="crud-btn">Delete</button>
             </form>
           </li>

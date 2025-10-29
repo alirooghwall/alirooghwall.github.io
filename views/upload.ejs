@@ -9,7 +9,7 @@
 <body>
   <main style="max-width:600px;margin:3rem auto;padding:1rem;">
     <h1>File Upload</h1>
-    <form id="upload-form" action="/upload" enctype="multipart/form-data">
+    <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data">
       <input type="file" name="file" required />
       <button type="button" onclick="submitForm('upload-form')">Upload</button>
     </form>

@@ -45,7 +45,7 @@
         </header>
         
         <h2>Create New Setting</h2>
-        <form id="create-setting-form" action="/settings/create">
+        <form id="create-setting-form" action="/settings/create" method="post">
           <input name="key" placeholder="Key" required />
           <textarea name="value" placeholder="Value"></textarea>
           <button type="button" onclick="submitForm('create-setting-form')">Create Setting</button>
@@ -55,12 +55,12 @@
         <ul>
           <% settings.forEach(s => { %>
             <li>
-              <form id="update-setting-<%= s._id %>" action="/settings/update/<%= s._id %>" style="display:inline;">
+              <form id="update-setting-<%= s._id %>" action="/settings/update/<%= s._id %>" method="post" style="display:inline;">
                 <input name="key" value="<%= s.key %>" readonly />
                 <textarea name="value"><%= s.value %></textarea>
                 <button type="button" onclick="submitForm('update-setting-<%= s._id %>')" class="crud-btn">Update</button>
               </form>
-              <form id="delete-setting-<%= s._id %>" action="/settings/delete/<%= s._id %>" style="display:inline;">
+              <form id="delete-setting-<%= s._id %>" action="/settings/delete/<%= s._id %>" method="post" style="display:inline;">
                 <button type="button" onclick="submitForm('delete-setting-<%= s._id %>')" class="crud-btn">Delete</button>
               </form>
             </li>
