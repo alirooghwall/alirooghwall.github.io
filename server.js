@@ -400,6 +400,12 @@ app.post('/signup', [
     return res.send(`<script>alert("${msg}"); window.history.back();</script>`);
   }
 
+  // Check if database is connected
+  if (!process.env.MONGO_URI) {
+    logger.error('Signup attempted without database connection');
+    return res.send(`<script>alert("Server configuration error. Please contact administrator."); window.history.back();</script>`);
+  }
+
   try {
     const { name, email, password, accountType, mlmLevel, phone, leaderName } = req.body;
 
@@ -417,7 +423,7 @@ app.post('/signup', [
           from: EMAIL_USER,
           to: email,
           subject: 'Verify your email - MARS EMPIRE',
-          html: `<p>Click <a href="${BASE_URL}/verify/${token}">here</a> to verify your account.</p>`
+          html: emailTemplates.verification(token)
         };
         await transporter.sendMail(mailOptions);
         return res.send(`<script>alert("Verification email resent."); window.history.back();</script>`);
@@ -752,6 +758,12 @@ app.post('/admin/delete-tree/:id', requireAuth, requireAdmin, async (req, res) =
 });
 
 app.post('/admin/create-user', requireAuth, requireAdmin, async (req, res) => {
+  // Check if database is connected
+  if (!process.env.MONGO_URI) {
+    logger.error('Admin create user attempted without database connection');
+    return res.status(500).send('<script>alert("Server configuration error. Please contact administrator."); window.history.back();</script>');
+  }
+
   try {
     const { name, email, password, phone, leaderName, accountType, mlmLevel, permissions } = req.body;
     const hashed = await bcrypt.hash(password, 10);
