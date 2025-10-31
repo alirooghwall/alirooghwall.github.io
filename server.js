@@ -794,6 +794,15 @@ app.post('/admin/create-user', requireAuth, requireAdmin, async (req, res) => {
 
   try {
     const { name, email, password, phone, leaderName, accountType, mlmLevel, permissions } = req.body;
+    // Only master_admin can create admin/master_admin users
+    if (['admin', 'master_admin'].includes(accountType) && req.user.accountType !== 'master_admin') {
+      return res.status(403).send('<script>alert("Only master admin can create admin users."); window.history.back();</script>');
+    }
+    // Prevent duplicate emails
+    const existing = await User.findOne({ email });
+    if (existing) {
+      return res.status(400).send('<script>alert("Email already exists."); window.history.back();</script>');
+    }
     const hashed = await bcrypt.hash(password, 10);
     const userId = 'ME' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
     const perms = Array.isArray(permissions) ? permissions : permissions ? [permissions] : [];
