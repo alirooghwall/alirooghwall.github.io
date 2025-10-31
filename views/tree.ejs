@@ -56,9 +56,9 @@
 					<% if (user && user.accountType === 'admin') { %>
 						<section>
 							<h2>Pending Connections</h2>
-							<ul>
-								<% pendingConnections.forEach(t => { %>
-									<li><%= t.userId %> under <%= t.leaderId %>
+                            <ul>
+                                <% pendingConnections.forEach(t => { %>
+                                    <li><%= t.userId && t.userId.name %> under <%= t.leaderId && t.leaderId.name %>
 										<button onclick="verify('<%= t._id %>')">Verify</button>
 									</li>
 								<% }); %>
@@ -104,13 +104,17 @@
 				});
 				window.location.href = '/';
 			}
-			async function verify(id) {
-				await fetch('/tree/verify/' + id, {
-					method: 'POST',
-					credentials: 'include'
-				});
-				location.reload();
-			}
+            async function verify(id) {
+                showLoader(true);
+                try {
+                    await fetch('/tree/verify/' + id, {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+                    showToast('success', 'Connection verified');
+                    location.reload();
+                } finally { showLoader(false); }
+            }
 		</script>
 		<script src="assets/js/jquery.min.js"></script>
 		<script src="assets/js/jquery.scrollex.min.js"></script>

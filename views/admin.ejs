@@ -177,6 +177,7 @@
         <input name="category" placeholder="Category" />
         <input name="tags" placeholder="Tags (comma separated)" />
         <label><input name="published" type="checkbox" /> Published</label>
+        <input name="files" type="file" multiple />
         <button type="button" onclick="submitForm('create-article-form')">Create Article</button>
       </form>
       <ul>
@@ -208,6 +209,7 @@
           <option value="file">File</option>
         </select>
         <input name="url" placeholder="URL" />
+        <input name="file" type="file" />
         <input name="category" placeholder="Category" />
         <select name="accessLevel">
           <option value="public">Public</option>
@@ -289,20 +291,22 @@
     });
     function submitForm(id) {
       const form = document.getElementById(id);
+      showLoader(true);
       fetch(form.action, {
         method: 'POST',
         credentials: 'include',
         body: new FormData(form)
       }).then(response => {
         if (response.ok) {
+          showToast('success', 'Saved successfully');
           location.reload();
         } else {
-          alert('Error: ' + response.status);
+          showToast('error', 'Error: ' + response.status);
         }
       }).catch(err => {
         console.error('Error:', err);
-        alert('Error submitting form');
-      });
+        showToast('error', 'Error submitting form');
+      }).finally(() => showLoader(false));
     }
   </script>
 </body>

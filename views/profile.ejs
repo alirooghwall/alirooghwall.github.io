@@ -63,7 +63,7 @@
 					<p><strong>Leader:</strong> <%= user.leaderName %></p>
 					<p><strong>Status:</strong> <%= user.status %></p>
 					<p><strong>Verified:</strong> <%= user.isVerified ? 'Yes' : 'No' %></p>
-					<form id="update-profile-form" action="/update-profile" method="post">
+                    <form id="update-profile-form" action="/profile/request-update" method="post">
 						<label for="name">Name</label>
 						<input name="name" value="<%= user.name %>" required />
 						<label for="email">Email</label>
@@ -100,23 +100,25 @@
 					location.href = '/';
 				});
 			}
-			function submitForm(id) {
-				const form = document.getElementById(id);
-				fetch(form.action, {
-					method: 'POST',
-					credentials: 'include',
-					body: new FormData(form)
-				}).then(response => {
-					if (response.ok) {
-						location.reload();
-					} else {
-						alert('Error: ' + response.status);
-					}
-				}).catch(err => {
-					console.error('Error:', err);
-					alert('Error submitting form');
-				});
-			}
+            function submitForm(id) {
+                const form = document.getElementById(id);
+                showLoader(true);
+                fetch(form.action, {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: new FormData(form)
+                }).then(response => {
+                    if (response.ok) {
+                        showToast('success', 'Request submitted for approval');
+                        location.reload();
+                    } else {
+                        showToast('error', 'Error: ' + response.status);
+                    }
+                }).catch(err => {
+                    console.error('Error:', err);
+                    showToast('error', 'Error submitting form');
+                }).finally(() => showLoader(false));
+            }
 		</script>
 	</body>
 </html>

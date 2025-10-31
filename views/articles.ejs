@@ -49,6 +49,7 @@
             <textarea name="content" placeholder="Article Content" rows="10" style="width:100%;padding:0.5rem;"></textarea>
             <input name="category" placeholder="Category (e.g., Strategy, Success)" style="width:100%;padding:0.5rem;" />
             <input name="tags" placeholder="Tags (comma separated)" style="width:100%;padding:0.5rem;" />
+            <input name="files" type="file" multiple style="width:100%;padding:0.5rem;" />
             <label><input name="published" type="checkbox" /> Publish immediately</label>
             <button type="button" onclick="submitForm('createArticleForm', '/articles/create')" style="padding:0.5rem 1rem;">Create Article</button>
           </form>
@@ -61,6 +62,16 @@
               <p>By <%= article.author.name %> | Category: <%= article.category %> | Tags: <%= article.tags.join(', ') %></p>
             </header>
             <p><%= article.content.substring(0, 200) %>...</p>
+            <% if (article.attachments && article.attachments.length) { %>
+              <div>
+                <strong>Attachments:</strong>
+                <ul>
+                  <% article.attachments.forEach(att => { %>
+                    <li><a href="/uploads/<%= att.filename %>" target="_blank"><%= att.originalName %></a></li>
+                  <% }) %>
+                </ul>
+              </div>
+            <% } %>
             <% if (['admin', 'manager', 'editor'].includes(user.accountType)) { %>
               <form id="updateArticle<%= article._id %>">
                 <input name="title" value="<%= article.title %>" required />
@@ -92,19 +103,21 @@
       const form = document.getElementById(formId);
       const formData = new FormData(form);
       try {
+        showLoader(true);
         const response = await fetch(action, {
           method: 'POST',
           credentials: 'include',
           body: formData
         });
         if (response.ok) {
+          showToast('success', 'Saved');
           location.reload();
         } else {
-          alert('Error: ' + response.statusText);
+          showToast('error', 'Error: ' + response.statusText);
         }
       } catch (error) {
-        alert('Error: ' + error.message);
-      }
+        showToast('error', 'Error: ' + error.message);
+      } finally { showLoader(false); }
     }
   </script>
   <script src="assets/js/jquery.min.js"></script>

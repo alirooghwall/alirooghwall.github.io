@@ -110,7 +110,7 @@
 			<%- include('footer') %>
 		</div>
 		<script>
-			async function logout() {
+            async function logout() {
 				await fetch('/logout', {
 					method: 'POST',
 					credentials: 'include'
@@ -121,19 +121,21 @@
 				const form = document.getElementById(formId);
 				const formData = new FormData(form);
 				try {
+                    showLoader(true);
 					const response = await fetch(action, {
 						method: 'POST',
 						credentials: 'include',
 						body: formData
 					});
 					if (response.ok) {
+                        showToast('success', 'Saved');
 						location.reload();
 					} else {
-						alert('Error: ' + response.statusText);
+                        showToast('error', 'Error: ' + response.statusText);
 					}
 				} catch (error) {
-					alert('Error: ' + error.message);
-				}
+                    showToast('error', 'Error: ' + error.message);
+                } finally { showLoader(false); }
 			}
 		</script>
 		<script src="assets/js/jquery.min.js"></script>

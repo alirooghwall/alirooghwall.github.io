@@ -54,6 +54,7 @@
               <option value="file">File</option>
             </select>
             <input name="url" placeholder="URL or File Path" style="width:100%;padding:0.5rem;" />
+            <input name="file" type="file" style="width:100%;padding:0.5rem;" />
             <input name="category" placeholder="Category (e.g., Training, Marketing)" style="width:100%;padding:0.5rem;" />
             <select name="accessLevel" style="width:100%;padding:0.5rem;">
               <option value="public">Public</option>
@@ -71,10 +72,12 @@
               <p>Category: <%= resource.category %> | Access: <%= resource.accessLevel %></p>
             </header>
             <p><%= resource.description %></p>
-            <% if (resource.type === 'link') { %>
+            <% if (resource.type === 'link' && resource.url) { %>
               <a href="<%= resource.url %>" target="_blank">View Resource</a>
-            <% } else { %>
-              <a href="<%= resource.url %>">Download/View</a>
+            <% } else if (resource.file && resource.file.filename) { %>
+              <a href="/uploads/<%= resource.file.filename %>">Download/View</a>
+            <% } else if (resource.url) { %>
+              <a href="<%= resource.url %>">Open</a>
             <% } %>
             <% if (['admin', 'manager', 'editor'].includes(user.accountType)) { %>
               <form id="updateResource<%= resource._id %>">
@@ -117,19 +120,21 @@
       const form = document.getElementById(formId);
       const formData = new FormData(form);
       try {
+        showLoader(true);
         const response = await fetch(action, {
           method: 'POST',
           credentials: 'include',
           body: formData
         });
         if (response.ok) {
+          showToast('success', 'Saved');
           location.reload();
         } else {
-          alert('Error: ' + response.statusText);
+          showToast('error', 'Error: ' + response.statusText);
         }
       } catch (error) {
-        alert('Error: ' + error.message);
-      }
+        showToast('error', 'Error: ' + error.message);
+      } finally { showLoader(false); }
     }
   </script>
   <script src="assets/js/jquery.min.js"></script>

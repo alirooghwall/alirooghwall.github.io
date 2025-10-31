@@ -22,7 +22,7 @@
       <tbody>
         <% logs.forEach(l => { %>
           <tr>
-            <td style="border:1px solid #ccc; padding:0.5rem;"><%= l.timestamp %></td>
+            <td style="border:1px solid #ccc; padding:0.5rem;"><%= l.createdAt %></td>
             <td style="border:1px solid #ccc; padding:0.5rem;"><%= l.level %></td>
             <td style="border:1px solid #ccc; padding:0.5rem;"><%= l.message %></td>
             <td style="border:1px solid #ccc; padding:0.5rem;"><%= JSON.stringify(l.details) %></td>

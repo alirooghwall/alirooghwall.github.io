@@ -1,11 +1,8 @@
-require('dotenv').config();
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const mongoose = require('mongoose');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+console.log('DEBUG: MONGO_URI from dotenv:', process.env.MONGO_URI);
+console.log('DEBUG: .env path:', path.join(__dirname, '.env'));
+const express = require('express');
 const nodemailer = require('nodemailer');
 const multer = require('multer');
 const upload = multer({ 
@@ -32,6 +29,14 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const csv = require('csv-parser');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const { body, validationResult } = require('express-validator');
+
+// Additional missing requires
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 
 // i18n setup
 const i18next = require('i18next');
@@ -160,6 +165,9 @@ app.use(limiter);
 // Serve static files
 app.use(express.static(path.join(__dirname)));
 
+// Mount JSON auth API to align with SRS (parallel to HTML auth flow)
+app.use('/auth', require('./routes/auth'));
+
 // Sanity checks
 if (!JWT_SECRET) {
   logger.error('❌ JWT_SECRET is not set');
@@ -212,6 +220,15 @@ const Setting = require('./models/Setting');
 
 const emailTemplates = require('./utils/emailTemplates');
 
+// DB logging helper
+async function logAction(userId, action, message, details) {
+  try {
+    await new Log({ level: 'info', userId, action, message, details }).save();
+  } catch (e) {
+    logger.warn('DB log failed', e);
+  }
+}
+
 const checklistSchema = new mongoose.Schema({
   title: String,
   items: [{ text: String, completed: { type: Boolean, default: false } }],
@@ -231,13 +248,21 @@ const treeSchema = new mongoose.Schema({
 });
 const Tree = mongoose.model('Tree', treeSchema);
 
-// Middleware to check auth
-const requireAuth = (req, res, next) => {
+// Middleware to check auth and load fresh user data
+const requireAuth = async (req, res, next) => {
   const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
   if (!token) return res.redirect('/signin?redirect=' + encodeURIComponent(req.originalUrl));
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
+    const userDoc = await User.findOne({ email: decoded.email });
+    if (!userDoc) throw new Error('User not found');
+    req.user = {
+      _id: userDoc._id,
+      email: userDoc.email,
+      isVerified: userDoc.isVerified,
+      accountType: userDoc.accountType,
+      permissions: userDoc.permissions || []
+    };
     next();
   } catch {
     res.clearCookie('token');
@@ -450,6 +475,7 @@ app.post('/signup', [
     };
     await transporter.sendMail(mailOptions);
 
+    await logAction(newUser._id, 'user_signup', 'User signed up (pending, verification sent)', { email });
     res.redirect('/approval-status');
   } catch (err) {
     logger.error('Signup error:', err);
@@ -501,6 +527,7 @@ app.get('/verify/:token', async (req, res) => {
     user.verificationToken = undefined;
     await user.save();
     logger.info('User verified:', user.email);
+    await logAction(user._id, 'user_verified', 'Email verified');
     res.send('<p>Email verified! <a href="/signin">Sign in</a></p>');
   } catch (err) {
     logger.error('Verification error:', err);
@@ -605,6 +632,7 @@ app.post('/signin', [
 
     const token = jwt.sign({ email: user.email, isVerified: user.isVerified, accountType: user.accountType }, JWT_SECRET, { expiresIn: ['admin', 'master_admin'].includes(user.accountType) ? '2h' : '1d' });
     res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: ['admin', 'master_admin'].includes(user.accountType) ? 7200000 : 86400000 });
+    await logAction(user._id, 'signin', 'User signed in');
     res.redirect(redirect || '/dashboard');
   } catch (err) {
     logger.error('Signin error:', err);
@@ -706,7 +734,7 @@ app.post('/reset-password/:token', async (req, res) => {
     user.resetToken = undefined;
     user.resetExpires = undefined;
     await user.save();
-
+    await logAction(user._id, 'password_reset', 'Password reset via token');
     res.send('<p>Password reset! <a href="/signin">Sign in</a></p>');
   } catch (err) {
     logger.error('Reset error:', err);
@@ -724,7 +752,7 @@ app.get('/admin', requireAuth, requireVerified, requireAdmin, async (req, res) =
   const rules = await Rule.find({});
   const articles = await Article.find({}).populate('author');
   const resources = await Resource.find({});
-  res.render('admin', { pendingUsers, allUsers, treeConnections, rules, articles, resources, user: req.user });
+  res.render('admin', { pendingUsers, allUsers, treeConnections, rules, articles, resources, user: req.user, req });
 });
 
 // Admin edit user
@@ -770,6 +798,7 @@ app.post('/admin/create-user', requireAuth, requireAdmin, async (req, res) => {
     const userId = 'ME' + Date.now() + Math.random().toString(36).substr(2, 5).toUpperCase();
     const perms = Array.isArray(permissions) ? permissions : permissions ? [permissions] : [];
     await new User({ name, email, password: hashed, phone, leaderName, accountType, mlmLevel, userId, status: 'approved', isVerified: true, permissions: perms }).save();
+    await logAction(req.user._id, 'admin_create_user', 'Admin created user', { email });
     res.redirect('/admin');
   } catch (err) {
     logger.error('Create user error:', err);
@@ -779,11 +808,13 @@ app.post('/admin/create-user', requireAuth, requireAdmin, async (req, res) => {
 
 app.post('/admin/approve/:id', requireAuth, requireAdmin, async (req, res) => {
   await User.updateOne({ _id: req.params.id }, { status: 'approved' });
+  await logAction(req.user._id, 'admin_approve_user', 'Approved user', { userId: req.params.id });
   res.redirect('/admin');
 });
 
 app.post('/admin/reject/:id', requireAuth, requireAdmin, async (req, res) => {
   await User.updateOne({ _id: req.params.id }, { status: 'rejected' });
+  await logAction(req.user._id, 'admin_reject_user', 'Rejected user', { userId: req.params.id });
   res.redirect('/admin');
 });
 
@@ -793,11 +824,13 @@ app.post('/admin/approve-profile/:id', requireAuth, requireAdmin, async (req, re
   await User.updateOne({ _id: request.userId._id }, request.requestedChanges);
   request.status = 'approved';
   await request.save();
+  await logAction(req.user._id, 'admin_approve_profile', 'Approved profile update', { requestId: req.params.id });
   res.redirect('/admin');
 });
 
 app.post('/admin/reject-profile/:id', requireAuth, requireAdmin, async (req, res) => {
   await ProfileUpdateRequest.updateOne({ _id: req.params.id }, { status: 'rejected' });
+  await logAction(req.user._id, 'admin_reject_profile', 'Rejected profile update', { requestId: req.params.id });
   res.redirect('/admin');
 });
 
@@ -853,13 +886,14 @@ app.get('/admin/export-users', requireAuth, requireAdmin, async (req, res) => {
 app.get('/checklists', requireAuth, requireVerified, async (req, res) => {
   const userChecklists = await Checklist.find({ userId: req.user.email });
   const predefined = await Checklist.find({ isPredefined: true });
-  res.render('checklists', { userChecklists, predefined, user: req.user });
+  res.render('checklists', { userChecklists, predefined, user: req.user, req });
 });
 
 app.post('/checklists/create', requireAuth, requireVerified, async (req, res) => {
   const { title, items } = req.body;
   const itemList = items.split('\n').map(text => ({ text: text.trim(), completed: false }));
   await new Checklist({ title, items: itemList, userId: req.user.email }).save();
+  await logAction(req.user._id, 'checklist_create', 'Created personal checklist', { title });
   res.redirect('/checklists');
 });
 
@@ -869,6 +903,7 @@ app.post('/checklists/update', requireAuth, requireVerified, async (req, res) =>
   if (checklist.userId === req.user.email || checklist.isPredefined) {
     checklist.items[index].completed = completed;
     await checklist.save();
+    await logAction(req.user._id, 'checklist_update', 'Updated checklist item', { checklistId: id, index });
   }
   res.sendStatus(200);
 });
@@ -907,6 +942,7 @@ app.post('/request-tree', requireAuth, requireVerified, async (req, res) => {
   const existing = await Tree.findOne({ userId: user._id, verified: false });
   if (existing) return res.send('<p>Request already pending.</p>');
   await new Tree({ userId: user._id, leaderId, verified: false }).save();
+  await logAction(req.user._id, 'tree_request', 'Requested tree connection', { leaderId });
   res.send('<p>Request submitted! Admin will review.</p>');
 });
 
@@ -924,22 +960,23 @@ app.get('/tree', requireAuth, requireVerified, async (req, res) => {
   });
   const treeJson = JSON.stringify(treeData);
   const pendingConnections = req.user.accountType === 'admin' ? await Tree.find({ verified: false }).populate('userId leaderId') : [];
-  res.render('tree', { treeData, user: req.user, pendingConnections });
+  res.render('tree', { treeData, user: req.user, pendingConnections, req });
 });
 
 app.post('/tree/verify/:id', requireAuth, requireAdmin, async (req, res) => {
   await Tree.updateOne({ _id: req.params.id }, { verified: true });
+  await logAction(req.user._id, 'tree_verify', 'Verified tree connection', { connectionId: req.params.id });
   res.redirect('/tree');
 });
 
 // Dashboard
 app.get('/dashboard', requireAuth, requireVerified, (req, res) => {
-  res.render('dashboard', { user: req.user });
+  res.render('dashboard', { user: req.user, req });
 });
 
 // Calculator
 app.get('/calculator', requireAuth, requireVerified, (req, res) => {
-  res.render('calculator', { user: req.user });
+  res.render('calculator', { user: req.user, req });
 });
 
 // Leaderboard
@@ -953,27 +990,27 @@ app.get('/leaderboard', requireAuth, requireVerified, async (req, res) => {
     data = { topByScore, topBySales, topByRecruited };
     cache.put(cacheKey, data, 300000); // 5 min
   }
-  res.render('leaderboard', { ...data, user: req.user });
+  res.render('leaderboard', { ...data, user: req.user, req });
 });
 
 app.get('/rules', requireAuth, requireVerified, async (req, res) => {
   const rules = await Rule.find({});
-  res.render('rules', { rules, user: req.user });
+  res.render('rules', { rules, user: req.user, req });
 });
 
-app.post('/rules/create', requireEditor, async (req, res) => {
+app.post('/rules/create', requireAuth, requireVerified, requireEditor, async (req, res) => {
   const { title, content, category } = req.body;
   await new Rule({ title, content, category, createdBy: req.user._id }).save();
   res.redirect('/rules');
 });
 
-app.post('/rules/update/:id', requireEditor, async (req, res) => {
+app.post('/rules/update/:id', requireAuth, requireVerified, requireEditor, async (req, res) => {
   const { title, content, category } = req.body;
   await Rule.updateOne({ _id: req.params.id }, { title, content, category, updatedAt: new Date() });
   res.redirect('/rules');
 });
 
-app.post('/rules/delete/:id', requireEditor, async (req, res) => {
+app.post('/rules/delete/:id', requireAuth, requireVerified, requireEditor, async (req, res) => {
   await Rule.deleteOne({ _id: req.params.id });
   res.redirect('/rules');
 });
@@ -981,23 +1018,23 @@ app.post('/rules/delete/:id', requireEditor, async (req, res) => {
 // Articles routes
 app.get('/articles', requireAuth, requireVerified, async (req, res) => {
   const articles = await Article.find({ published: true }).populate('author');
-  res.render('articles', { articles, user: req.user });
+  res.render('articles', { articles, user: req.user, req });
 });
 
-app.post('/articles/create', requireEditor, upload.array('files', 10), async (req, res) => {
+app.post('/articles/create', requireAuth, requireVerified, requireEditor, upload.array('files', 10), async (req, res) => {
   const { title, content, category, tags, published } = req.body;
   const attachments = req.files ? req.files.map(f => ({ filename: f.filename, originalName: f.originalname })) : [];
   await new Article({ title, content, category, tags: tags.split(','), published: published === 'on', author: req.user._id, attachments }).save();
   res.redirect('/articles');
 });
 
-app.post('/articles/update/:id', requireEditor, async (req, res) => {
+app.post('/articles/update/:id', requireAuth, requireVerified, requireEditor, async (req, res) => {
   const { title, content, category, tags, published } = req.body;
   await Article.updateOne({ _id: req.params.id }, { title, content, category, tags: tags.split(','), published: published === 'on', updatedAt: new Date() });
   res.redirect('/articles');
 });
 
-app.post('/articles/delete/:id', requireEditor, async (req, res) => {
+app.post('/articles/delete/:id', requireAuth, requireVerified, requireEditor, async (req, res) => {
   await Article.deleteOne({ _id: req.params.id });
   res.redirect('/articles');
 });
@@ -1006,23 +1043,23 @@ app.post('/articles/delete/:id', requireEditor, async (req, res) => {
 app.get('/resources', requireAuth, requireVerified, async (req, res) => {
   const accessLevels = req.user.accountType === 'admin' ? ['public', 'participants', 'managers'] : req.user.accountType === 'manager' ? ['public', 'participants'] : ['public'];
   const resources = await Resource.find({ accessLevel: { $in: accessLevels } });
-  res.render('resources', { resources, user: req.user });
+  res.render('resources', { resources, user: req.user, req });
 });
 
-app.post('/resources/create', requireEditor, upload.single('file'), async (req, res) => {
+app.post('/resources/create', requireAuth, requireVerified, requireEditor, upload.single('file'), async (req, res) => {
   const { title, description, type, url, category, accessLevel } = req.body;
   const file = req.file ? { filename: req.file.filename, originalName: req.file.originalname } : null;
   await new Resource({ title, description, type, url, category, accessLevel, uploadedBy: req.user._id, file }).save();
   res.redirect('/resources');
 });
 
-app.post('/resources/update/:id', requireEditor, async (req, res) => {
+app.post('/resources/update/:id', requireAuth, requireVerified, requireEditor, async (req, res) => {
   const { title, description, type, url, category, accessLevel } = req.body;
   await Resource.updateOne({ _id: req.params.id }, { title, description, type, url, category, accessLevel });
   res.redirect('/resources');
 });
 
-app.post('/resources/delete/:id', requireEditor, async (req, res) => {
+app.post('/resources/delete/:id', requireAuth, requireVerified, requireEditor, async (req, res) => {
   await Resource.deleteOne({ _id: req.params.id });
   res.redirect('/resources');
 });
@@ -1030,19 +1067,19 @@ app.post('/resources/delete/:id', requireEditor, async (req, res) => {
 // Reports routes
 app.get('/reports', requireAuth, requireVerified, requirePermission('view_reports'), async (req, res) => {
   const reports = await Report.find({}).sort({ createdAt: -1 });
-  res.render('reports', { reports, user: req.user });
+  res.render('reports', { reports, user: req.user, req });
 });
 
 app.post('/reports/create', requireAuth, async (req, res) => {
-  const { type, data } = req.body;
-  await new Report({ type, data, createdBy: req.user._id }).save();
+  const { type, data, title } = req.body;
+  await new Report({ title, type, data, generatedBy: req.user._id }).save();
   res.redirect('/reports');
 });
 
 // Notifications routes
 app.get('/notifications', requireAuth, requireVerified, async (req, res) => {
   const notifications = await Notification.find({ userId: req.user._id }).sort({ createdAt: -1 });
-  res.render('notifications', { notifications, user: req.user });
+  res.render('notifications', { notifications, user: req.user, req });
 });
 
 app.post('/notifications/create', requireAuth, requireAdmin, async (req, res) => {
@@ -1058,13 +1095,13 @@ app.post('/notifications/mark-read/:id', requireAuth, async (req, res) => {
 
 // Logs routes
 app.get('/logs', requireAuth, requireVerified, requirePermission('view_logs'), async (req, res) => {
-  const logs = await Log.find({}).sort({ timestamp: -1 }).limit(100);
-  res.render('logs', { logs, user: req.user });
+  const logs = await Log.find({}).sort({ createdAt: -1 }).limit(100);
+  res.render('logs', { logs, user: req.user, req });
 });
 
 // Upload routes
 app.get('/upload', requireAuth, requireVerified, requirePermission('upload_files'), (req, res) => {
-  res.render('upload', { user: req.user });
+  res.render('upload', { user: req.user, req });
 });
 
 app.post('/upload', requireAuth, requirePermission('upload_files'), upload.single('file'), async (req, res) => {
@@ -1083,7 +1120,7 @@ app.post('/upload', requireAuth, requirePermission('upload_files'), upload.singl
 // Settings routes
 app.get('/settings', requireAuth, requireVerified, requireAdmin, async (req, res) => {
   const settings = await Setting.find({});
-  res.render('settings', { settings, user: req.user });
+  res.render('settings', { settings, user: req.user, req });
 });
 
 app.post('/settings/create', requireAuth, requireAdmin, async (req, res) => {
@@ -1107,7 +1144,7 @@ app.post('/settings/delete/:id', requireAuth, requireAdmin, async (req, res) => 
 app.get('/profile', requireAuth, requireVerified, async (req, res) => {
   const user = await User.findOne({ email: req.user.email }).select('-password');
   const pendingRequest = await ProfileUpdateRequest.findOne({ userId: user._id, status: 'pending' });
-  res.render('profile', { user, pendingRequest });
+  res.render('profile', { user, pendingRequest, req });
 });
 
 app.post('/profile/request-update', requireAuth, async (req, res) => {
@@ -1186,7 +1223,7 @@ app.get('/search', requireAuth, requireVerified, async (req, res) => {
   const articles = query ? await Article.find({ published: true, $or: [{ title: new RegExp(query, 'i') }, { content: new RegExp(query, 'i') }] }).populate('author') : [];
   const resources = query ? await Resource.find({ $or: [{ title: new RegExp(query, 'i') }, { description: new RegExp(query, 'i') }] }) : [];
   const users = query ? await User.find({ status: 'approved', $or: [{ name: new RegExp(query, 'i') }, { userId: new RegExp(query, 'i') }] }).select('name userId') : [];
-  res.render('search', { articles, resources, users, query, user: req.user });
+  res.render('search', { articles, resources, users, query, user: req.user, req });
 });
 
 // Logout
@@ -1231,6 +1268,11 @@ app.get('/sitemap.xml', (req, res) => {
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain');
   res.send('User-agent: *\nAllow: /\nSitemap: ' + BASE_URL + '/sitemap.xml');
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(__dirname, '404.html'));
 });
 
 // AI integration routes (placeholders for future AI model)

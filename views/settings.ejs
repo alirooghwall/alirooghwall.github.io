@@ -80,20 +80,22 @@
   <script>
     function submitForm(id) {
       const form = document.getElementById(id);
+      showLoader(true);
       fetch(form.action, {
         method: 'POST',
         credentials: 'include',
         body: new FormData(form)
       }).then(response => {
         if (response.ok) {
+          showToast('success', 'Saved');
           location.reload();
         } else {
-          alert('Error: ' + response.status);
+          showToast('error', 'Error: ' + response.status);
         }
       }).catch(err => {
         console.error('Error:', err);
-        alert('Error submitting form');
-      });
+        showToast('error', 'Error submitting form');
+      }).finally(() => showLoader(false));
     }
     async function logout() {
       await fetch('/logout', {

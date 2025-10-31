@@ -96,36 +96,12 @@
 							</ul>
 						</section>
 					<% }); %>
-					<% if (['admin', 'manager'].includes(user.accountType)) { %>
-						<h2>Assign Checklist to User</h2>
-						<form id="assignForm">
-							<input name="title" placeholder="Checklist Title" required />
-							<textarea name="items" placeholder="Items (one per line)" required></textarea>
-							<input name="userId" placeholder="User Email" required />
-							<button type="button" onclick="submitForm('assignForm', '/checklists/assign')">Assign</button>
-						</form>
-					<% } %>
-					<% if (assignedChecklists && assignedChecklists.length > 0) { %>
-						<h2>Assigned Checklists</h2>
-						<% assignedChecklists.forEach(c => { %>
-							<% const percent = Math.round((c.items.filter(item => item.completed).length / c.items.length) * 100); %>
-							<section class="checklist">
-								<h3><%= c.title %> (Assigned by <%= c.assignedBy %>)</h3>
-								<div class="progress-text"><%= c.items.filter(item => item.completed).length %>/<%= c.items.length %> completed (<%= percent %>%)</div>
-								<div class="progress-bar">
-									<div class="progress-fill" data-percent="<%= percent %>"></div>
-								</div>
-								<ul>
-									<% c.items.forEach((item, i) => { %>
-										<li>
-											<input type="checkbox" <%= item.completed ? 'checked' : '' %> onchange="updateItem('<%= c._id %>', <%= i %>, this.checked)">
-											<%= item.text %>
-										</li>
-									<% }); %>
-								</ul>
-							</section>
-						<% }); %>
-					<% } %>
+                    <h2>Create Personal Checklist</h2>
+                    <form id="createChecklistForm">
+                        <input name="title" placeholder="Checklist Title" required />
+                        <textarea name="items" placeholder="Items (one per line)" required></textarea>
+                        <button type="button" onclick="submitForm('createChecklistForm', '/checklists/create')">Create</button>
+                    </form>
 				</article>
 			</div>
 			<%- include('footer') %>
@@ -134,15 +110,19 @@
 			document.querySelectorAll('.progress-fill').forEach(el => {
 				el.style.width = el.dataset.percent + '%';
 			});
-			async function updateItem(id, index, completed) {
-				await fetch('/checklists/update', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					credentials: 'include',
-					body: JSON.stringify({ id, index, completed })
-				});
-				location.reload();
-			}
+            async function updateItem(id, index, completed) {
+                showLoader(true);
+                try {
+                    await fetch('/checklists/update', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ id, index, completed })
+                    });
+                    showToast('success', 'Checklist updated');
+                    location.reload();
+                } finally { showLoader(false); }
+            }
 			async function logout() {
 				await fetch('/logout', {
 					method: 'POST',
@@ -150,23 +130,25 @@
 				});
 				window.location.href = '/';
 			}
-			async function submitForm(formId, action) {
+            async function submitForm(formId, action) {
 				const form = document.getElementById(formId);
 				const formData = new FormData(form);
 				try {
+                    showLoader(true);
 					const response = await fetch(action, {
 						method: 'POST',
 						credentials: 'include',
 						body: formData
 					});
 					if (response.ok) {
-						location.reload();
+                        showToast('success', 'Saved');
+                        location.reload();
 					} else {
-						alert('Error: ' + response.statusText);
+                        showToast('error', 'Error: ' + response.statusText);
 					}
 				} catch (error) {
-					alert('Error: ' + error.message);
-				}
+                    showToast('error', 'Error: ' + error.message);
+                } finally { showLoader(false); }
 			}
 		</script>
 		<script src="assets/js/jquery.min.js"></script>

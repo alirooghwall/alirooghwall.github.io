@@ -48,26 +48,34 @@
       const form = document.getElementById(formId);
       const formData = new FormData(form);
       try {
+        showLoader(true);
         const response = await fetch(action, {
           method: 'POST',
           credentials: 'include',
           body: formData
         });
         if (response.ok) {
+          showToast('success', 'Saved');
           location.reload();
         } else {
-          alert('Error: ' + response.statusText);
+          showToast('error', 'Error: ' + response.statusText);
         }
       } catch (error) {
-        alert('Error: ' + error.message);
-      }
+        showToast('error', 'Error: ' + error.message);
+      } finally { showLoader(false); }
     }
     async function markRead(id) {
-      await fetch('/notifications/mark-read/' + id, {
-        method: 'POST',
-        credentials: 'include'
-      });
-      location.reload();
+      showLoader(true);
+      try {
+        await fetch('/notifications/mark-read/' + id, {
+          method: 'POST',
+          credentials: 'include'
+        });
+        showToast('success', 'Marked as read');
+        location.reload();
+      } finally {
+        showLoader(false);
+      }
     }
   </script>
 </body>

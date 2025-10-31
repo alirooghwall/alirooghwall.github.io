@@ -17,7 +17,13 @@
     
     <h2>Create New Report</h2>
     <form id="createReportForm">
-      <input name="type" placeholder="Type" required />
+      <input name="title" placeholder="Title" required />
+      <select name="type" required>
+        <option value="user_activity">user_activity</option>
+        <option value="sales">sales</option>
+        <option value="recruitment">recruitment</option>
+        <option value="system">system</option>
+      </select>
       <textarea name="data" placeholder="Data"></textarea>
       <button type="button" onclick="submitForm('createReportForm', '/reports/create')">Create Report</button>
     </form>
@@ -33,24 +39,26 @@
     
     <a href="/profile">Back to Profile</a>
   </main>
-  <script>
+    <script>
     async function submitForm(formId, action) {
       const form = document.getElementById(formId);
       const formData = new FormData(form);
       try {
+        showLoader(true);
         const response = await fetch(action, {
           method: 'POST',
           credentials: 'include',
           body: formData
         });
         if (response.ok) {
+          showToast('success', 'Saved');
           location.reload();
         } else {
-          alert('Error: ' + response.statusText);
+          showToast('error', 'Error: ' + response.statusText);
         }
       } catch (error) {
-        alert('Error: ' + error.message);
-      }
+        showToast('error', 'Error: ' + error.message);
+      } finally { showLoader(false); }
     }
   </script>
 </body>
